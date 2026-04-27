@@ -1,0 +1,26 @@
+{
+  "name": "@repo/ui",
+  "version": "0.0.0",
+  "exports": {
+    ".": "./index.ts",
+    "./button": "./common/button.tsx",
+    "./common/button": "./common/button.tsx"
+  },
+  "license": "MIT",
+  "scripts": {
+    "lint": "eslint \"**/*.ts\""
+  },
+  "peerDependencies": {
+    "react": ">=19",
+    "react-native": ">=0.81"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/react": "~19.1.0",
+    "eslint": "^8.57.0",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "typescript": "5.5.4"
+  }
+}
