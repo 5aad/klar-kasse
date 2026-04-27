@@ -65,7 +65,7 @@ export default function ReceiptCameraScreen() {
           height: cropped.height,
         },
       });
-      router.push('/receipt-camera/captured2');
+      router.push('/receipt-camera/captured');
     } catch {
       setErrorMessage('Could not capture the receipt. Try again.');
     } finally {
