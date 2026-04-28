@@ -1,10 +1,10 @@
 import { router } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { initExecutorch } from "react-native-executorch";
-import { ExpoResourceFetcher } from "react-native-executorch-expo-resource-fetcher";
+// import { initExecutorch } from "react-native-executorch";
+// import { ExpoResourceFetcher } from "react-native-executorch-expo-resource-fetcher";
 export default function Index() {
-  initExecutorch({ resourceFetcher: ExpoResourceFetcher });
+  // initExecutorch({ resourceFetcher: ExpoResourceFetcher });
   useEffect(() => {
     let isMounted = true;
 

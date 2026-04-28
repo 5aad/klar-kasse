@@ -1,4 +1,5 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { colors, fontSize } from "@repo/theme";
 import {
   Icon,
   Label,
@@ -9,14 +10,21 @@ import {
 export default function TabLayout() {
   return (
     <NativeTabs
-    minimizeBehavior="onScrollDown"
-      backgroundColor="#ffffff"
-      iconColor={{ default: "#6b7280", selected: "#111827" }}
+      minimizeBehavior="onScrollDown"
+      backgroundColor={colors.background}
+      iconColor={{ default: colors.surface, selected: colors.primary }}
       labelStyle={{
-        default: { color: "#6b7280", fontSize: 12, fontWeight: "500" },
-        selected: { color: "#111827", fontSize: 12, fontWeight: "700" },
+        default: {
+          color: colors.surface,
+          fontSize: fontSize.sm,
+          fontWeight: "500",
+        },
+        selected: {
+          color: colors.primary,
+          fontSize: fontSize.sm,
+          fontWeight: "700",
+        },
       }}
-      
     >
       <NativeTabs.Trigger name="dashboard">
         <Icon
@@ -35,7 +43,7 @@ export default function TabLayout() {
         />
         <Label>Insight</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="scan" role="search" >
+      <NativeTabs.Trigger name="scan" role="search">
         <Icon
           src={<VectorIcon family={MaterialCommunityIcons} name="line-scan" />}
         />
