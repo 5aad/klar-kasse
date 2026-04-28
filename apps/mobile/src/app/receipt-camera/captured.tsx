@@ -21,7 +21,8 @@ export default function CapturedReceiptMlKitScreen() {
   const [isRecognizing, setIsRecognizing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const croppedImage = useReceiptScanStore((state) => state.croppedImage);
-const { cleanReceiptJson, isReady, isGenerating, downloadProgress } = useReceiptJsonCleaner();
+  const { cleanReceiptJson, isReady, isGenerating, downloadProgress } =
+    useReceiptJsonCleaner();
   const clearReceiptImages = useReceiptScanStore(
     (state) => state.clearReceiptImages,
   );
@@ -32,16 +33,11 @@ const { cleanReceiptJson, isReady, isGenerating, downloadProgress } = useReceipt
   };
 
   const runModel = async () => {
-    if (
-      !croppedImage?.uri ||
-      isRecognizing ||
-      isGenerating ||
-      !isReady
-    ) {
+    if (!croppedImage?.uri || isRecognizing || isGenerating || !isReady) {
       if (!isReady) {
         setErrorMessage(
           `Receipt cleaner is still loading (${Math.round(
-            downloadProgress * 100
+            downloadProgress * 100,
           )}%). Try again when it is ready.`,
         );
       }
@@ -65,8 +61,8 @@ const { cleanReceiptJson, isReady, isGenerating, downloadProgress } = useReceipt
       console.log("ML Kit OCR Result:", result.text);
       const parsedReceipt = parseNormaReceipt(result.text);
       console.log(parsedReceipt);
-      const llmResult = await cleanReceiptJson(parsedReceipt);
-      console.log("LLM Result:", llmResult);
+      // const llmResult = await cleanReceiptJson(parsedReceipt);
+      // console.log("Receipt JSON Result:", llmResult.source, llmResult.data);
     } catch (err) {
       console.error("Receipt processing failed:", err);
       setErrorMessage(String(err instanceof Error ? err.message : err));

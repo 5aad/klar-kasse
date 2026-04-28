@@ -5,6 +5,7 @@ import { useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 
 import { useReceiptScanStore } from '@/stores/receipt-scan-store';
+import { useAndroidBackToHome } from '@/hooks/use-android-back-to-home';
 
 const FRAME_WIDTH_RATIO = 0.74;
 const FRAME_ASPECT_RATIO = 0.44;
@@ -30,7 +31,7 @@ export default function ReceiptCameraScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [cameraSize, setCameraSize] = useState<Size | null>(null);
   const setReceiptImages = useReceiptScanStore((state) => state.setReceiptImages);
-
+  useAndroidBackToHome("/");
   const frame = cameraSize ? getReceiptFrame(cameraSize) : null;
 
   const handleCameraLayout = (event: LayoutChangeEvent) => {

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   fixAndValidateStructuredOutput,
   getStructuredOutputPrompt,
-  SMOLLM2_1_135M_QUANTIZED,
+  SMOLLM2_1_360M_QUANTIZED,
   LLMModule,
   type Message,
 } from "react-native-executorch";
@@ -35,13 +35,20 @@ export const ReceiptSchema = z.object({
         tax: z.number(),
       }),
     )
-    .default([]).optional(),
+    .default([])
+    .optional(),
 });
 
 export type ReceiptJson = z.infer<typeof ReceiptSchema>;
 
 export type ReceiptJsonWithRawText = ReceiptJson & {
   rawText?: string;
+};
+
+type CleanReceiptJsonResult = {
+  source: "parser" | "llm" | "parser-fallback";
+  data: ReceiptJson;
+  messages: Message[];
 };
 
 function round2(value: number) {
@@ -102,17 +109,6 @@ function buildUserPrompt(receipt: ReceiptJsonWithRawText) {
 /no_think
 
 Fix this parsed receipt JSON using the OCR text as reference.
-
-Rules:
-- Do not re-extract from scratch.
-- Fix only obvious mistakes.
-- Do not invent missing items.
-- Ignore payment terminal lines as items.
-- Ignore VAT summary lines as items.
-- Keep prices as numbers.
-- Keep German item names.
-- Return ONLY valid JSON matching the schema.
-- Do not include rawText in output.
 
 Parsed JSON:
 ${JSON.stringify(jsonWithoutRawText)}
@@ -194,7 +190,7 @@ function ensureReceiptCleanerLoaded(systemPrompt: string) {
   const loadWithRetry = async (attempt = 0): Promise<LLMModule> => {
     try {
       return await LLMModule.fromModelName(
-        SMOLLM2_1_135M_QUANTIZED,
+        SMOLLM2_1_360M_QUANTIZED,
         notifyProgress,
         notifyToken,
         notifyMessages,
@@ -271,12 +267,14 @@ export function useReceiptJsonCleaner() {
   }, [systemPrompt]);
 
   const cleanReceiptJson = useCallback(
-    async (receipt: ReceiptJsonWithRawText) => {
+    async (
+      receipt: ReceiptJsonWithRawText,
+    ): Promise<CleanReceiptJsonResult> => {
       const parsed = ReceiptSchema.safeParse(removeRawText(receipt));
 
       if (parsed.success && !needsLLM(receipt)) {
         return {
-          source: "parser" as const,
+          source: "parser",
           data: parsed.data,
           messages: [],
         };
@@ -307,18 +305,34 @@ export function useReceiptJsonCleaner() {
           throw new Error("No assistant response from LLM");
         }
 
+        console.log("Raw receipt LLM response:", lastMessage.content);
+
         const fixedJson = fixAndValidateStructuredOutput(
           lastMessage.content,
           ReceiptSchema,
         );
 
         return {
-          source: "llm" as const,
+          source: "llm",
           data: fixedJson,
           messages,
         };
       } catch (err) {
         setError(err);
+
+        const lastMessage = sharedMessageHistory.at(-1);
+        if (lastMessage?.role === "assistant") {
+          console.log("Invalid receipt LLM response:", lastMessage.content);
+        }
+
+        if (parsed.success) {
+          return {
+            source: "parser-fallback",
+            data: parsed.data,
+            messages: sharedMessageHistory,
+          };
+        }
+
         throw err;
       } finally {
         setIsGenerating(false);
