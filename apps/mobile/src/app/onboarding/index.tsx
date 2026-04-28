@@ -1,4 +1,5 @@
 import type { ViewToken } from "react-native";
+import { colors } from "@repo/theme";
 import { router } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {
@@ -8,7 +9,10 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import {
   onboardingPages,
@@ -20,7 +24,7 @@ import { OnboardingPagination } from "@/components/onboarding/onboarding-paginat
 import { setIsOnboardingDone } from "@/utils/onboarding-storage";
 
 export default function OnboardingScreen() {
-  const { bottom, top } = useSafeAreaInsets();
+  const { bottom } = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const flatListRef = useRef<FlatList<OnboardingPageData>>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -71,7 +75,7 @@ export default function OnboardingScreen() {
   );
 
   return (
-    <View style={[styles.screen, { paddingTop: top }]}>
+    <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
       <Animated.FlatList
         ref={flatListRef}
         bounces={false}
@@ -101,7 +105,7 @@ export default function OnboardingScreen() {
           onPress={handleButtonPress}
         />
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -112,7 +116,7 @@ const viewabilityConfig = {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f9fafb",
+    backgroundColor: colors.surface,
   },
   footer: {
     minHeight: 104,

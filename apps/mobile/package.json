@@ -12,6 +12,7 @@
     "@expo/vector-icons": "^15.0.3",
     "@react-native-ml-kit/text-recognition": "^2.0.0",
     "@react-navigation/native": "7.2.2",
+    "@repo/theme": "workspace:*",
     "@repo/ui": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "expo": "~54.0.33",

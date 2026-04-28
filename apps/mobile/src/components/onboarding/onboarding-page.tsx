@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { colors } from "@repo/theme";
 import { memo } from "react";
 import {
   Animated,
@@ -136,9 +137,9 @@ const styles = StyleSheet.create({
     aspectRatio: 0.72,
     padding: 16,
     borderRadius: 30,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: colors.border,
     gap: 18,
   },
   phoneHeader: {
@@ -155,7 +156,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 8,
     borderRadius: 999,
-    backgroundColor: "#e5e7eb",
+    backgroundColor: colors.background,
   },
   iconWrap: {
     height: 120,
@@ -170,7 +171,7 @@ const styles = StyleSheet.create({
     width: "72%",
     height: 9,
     borderRadius: 999,
-    backgroundColor: "#d1d5db",
+    backgroundColor: colors.mutedText,
   },
   receiptLineLarge: {
     width: "92%",
@@ -208,7 +209,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   title: {
-    color: "#111827",
+    color: colors.text,
     fontSize: 33,
     fontWeight: "800",
     lineHeight: 39,
@@ -216,7 +217,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   body: {
-    color: "#4b5563",
+    color: colors.mutedText,
     fontSize: 16,
     lineHeight: 24,
     textAlign: "center",

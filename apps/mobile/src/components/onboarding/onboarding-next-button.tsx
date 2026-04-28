@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { colors } from "@repo/theme";
 import { Animated, Pressable, StyleSheet } from "react-native";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -85,7 +86,11 @@ export function OnboardingNextButton({
       onPress={onPress}
     >
       <Animated.View style={[styles.icon, iconStyle]}>
-        <MaterialCommunityIcons color="#ffffff" name="arrow-right" size={25} />
+        <MaterialCommunityIcons
+          color={colors.primaryText}
+          name="arrow-right"
+          size={25}
+        />
       </Animated.View>
       <Animated.Text style={[styles.text, textStyle]}>
         {disabled ? "Starting" : "Get Started"}
@@ -101,14 +106,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     overflow: "hidden",
     borderRadius: 999,
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
   },
   icon: {
     position: "absolute",
   },
   text: {
     position: "absolute",
-    color: "#ffffff",
+    color: colors.primaryText,
     fontSize: 16,
     fontWeight: "800",
     letterSpacing: 0,

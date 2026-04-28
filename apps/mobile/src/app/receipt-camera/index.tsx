@@ -1,11 +1,23 @@
-import { CameraView, useCameraPermissions, type CameraCapturedPicture } from 'expo-camera';
-import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
-import { router } from 'expo-router';
-import { useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import {
+  CameraView,
+  useCameraPermissions,
+  type CameraCapturedPicture,
+} from "expo-camera";
+import { SaveFormat, manipulateAsync } from "expo-image-manipulator";
+import { router } from "expo-router";
+import { useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type LayoutChangeEvent,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useReceiptScanStore } from '@/stores/receipt-scan-store';
-import { useAndroidBackToHome } from '@/hooks/use-android-back-to-home';
+import { useReceiptScanStore } from "@/stores/receipt-scan-store";
+import { useAndroidBackToHome } from "@/hooks/use-android-back-to-home";
 
 const FRAME_WIDTH_RATIO = 0.74;
 const FRAME_ASPECT_RATIO = 0.44;
@@ -30,7 +42,9 @@ export default function ReceiptCameraScreen() {
   const [isCapturing, setIsCapturing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [cameraSize, setCameraSize] = useState<Size | null>(null);
-  const setReceiptImages = useReceiptScanStore((state) => state.setReceiptImages);
+  const setReceiptImages = useReceiptScanStore(
+    (state) => state.setReceiptImages,
+  );
   useAndroidBackToHome("/");
   const frame = cameraSize ? getReceiptFrame(cameraSize) : null;
 
@@ -66,9 +80,14 @@ export default function ReceiptCameraScreen() {
           height: cropped.height,
         },
       });
-      router.push('/receipt-camera/captured');
-    } catch {
-      setErrorMessage('Could not capture the receipt. Try again.');
+      router.push("/receipt-camera/captured");
+    } catch (error) {
+      console.error("Receipt capture failed:", error);
+      setErrorMessage(
+        `Could not capture the receipt. ${
+          error instanceof Error ? error.message : "Try again."
+        }`,
+      );
     } finally {
       setIsCapturing(false);
     }
@@ -95,7 +114,7 @@ export default function ReceiptCameraScreen() {
   }
 
   return (
-    <View style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
       <View style={styles.cameraWrap} onLayout={handleCameraLayout}>
         <CameraView
           ref={cameraRef}
@@ -106,9 +125,31 @@ export default function ReceiptCameraScreen() {
         {frame ? (
           <View pointerEvents="none" style={styles.overlay}>
             <View style={[styles.dim, styles.topDim, { height: frame.y }]} />
-            <View style={[styles.dim, styles.bottomDim, { top: frame.y + frame.height }]} />
-            <View style={[styles.dim, styles.leftDim, { top: frame.y, width: frame.x, height: frame.height }]} />
-            <View style={[styles.dim, styles.rightDim, { top: frame.y, left: frame.x + frame.width, height: frame.height }]} />
+            <View
+              style={[
+                styles.dim,
+                styles.bottomDim,
+                { top: frame.y + frame.height },
+              ]}
+            />
+            <View
+              style={[
+                styles.dim,
+                styles.leftDim,
+                { top: frame.y, width: frame.x, height: frame.height },
+              ]}
+            />
+            <View
+              style={[
+                styles.dim,
+                styles.rightDim,
+                {
+                  top: frame.y,
+                  left: frame.x + frame.width,
+                  height: frame.height,
+                },
+              ]}
+            />
             <View
               style={[
                 styles.receiptFrame,
@@ -128,16 +169,22 @@ export default function ReceiptCameraScreen() {
           </View>
         ) : null}
         <View style={styles.instructions}>
-          <Text style={styles.instructionText}>Place the receipt inside the frame</Text>
+          <Text style={styles.instructionText}>
+            Place the receipt inside the frame
+          </Text>
         </View>
       </View>
 
       {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
 
-      <Pressable style={[styles.captureButton, isCapturing && styles.disabled]} disabled={isCapturing} onPress={captureReceipt}>
+      <Pressable
+        style={[styles.captureButton, isCapturing && styles.disabled]}
+        disabled={isCapturing}
+        onPress={captureReceipt}
+      >
         <View style={styles.captureButtonInner} />
       </Pressable>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -155,8 +202,11 @@ function getReceiptFrame(size: Size): Rect {
   };
 }
 
-function getImageCropRect(picture: CameraCapturedPicture, previewSize: Size, frame: Rect): Rect {
-  const scale = Math.max(previewSize.width / picture.width, previewSize.height / picture.height);
+function getImageCropRect(picture: Size, previewSize: Size, frame: Rect): Rect {
+  const scale = Math.max(
+    previewSize.width / picture.width,
+    previewSize.height / picture.height,
+  );
   const displayedWidth = picture.width * scale;
   const displayedHeight = picture.height * scale;
   const offsetX = (displayedWidth - previewSize.width) / 2;
@@ -168,65 +218,80 @@ function getImageCropRect(picture: CameraCapturedPicture, previewSize: Size, fra
     width: frame.width / scale,
     height: frame.height / scale,
   };
+  const x = Math.max(0, Math.min(crop.x, picture.width - 1));
+  const y = Math.max(0, Math.min(crop.y, picture.height - 1));
 
   return {
-    x: Math.max(0, Math.min(crop.x, picture.width - 1)),
-    y: Math.max(0, Math.min(crop.y, picture.height - 1)),
-    width: Math.min(crop.width, picture.width - crop.x),
-    height: Math.min(crop.height, picture.height - crop.y),
+    x: Math.round(x),
+    y: Math.round(y),
+    width: Math.round(Math.max(1, Math.min(crop.width, picture.width - x))),
+    height: Math.round(Math.max(1, Math.min(crop.height, picture.height - y))),
   };
 }
 
-async function cropReceiptFrame(picture: CameraCapturedPicture, previewSize: Size, frame: Rect) {
-  const crop = getImageCropRect(picture, previewSize, frame);
-  const image = await ImageManipulator.manipulate(picture.uri)
-    .crop({
-      originX: crop.x,
-      originY: crop.y,
-      width: crop.width,
-      height: crop.height,
-    })
-    .resize({ width: OUTPUT_WIDTH })
-    .renderAsync();
-
-  return image.saveAsync({
-    compress: 0.92,
+async function cropReceiptFrame(
+  picture: CameraCapturedPicture,
+  previewSize: Size,
+  frame: Rect,
+) {
+  const normalized = await manipulateAsync(picture.uri, [{ rotate: 0 }], {
+    compress: 1,
     format: SaveFormat.JPEG,
   });
+  const crop = getImageCropRect(normalized, previewSize, frame);
+
+  return manipulateAsync(
+    normalized.uri,
+    [
+      {
+        crop: {
+          originX: crop.x,
+          originY: crop.y,
+          width: crop.width,
+          height: crop.height,
+        },
+      },
+      { resize: { width: OUTPUT_WIDTH } },
+    ],
+    {
+      compress: 0.92,
+      format: SaveFormat.JPEG,
+    },
+  );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: "#0f172a",
   },
   centered: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0f172a',
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#0f172a",
   },
   permissionScreen: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: 24,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
   },
   title: {
-    color: '#111827',
+    color: "#111827",
     fontSize: 32,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   body: {
     marginTop: 12,
-    color: '#4b5563',
+    color: "#4b5563",
     fontSize: 16,
     lineHeight: 24,
   },
   cameraWrap: {
     flex: 1,
-    overflow: 'hidden',
-    backgroundColor: '#000000',
+    overflow: "hidden",
+    backgroundColor: "#000000",
   },
   camera: {
     flex: 1,
@@ -235,8 +300,8 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   dim: {
-    position: 'absolute',
-    backgroundColor: 'rgba(15, 23, 42, 0.58)',
+    position: "absolute",
+    backgroundColor: "rgba(15, 23, 42, 0.58)",
   },
   topDim: {
     top: 0,
@@ -255,16 +320,16 @@ const styles = StyleSheet.create({
     right: 0,
   },
   receiptFrame: {
-    position: 'absolute',
-    borderColor: '#ffffff',
+    position: "absolute",
+    borderColor: "#ffffff",
     borderRadius: 18,
     borderWidth: 2,
   },
   corner: {
-    position: 'absolute',
+    position: "absolute",
     width: 32,
     height: 32,
-    borderColor: '#22c55e',
+    borderColor: "#22c55e",
   },
   topLeft: {
     top: -2,
@@ -295,36 +360,36 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 18,
   },
   instructions: {
-    position: 'absolute',
+    position: "absolute",
     top: 52,
     right: 20,
     left: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   instructionText: {
-    overflow: 'hidden',
+    overflow: "hidden",
     borderRadius: 999,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    backgroundColor: 'rgba(15, 23, 42, 0.72)',
-    color: '#ffffff',
+    backgroundColor: "rgba(15, 23, 42, 0.72)",
+    color: "#ffffff",
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   error: {
     paddingHorizontal: 20,
     paddingTop: 12,
-    color: '#fecaca',
-    textAlign: 'center',
+    color: "#fecaca",
+    textAlign: "center",
   },
   captureButton: {
-    alignSelf: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignSelf: "center",
+    alignItems: "center",
+    justifyContent: "center",
     width: 76,
     height: 76,
     marginVertical: 22,
-    borderColor: '#ffffff',
+    borderColor: "#ffffff",
     borderRadius: 38,
     borderWidth: 4,
   },
@@ -332,22 +397,22 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
   },
   disabled: {
     opacity: 0.55,
   },
   primaryButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minHeight: 48,
     marginTop: 24,
     borderRadius: 8,
-    backgroundColor: '#2563eb',
+    backgroundColor: "#2563eb",
   },
   primaryButtonText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });

@@ -29,6 +29,9 @@ importers:
       '@react-navigation/native':
         specifier: 7.2.2
         version: 7.2.2(react-native@0.81.5)(react@19.1.0)
+      '@repo/theme':
+        specifier: workspace:*
+        version: link:../../packages/theme
       '@repo/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -163,6 +166,10 @@ importers:
   packages/typescript-config: {}
 
   packages/ui:
+    dependencies:
+      '@repo/theme':
+        specifier: workspace:*
+        version: link:../theme
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*

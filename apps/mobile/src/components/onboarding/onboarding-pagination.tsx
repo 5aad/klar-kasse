@@ -1,3 +1,4 @@
+import { colors } from "@repo/theme";
 import { Animated, StyleSheet, View, useWindowDimensions } from "react-native";
 
 type DotProps = {
@@ -16,7 +17,7 @@ function PaginationDot({ index, scrollX }: DotProps) {
     }),
     backgroundColor: scrollX.interpolate({
       inputRange,
-      outputRange: ["#d1d5db", "#111827", "#d1d5db"],
+      outputRange: [colors.mutedText, colors.primary, colors.mutedText],
       extrapolate: "clamp",
     }),
   };
