@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "exports": {
     ".": "./index.ts",
+    "./base-modal": "./common/base-modal.tsx",
     "./button": "./common/button.tsx",
+    "./common/base-modal": "./common/base-modal.tsx",
     "./common/button": "./common/button.tsx"
   },
   "license": "MIT",
