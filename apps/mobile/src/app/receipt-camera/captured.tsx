@@ -1,3 +1,6 @@
+import TextRecognition, {
+  TextRecognitionScript,
+} from "@react-native-ml-kit/text-recognition";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -8,109 +11,20 @@ import {
   Text,
   View,
 } from "react-native";
-import { OCR_GERMAN, useOCR } from "react-native-executorch";
+
+import { useReceiptJsonCleaner } from "@/hooks/use-receipt-json-cleaner";
 import { useReceiptScanStore } from "@/stores/receipt-scan-store";
-function parseReceipt(lines: string[]) {
-  const clean = (s: string) =>
-    s
-      .replace(/_/g, " ")
-      .replace(/[ỊĪ]/g, "l")
-      .replace(/[^\p{L}\p{N}\s.,€:/;-]/gu, "")
-      .replace(/\s+/g, " ")
-      .trim();
+import { parseNormaReceipt } from "@/utils/receipt-parser";
 
-  const normalized = lines.map(clean).filter(Boolean);
-  const text = normalized.join(" ");
-
-  const isPrice = (line: string) =>
-    /^\d+[,.]\d{2}\s*€?$/.test(line) || /^€?\s*\d+[,.]\d{2}$/.test(line);
-
-  const toNumber = (s: string) =>
-    Number(s.replace("€", "").replace(",", "."));
-
-  const isValidItemName = (line: string) =>
-    !/^\d+$/.test(line) && // not just number
-    !/^\d{5}\s+/.test(line) && // not postal code
-    !/\b(gasse|straße|strasse|weg|platz)\b/i.test(line) && // not address
-    !/^(norma|www|ust|einkaufswert|summe|artikel|gegeben|visa|mwst|netto|terminal|bnr|ta-nr|pan|karte|emv|vu-nr|genehmigung|datum|zahlung|bitte|trnr)/i.test(line);
-
-  const items: any[] = [];
-
-  for (let i = 1; i < normalized.length; i++) {
-    const line = normalized[i];
-
-    if (isPrice(line)) {
-      const prev = normalized[i - 1];
-
-      if (prev && isValidItemName(prev)) {
-        items.push({
-          name: prev,
-          price: toNumber(line),
-        });
-      }
-    }
-
-    // handle weight items (kg + €/kg)
-    if (/kg/i.test(line) && normalized[i + 1]?.includes("€/kg")) {
-      const prev = normalized[i - 1];
-
-      if (prev && isValidItemName(prev)) {
-        items.push({
-          name: prev,
-          quantity: line.replace(",", "."),
-          unit_price: normalized[i + 1]
-            .replace(",", ".")
-            .replace("€", "EUR"),
-          price: null,
-        });
-      }
-    }
-  }
-
-  const postalCity = text.match(/(\d{5})\s+([A-Za-zÄÖÜäöüß]+)/);
-  const street =
-    normalized.find(line =>
-      /\b[A-Za-zÄÖÜäöüß]+(?:gasse|straße|strasse|weg|platz)\s*\d+\b/i.test(line)
-    ) || null;
-
-  const dateTime = text.match(
-    /Datum\s+(\d{2})\.(\d{2})\.(\d{2})\s+(\d{1,2})[;:](\d{2})/i
-  );
-
-  const total = text.match(/EUR\s+(\d+[,.]\d{2})/i);
-
-  return {
-    store_name: normalized[0] || null,
-    address: {
-      street,
-      postal_code: postalCity?.[1] || null,
-      city: postalCity?.[2] || null,
-      country: "Germany",
-    },
-    date: dateTime ? `20${dateTime[3]}-${dateTime[2]}-${dateTime[1]}` : null,
-    time: dateTime
-      ? `${dateTime[4].padStart(2, "0")}:${dateTime[5]}`
-      : null,
-    total_price: {
-      amount: total ? toNumber(total[1]) : null,
-      currency: "EUR",
-    },
-    payment_method: /visa kontaktlos/i.test(text)
-      ? "Visa kontaktlos"
-      : null,
-    items,
-  };
-}
-export default function CapturedReceiptScreen() {
+export default function CapturedReceiptMlKitScreen() {
   const [ocrText, setOcrText] = useState("");
+  const [isRecognizing, setIsRecognizing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const croppedImage = useReceiptScanStore((state) => state.croppedImage);
+const { cleanReceiptJson, isReady, isGenerating, downloadProgress } = useReceiptJsonCleaner();
   const clearReceiptImages = useReceiptScanStore(
     (state) => state.clearReceiptImages,
   );
-
-  const { isReady, isGenerating, error, forward } = useOCR({
-    model: OCR_GERMAN,
-  });
 
   const retakeReceipt = () => {
     clearReceiptImages();
@@ -118,17 +32,46 @@ export default function CapturedReceiptScreen() {
   };
 
   const runModel = async () => {
-    if (!croppedImage?.uri || !isReady || isGenerating) return;
+    if (
+      !croppedImage?.uri ||
+      isRecognizing ||
+      isGenerating ||
+      !isReady
+    ) {
+      if (!isReady) {
+        setErrorMessage(
+          `Receipt cleaner is still loading (${Math.round(
+            downloadProgress * 100
+          )}%). Try again when it is ready.`,
+        );
+      }
+      return;
+    }
+
+    setIsRecognizing(true);
+    setErrorMessage(null);
 
     try {
-      const detections = await forward(croppedImage.uri);
-      const text = detections.map((detection) => detection.text);
+      const result = await TextRecognition.recognize(
+        croppedImage.uri,
+        TextRecognitionScript.LATIN,
+      );
+      const lines = result.blocks.flatMap((block) =>
+        block.lines.map((line) => line.text),
+      );
+      const text = lines.length > 0 ? lines.join("\n") : result.text;
 
-      // setOcrText(text);
-      console.log("OCR Result:", text);
-      console.log(parseReceipt(text));
+      setOcrText(result.text);
+      console.log("ML Kit OCR Result:", result.text);
+      const parsedReceipt = parseNormaReceipt(result.text);
+      console.log(parsedReceipt);
+      const llmResult = await cleanReceiptJson(parsedReceipt);
+      console.log("LLM Result:", llmResult);
     } catch (err) {
-      console.error("OCR failed:", err);
+      console.error("Receipt processing failed:", err);
+      setErrorMessage(String(err instanceof Error ? err.message : err));
+    } finally {
+      setIsRecognizing(false);
     }
   };
 
@@ -158,8 +101,8 @@ export default function CapturedReceiptScreen() {
         </View>
       ) : null}
 
-      {error ? (
-        <Text style={styles.errorText}>{String(error.message ?? error)}</Text>
+      {errorMessage ? (
+        <Text style={styles.errorText}>{errorMessage}</Text>
       ) : null}
 
       <View style={styles.footer}>
@@ -170,16 +113,19 @@ export default function CapturedReceiptScreen() {
         <Pressable
           style={[
             styles.primaryButton,
-            (!isReady || isGenerating) && styles.disabledButton,
+            (isRecognizing || isGenerating || !isReady) &&
+              styles.disabledButton,
           ]}
           onPress={runModel}
-          disabled={!isReady || isGenerating}
+          disabled={isRecognizing || isGenerating || !isReady}
         >
-          {isGenerating ? (
+          {isRecognizing || isGenerating ? (
             <ActivityIndicator />
           ) : (
             <Text style={styles.primaryButtonText}>
-              {isReady ? "Read Receipt" : "Loading OCR..."}
+              {isReady
+                ? "Read Receipt"
+                : `Loading Cleaner ${Math.round(downloadProgress * 100)}%`}
             </Text>
           )}
         </Pressable>
@@ -198,8 +144,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     filter: [
       { grayscale: 1 },
-      { contrast: 1.85 },
-      { brightness: 1.18 },
+      { contrast: 4 },
+      { brightness: 1 },
       { saturate: 0 },
     ],
   },

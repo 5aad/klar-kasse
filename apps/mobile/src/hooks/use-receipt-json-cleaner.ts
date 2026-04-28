@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   fixAndValidateStructuredOutput,
   getStructuredOutputPrompt,
-  QWEN3_0_6B_QUANTIZED,
+  SMOLLM2_1_135M_QUANTIZED,
   LLMModule,
   type Message,
 } from "react-native-executorch";
@@ -10,7 +10,7 @@ import * as z from "zod/v4";
 
 export const ReceiptSchema = z.object({
   store: z.string().optional(),
-  address: z.array(z.string()).default([]),
+  address: z.array(z.string()).default([]).optional(),
   date: z.string().optional(),
   time: z.string().optional(),
   paymentMethod: z.string().optional(),
@@ -35,38 +35,91 @@ export const ReceiptSchema = z.object({
         tax: z.number(),
       }),
     )
-    .default([]),
+    .default([]).optional(),
 });
 
 export type ReceiptJson = z.infer<typeof ReceiptSchema>;
+
+export type ReceiptJsonWithRawText = ReceiptJson & {
+  rawText?: string;
+};
+
+function round2(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
+function getItemsTotal(receipt: ReceiptJson) {
+  return round2(receipt.items.reduce((sum, item) => sum + item.price, 0));
+}
+
+function needsLLM(receipt: ReceiptJsonWithRawText) {
+  const itemsTotal = getItemsTotal(receipt);
+
+  if (!receipt.items.length) return true;
+  if (receipt.itemCount !== receipt.items.length) return true;
+  if (Math.abs(itemsTotal - receipt.total) > 0.01) return true;
+
+  for (const item of receipt.items) {
+    if (!item.name || item.name.trim().length < 2) return true;
+    if (typeof item.price !== "number" || Number.isNaN(item.price)) return true;
+  }
+
+  return false;
+}
+
+function removeRawText(receipt: ReceiptJsonWithRawText) {
+  const { rawText, ...jsonWithoutRawText } = receipt;
+  return jsonWithoutRawText;
+}
 
 function buildSystemPrompt() {
   const formattingInstructions = getStructuredOutputPrompt(ReceiptSchema);
 
   return `
-You clean German supermarket receipt OCR into valid JSON.
+/no_think
 
-Rules:
-- Return ONLY JSON.
-- Do not invent items.
-- Ignore payment terminal lines, VAT summary lines, totals, card data, and customer receipt text as items.
-- Item names appear before price lines.
-- Prices like "1,09 € A" are item prices.
-- "2 x 0,95 €" means quantity 2, unitPrice 0.95, price 1.90.
-- "0,718 kg x 1,29 €/kg" means weightKg 0.718, unitPrice 1.29.
-- "EUR 6,96", "Summe", or "Einkaufswert" is total, not an item.
-- Convert German decimal commas to numbers.
-- Fix obvious OCR errors:
-  "Sandwi ch Wejzen" -> "Sandwich Weizen"
-  "Sunne" -> "Summe"
-  "10; 19" -> "10:19"
-  "Vollmil ch" -> "Vollmilch"
-  "Kartenzahl ung" -> "Kartenzahlung"
+You fix German supermarket receipt JSON.
+Return ONLY JSON.
+Do not explain.
+Do not use markdown.
+Do not invent data.
+Use OCR text only as reference.
+Keep item order.
+Remove rawText from final output.
+itemCount must equal items.length.
+total must equal sum of item prices when clearly possible.
+Use numbers, not strings.
 
 ${formattingInstructions}
+`.trim();
+}
 
+function buildUserPrompt(receipt: ReceiptJsonWithRawText) {
+  const rawText = receipt.rawText ?? "";
+  const jsonWithoutRawText = removeRawText(receipt);
+
+  return `
 /no_think
-  `.trim();
+
+Fix this parsed receipt JSON using the OCR text as reference.
+
+Rules:
+- Do not re-extract from scratch.
+- Fix only obvious mistakes.
+- Do not invent missing items.
+- Ignore payment terminal lines as items.
+- Ignore VAT summary lines as items.
+- Keep prices as numbers.
+- Keep German item names.
+- Return ONLY valid JSON matching the schema.
+- Do not include rawText in output.
+
+Parsed JSON:
+${JSON.stringify(jsonWithoutRawText)}
+
+OCR text:
+${rawText}
+`.trim();
 }
 
 type CleanerListener = {
@@ -78,6 +131,7 @@ type CleanerListener = {
 };
 
 const cleanerListeners = new Set<CleanerListener>();
+
 let sharedLlm: LLMModule | null = null;
 let sharedLoadPromise: Promise<LLMModule> | null = null;
 let sharedDownloadProgress = 0;
@@ -98,26 +152,39 @@ function delay(ms: number) {
 }
 
 function notifyReady(llm: LLMModule) {
-  for (const listener of cleanerListeners) listener.onReady(llm);
+  for (const listener of cleanerListeners) {
+    listener.onReady(llm);
+  }
 }
 
 function notifyError(error: unknown) {
-  for (const listener of cleanerListeners) listener.onError(error);
+  for (const listener of cleanerListeners) {
+    listener.onError(error);
+  }
 }
 
 function notifyProgress(progress: number) {
   sharedDownloadProgress = progress;
-  for (const listener of cleanerListeners) listener.onProgress(progress);
+
+  for (const listener of cleanerListeners) {
+    listener.onProgress(progress);
+  }
 }
 
 function notifyToken(token: string) {
   sharedResponse += token;
-  for (const listener of cleanerListeners) listener.onToken(token);
+
+  for (const listener of cleanerListeners) {
+    listener.onToken(token);
+  }
 }
 
 function notifyMessages(messages: Message[]) {
   sharedMessageHistory = messages;
-  for (const listener of cleanerListeners) listener.onMessages(messages);
+
+  for (const listener of cleanerListeners) {
+    listener.onMessages(messages);
+  }
 }
 
 function ensureReceiptCleanerLoaded(systemPrompt: string) {
@@ -127,7 +194,7 @@ function ensureReceiptCleanerLoaded(systemPrompt: string) {
   const loadWithRetry = async (attempt = 0): Promise<LLMModule> => {
     try {
       return await LLMModule.fromModelName(
-        QWEN3_0_6B_QUANTIZED,
+        SMOLLM2_1_135M_QUANTIZED,
         notifyProgress,
         notifyToken,
         notifyMessages,
@@ -179,6 +246,7 @@ export function useReceiptJsonCleaner() {
   const [isReady, setIsReady] = useState(Boolean(sharedLlm));
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<unknown>(sharedError);
+
   const systemPrompt = useMemo(buildSystemPrompt, []);
 
   useEffect(() => {
@@ -192,6 +260,7 @@ export function useReceiptJsonCleaner() {
 
     cleanerListeners.add(listener);
     setError(null);
+
     ensureReceiptCleanerLoaded(systemPrompt).catch((err) => {
       setError(err);
     });
@@ -201,36 +270,62 @@ export function useReceiptJsonCleaner() {
     };
   }, [systemPrompt]);
 
-  const cleanReceiptJson = useCallback(async (rawText: string) => {
-    const llm = sharedLlm;
+  const cleanReceiptJson = useCallback(
+    async (receipt: ReceiptJsonWithRawText) => {
+      const parsed = ReceiptSchema.safeParse(removeRawText(receipt));
 
-    if (!llm) {
-      throw new Error("LLM is not ready yet");
-    }
+      if (parsed.success && !needsLLM(receipt)) {
+        return {
+          source: "parser" as const,
+          data: parsed.data,
+          messages: [],
+        };
+      }
 
-    const prompt = `
-Clean this OCR receipt into the required JSON schema:
+      const llm = sharedLlm;
 
-${rawText}
-    `.trim();
+      if (!llm) {
+        throw new Error("LLM is not ready yet");
+      }
 
-    sharedResponse = "";
-    setResponse("");
-    setIsGenerating(true);
-    setError(null);
+      const prompt = buildUserPrompt(receipt);
 
-    try {
-      const messages = await llm.sendMessage(prompt);
-      sharedMessageHistory = messages;
-      setMessageHistory(messages);
-      return messages;
-    } catch (err) {
-      setError(err);
-      throw err;
-    } finally {
-      setIsGenerating(false);
-    }
-  }, []);
+      sharedResponse = "";
+      setResponse("");
+      setIsGenerating(true);
+      setError(null);
+
+      try {
+        const messages = await llm.sendMessage(prompt);
+
+        sharedMessageHistory = messages;
+        setMessageHistory(messages);
+
+        const lastMessage = messages.at(-1);
+
+        if (!lastMessage || lastMessage.role !== "assistant") {
+          throw new Error("No assistant response from LLM");
+        }
+
+        const fixedJson = fixAndValidateStructuredOutput(
+          lastMessage.content,
+          ReceiptSchema,
+        );
+
+        return {
+          source: "llm" as const,
+          data: fixedJson,
+          messages,
+        };
+      } catch (err) {
+        setError(err);
+        throw err;
+      } finally {
+        setIsGenerating(false);
+      }
+    },
+    [],
+  );
 
   const getCleanedJson = useCallback(() => {
     const lastMessage = messageHistory.at(-1);
