@@ -2,7 +2,15 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { colors, fontSize, radius, spacing } from "@repo/theme";
 import { StyleSheet, Text, View } from "react-native";
 
-const transactions = [
+type Transaction = {
+  amount: string;
+  category: string;
+  date: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  title: string;
+};
+
+const transactions: Transaction[] = [
   {
     icon: "sack-outline",
     title: "AI-Bank",
@@ -26,16 +34,26 @@ const transactions = [
   },
 ] as const;
 
-export function TransactionList() {
+type Props = {
+  actionLabel?: string;
+  items?: readonly Transaction[];
+  title?: string;
+};
+
+export function TransactionList({
+  actionLabel = "View all",
+  items = transactions,
+  title = "Transaction List",
+}: Props) {
   return (
     <View style={styles.section}>
       <View style={styles.header}>
-        <Text style={styles.title}>Transaction List</Text>
-        <Text style={styles.viewAll}>View all</Text>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.viewAll}>{actionLabel}</Text>
       </View>
 
       <View style={styles.list}>
-        {transactions.map((transaction) => (
+        {items.map((transaction) => (
           <View key={transaction.title} style={styles.row}>
             <View style={styles.iconBox}>
               <MaterialCommunityIcons

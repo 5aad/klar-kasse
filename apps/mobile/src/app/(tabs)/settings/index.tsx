@@ -20,6 +20,8 @@ export default function SettingsScreen() {
 
       <View style={styles.menu}>
         <SettingsRow icon="cog-outline" label="Preferences" />
+        <SettingsRow icon="database-outline" label="Your Data" />
+        <SettingsRow icon="translate" label="Language" />
         <SettingsRow icon="help-circle-outline" label="Customer Support" />
       </View>
     </SafeAreaView>
