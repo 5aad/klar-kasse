@@ -9,6 +9,7 @@ import {
 } from "react-native";
 
 export type BaseModalProps = {
+  backdropStyle?: StyleProp<ViewStyle>;
   children: React.ReactNode;
   contentStyle?: StyleProp<ViewStyle>;
   onRequestClose: () => void;
@@ -16,6 +17,7 @@ export type BaseModalProps = {
 };
 
 export function BaseModal({
+  backdropStyle,
   children,
   contentStyle,
   onRequestClose,
@@ -28,7 +30,7 @@ export function BaseModal({
       visible={visible}
       onRequestClose={onRequestClose}
     >
-      <View style={styles.backdrop}>
+      <View style={[styles.backdrop, backdropStyle]}>
         <Pressable
           accessibilityRole="button"
           style={StyleSheet.absoluteFill}

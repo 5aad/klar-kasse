@@ -13,6 +13,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
+import { useThemeColors } from "@/hooks/use-theme-colors";
+import { useThemeStore, type ThemePreference } from "@/stores/theme-store";
 
 const doodles = [
   "face-man-profile",
@@ -31,14 +33,18 @@ const themeOptions = [
 
 export default function PreferencesScreen() {
   const { width } = useWindowDimensions();
+  const themeColors = useThemeColors();
   const [name, setName] = useState("Tom Hillson");
   const [selectedDoodle, setSelectedDoodle] = useState(0);
-  const [selectedTheme, setSelectedTheme] =
-    useState<(typeof themeOptions)[number]["key"]>("system");
+  const selectedTheme = useThemeStore((state) => state.themePreference);
+  const setSelectedTheme = useThemeStore((state) => state.setThemePreference);
   const doodleTileSize = (width - spacing.lg * 2 - spacing.md * 2) / 3;
 
   return (
-    <SafeAreaView style={styles.screen} edges={["top"]}>
+    <SafeAreaView
+      style={[styles.screen, { backgroundColor: themeColors.background }]}
+      edges={["top"]}
+    >
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -49,18 +55,29 @@ export default function PreferencesScreen() {
         />
 
         <View style={styles.section}>
-          <Text style={styles.label}>DISPLAY NAME</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>
+            DISPLAY NAME
+          </Text>
           <TextInput
             value={name}
             onChangeText={setName}
             placeholder="Your name"
-            placeholderTextColor={colors.mutedText}
-            style={styles.input}
+            placeholderTextColor={themeColors.mutedText}
+            style={[
+              styles.input,
+              {
+                backgroundColor: themeColors.surface,
+                borderColor: themeColors.text,
+                color: themeColors.text,
+              },
+            ]}
           />
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>PROFILE DOODLE</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>
+            PROFILE DOODLE
+          </Text>
           <View style={styles.doodleGrid}>
             {doodles.map((doodle, index) => (
               <Pressable
@@ -71,6 +88,8 @@ export default function PreferencesScreen() {
                     width: doodleTileSize,
                     height: doodleTileSize,
                     borderRadius: doodleTileSize / 2,
+                    backgroundColor: themeColors.surface,
+                    borderColor: themeColors.text,
                   },
                   selectedDoodle === index && styles.selectedTile,
                 ]}
@@ -78,7 +97,9 @@ export default function PreferencesScreen() {
               >
                 <MaterialCommunityIcons
                   color={
-                    selectedDoodle === index ? colors.primaryText : colors.text
+                    selectedDoodle === index
+                      ? colors.primaryText
+                      : themeColors.text
                   }
                   name={doodle}
                   size={54}
@@ -89,7 +110,9 @@ export default function PreferencesScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>APP THEME</Text>
+          <Text style={[styles.label, { color: themeColors.text }]}>
+            APP THEME
+          </Text>
           <View style={styles.themeList}>
             {themeOptions.map((option) => {
               const isSelected = selectedTheme === option.key;
@@ -99,25 +122,32 @@ export default function PreferencesScreen() {
                   key={option.key}
                   style={[
                     styles.themeOption,
+                    {
+                      backgroundColor: themeColors.surface,
+                      borderColor: themeColors.text,
+                    },
                     isSelected && styles.themeOptionSelected,
                   ]}
-                  onPress={() => setSelectedTheme(option.key)}
+                  onPress={() =>
+                    setSelectedTheme(option.key as ThemePreference)
+                  }
                 >
                   <MaterialCommunityIcons
-                    color={isSelected ? colors.primary : colors.text}
+                    color={isSelected ? colors.primary : themeColors.text}
                     name={option.icon}
                     size={25}
                   />
                   <Text
                     style={[
                       styles.themeText,
+                      { color: themeColors.text },
                       isSelected && styles.themeTextSelected,
                     ]}
                   >
                     {option.label}
                   </Text>
                   <MaterialCommunityIcons
-                    color={isSelected ? colors.primary : colors.mutedText}
+                    color={isSelected ? colors.primary : themeColors.mutedText}
                     name={isSelected ? "radiobox-marked" : "radiobox-blank"}
                     size={24}
                   />

@@ -8,6 +8,16 @@ export const colors = {
   primaryText: "#FFFFFF",
 } as const;
 
+export const darkColors = {
+  background: "#101010",
+  surface: "#2B2B2A",
+  text: "#F2F0EA",
+  mutedText: "#D6D4CE",
+  border: "#91908D",
+  primary: "#E63C3A",
+  primaryText: "#FFFFFF",
+} as const;
+
 export const spacing = {
   xs: 4,
   sm: 8,
@@ -33,6 +43,7 @@ export const fontSize = {
 
 export const theme = {
   colors,
+  darkColors,
   spacing,
   radius,
   fontSize,

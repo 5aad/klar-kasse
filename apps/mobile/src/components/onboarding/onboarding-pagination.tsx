@@ -1,5 +1,6 @@
-import { colors } from "@repo/theme";
 import { Animated, StyleSheet, View, useWindowDimensions } from "react-native";
+
+import { useThemeColors } from "@/hooks/use-theme-colors";
 
 type DotProps = {
   index: number;
@@ -8,6 +9,7 @@ type DotProps = {
 
 function PaginationDot({ index, scrollX }: DotProps) {
   const { width } = useWindowDimensions();
+  const themeColors = useThemeColors();
   const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
   const dotStyle = {
     width: scrollX.interpolate({
@@ -17,7 +19,11 @@ function PaginationDot({ index, scrollX }: DotProps) {
     }),
     backgroundColor: scrollX.interpolate({
       inputRange,
-      outputRange: [colors.mutedText, colors.primary, colors.mutedText],
+      outputRange: [
+        themeColors.mutedText,
+        themeColors.primary,
+        themeColors.mutedText,
+      ],
       extrapolate: "clamp",
     }),
   };

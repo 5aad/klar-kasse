@@ -8,21 +8,29 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CustomerSupportModal } from "@/components/settings/customer-support-modal";
 import { LanguageModal } from "@/components/settings/language-modal";
+import { useThemeColors } from "@/hooks/use-theme-colors";
+
+type ThemeColors = ReturnType<typeof useThemeColors>;
 
 const PROFILE_IMAGE =
   "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=240&q=80";
 
 export default function SettingsScreen() {
+  const themeColors = useThemeColors();
   const [isLanguageModalVisible, setIsLanguageModalVisible] = useState(false);
   const [isSupportModalVisible, setIsSupportModalVisible] = useState(false);
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView
+      style={[styles.screen, { backgroundColor: themeColors.background }]}
+    >
       <View style={styles.profile}>
         <View style={styles.avatarWrap}>
           <Image source={{ uri: PROFILE_IMAGE }} style={styles.avatar} />
         </View>
-        <Text style={styles.name}>Tom Hillson</Text>
+        <Text style={[styles.name, { color: themeColors.text }]}>
+          Tom Hillson
+        </Text>
         {/* <Text style={styles.email}>Tomhill@mail.com</Text> */}
       </View>
 
@@ -30,21 +38,25 @@ export default function SettingsScreen() {
         <SettingsRow
           icon="cog-outline"
           label="Preferences"
+          themeColors={themeColors}
           onPress={() => router.push("/settings/preferences")}
         />
         <SettingsRow
           icon="database-outline"
           label="Your Data"
+          themeColors={themeColors}
           onPress={() => router.push("/settings/your-data")}
         />
         <SettingsRow
           icon="translate"
           label="Language"
+          themeColors={themeColors}
           onPress={() => setIsLanguageModalVisible(true)}
         />
         <SettingsRow
           icon="help-circle-outline"
           label="Customer Support"
+          themeColors={themeColors}
           onPress={() => setIsSupportModalVisible(true)}
         />
       </View>
@@ -66,6 +78,7 @@ type SettingsRowProps = {
   label: string;
   onPress?: () => void;
   showChevron?: boolean;
+  themeColors: ThemeColors;
 };
 
 function SettingsRow({
@@ -73,16 +86,19 @@ function SettingsRow({
   label,
   onPress,
   showChevron = true,
+  themeColors,
 }: SettingsRowProps) {
   return (
     <Pressable style={styles.row} onPress={onPress}>
-      <MaterialCommunityIcons name={icon} size={30} color={colors.text} />
-      <Text style={styles.rowLabel}>{label}</Text>
+      <MaterialCommunityIcons name={icon} size={30} color={themeColors.text} />
+      <Text style={[styles.rowLabel, { color: themeColors.text }]}>
+        {label}
+      </Text>
       {showChevron ? (
         <MaterialCommunityIcons
           name="chevron-right"
           size={25}
-          color={colors.mutedText}
+          color={themeColors.mutedText}
         />
       ) : null}
     </Pressable>
@@ -113,7 +129,6 @@ const styles = StyleSheet.create({
   },
   name: {
     marginTop: spacing.md,
-    color: colors.text,
     fontSize: fontSize.xl,
     fontWeight: "800",
   },
@@ -134,7 +149,6 @@ const styles = StyleSheet.create({
   },
   rowLabel: {
     flex: 1,
-    color: colors.text,
     fontSize: fontSize.lg,
     fontWeight: "600",
   },

@@ -1,6 +1,8 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { colors, fontSize, radius, spacing } from "@repo/theme";
+import { fontSize, radius, spacing } from "@repo/theme";
 import { StyleSheet, Text, View } from "react-native";
+
+import { useThemeColors } from "@/hooks/use-theme-colors";
 
 export type TransactionListItem = {
   amount: string;
@@ -45,33 +47,52 @@ export function TransactionList({
   items = transactions,
   title = "Transaction List",
 }: Props) {
+  const themeColors = useThemeColors();
+
   return (
     <View style={styles.section}>
       <View style={styles.header}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.viewAll}>{actionLabel}</Text>
+        <Text style={[styles.title, { color: themeColors.text }]}>{title}</Text>
+        <Text style={[styles.viewAll, { color: themeColors.primary }]}>
+          {actionLabel}
+        </Text>
       </View>
 
       <View style={styles.list}>
         {items.map((transaction) => (
           <View key={transaction.title} style={styles.row}>
-            <View style={styles.iconBox}>
+            <View
+              style={[styles.iconBox, { backgroundColor: themeColors.text }]}
+            >
               <MaterialCommunityIcons
-                color={colors.primaryText}
+                color={themeColors.primaryText}
                 name={transaction.icon}
                 size={26}
               />
             </View>
             <View style={styles.copy}>
-              <Text style={styles.transactionTitle}>{transaction.title}</Text>
-              <Text style={styles.transactionSubtitle}>
+              <Text
+                style={[styles.transactionTitle, { color: themeColors.text }]}
+              >
+                {transaction.title}
+              </Text>
+              <Text
+                style={[
+                  styles.transactionSubtitle,
+                  { color: themeColors.mutedText },
+                ]}
+              >
                 {transaction.category} | {transaction.date}
               </Text>
             </View>
             <Text
               style={[
                 styles.amount,
-                transaction.amount.startsWith("-") && styles.negativeAmount,
+                {
+                  color: transaction.amount.startsWith("-")
+                    ? themeColors.mutedText
+                    : themeColors.text,
+                },
               ]}
             >
               {transaction.amount}
@@ -94,12 +115,10 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   title: {
-    color: colors.text,
     fontSize: fontSize.xl,
     fontWeight: "700",
   },
   viewAll: {
-    color: colors.primary,
     fontSize: fontSize.md,
     fontWeight: "700",
   },
@@ -118,28 +137,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.md,
-    backgroundColor: colors.text,
   },
   copy: {
     flex: 1,
     gap: spacing.xs,
   },
   transactionTitle: {
-    color: colors.text,
     fontSize: 22,
     fontWeight: "500",
   },
   transactionSubtitle: {
-    color: colors.mutedText,
     fontSize: fontSize.sm,
     fontWeight: "500",
   },
   amount: {
-    color: colors.text,
     fontSize: 22,
     fontWeight: "500",
-  },
-  negativeAmount: {
-    color: colors.mutedText,
   },
 });

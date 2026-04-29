@@ -1,8 +1,10 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { colors, fontSize, spacing } from "@repo/theme";
+import { fontSize, spacing } from "@repo/theme";
 import { BaseModal } from "@repo/ui";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+
+import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
 
 type Props = {
   onClose: () => void;
@@ -10,32 +12,57 @@ type Props = {
 };
 
 export function LanguageModal({ onClose, visible }: Props) {
+  const themeColors = useThemeColors();
+  const resolvedTheme = useResolvedTheme();
   const [selectedLanguage, setSelectedLanguage] = useState<"en" | "de">("en");
 
   return (
-    <BaseModal visible={visible} onRequestClose={onClose}>
-      <Text style={styles.modalTitle}>Language</Text>
-      <Text style={styles.modalBody}>Choose your preferred app language.</Text>
+    <BaseModal
+      backdropStyle={
+        resolvedTheme === "dark" ? styles.lightBackdrop : undefined
+      }
+      contentStyle={{ backgroundColor: themeColors.background }}
+      visible={visible}
+      onRequestClose={onClose}
+    >
+      <Text style={[styles.modalTitle, { color: themeColors.text }]}>
+        Language
+      </Text>
+      <Text style={[styles.modalBody, { color: themeColors.mutedText }]}>
+        Choose your preferred app language.
+      </Text>
 
       <View style={styles.languageOptions}>
         <LanguageOption
           label="English"
           selected={selectedLanguage === "en"}
+          themeColors={themeColors}
           onPress={() => setSelectedLanguage("en")}
         />
         <LanguageOption
           label="Deutsch"
           selected={selectedLanguage === "de"}
+          themeColors={themeColors}
           onPress={() => setSelectedLanguage("de")}
         />
       </View>
 
       <View style={styles.modalActions}>
         <Pressable style={styles.cancelButton} onPress={onClose}>
-          <Text style={styles.cancelText}>Cancel</Text>
+          <Text style={[styles.cancelText, { color: themeColors.primary }]}>
+            Cancel
+          </Text>
         </Pressable>
-        <Pressable style={styles.submitButton} onPress={onClose}>
-          <Text style={styles.submitText}>Save</Text>
+        <Pressable
+          style={[
+            styles.submitButton,
+            { backgroundColor: themeColors.primary },
+          ]}
+          onPress={onClose}
+        >
+          <Text style={[styles.submitText, { color: themeColors.primaryText }]}>
+            Save
+          </Text>
         </Pressable>
       </View>
     </BaseModal>
@@ -46,24 +73,36 @@ type LanguageOptionProps = {
   label: string;
   onPress: () => void;
   selected: boolean;
+  themeColors: ReturnType<typeof useThemeColors>;
 };
 
-function LanguageOption({ label, onPress, selected }: LanguageOptionProps) {
+function LanguageOption({
+  label,
+  onPress,
+  selected,
+  themeColors,
+}: LanguageOptionProps) {
   return (
     <Pressable
-      style={[styles.languageOption, selected && styles.languageOptionSelected]}
+      style={[
+        styles.languageOption,
+        {
+          backgroundColor: themeColors.surface,
+          borderColor: selected ? themeColors.primary : themeColors.text,
+        },
+      ]}
       onPress={onPress}
     >
       <Text
         style={[
           styles.languageOptionText,
-          selected && styles.languageOptionTextSelected,
+          { color: selected ? themeColors.primary : themeColors.text },
         ]}
       >
         {label}
       </Text>
       <MaterialCommunityIcons
-        color={selected ? colors.primary : colors.mutedText}
+        color={selected ? themeColors.primary : themeColors.mutedText}
         name={selected ? "radiobox-marked" : "radiobox-blank"}
         size={24}
       />
@@ -72,14 +111,15 @@ function LanguageOption({ label, onPress, selected }: LanguageOptionProps) {
 }
 
 const styles = StyleSheet.create({
+  lightBackdrop: {
+    backgroundColor: "rgba(242, 240, 234, 0.42)",
+  },
   modalTitle: {
-    color: colors.text,
     fontSize: fontSize.xl,
     fontWeight: "900",
   },
   modalBody: {
     marginTop: spacing.xs,
-    color: colors.mutedText,
     fontSize: fontSize.md,
     fontWeight: "700",
     lineHeight: 20,
@@ -94,21 +134,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     borderWidth: 1,
-    borderColor: colors.text,
     borderRadius: 4,
     paddingHorizontal: spacing.md,
-    backgroundColor: colors.surface,
-  },
-  languageOptionSelected: {
-    borderColor: colors.primary,
   },
   languageOptionText: {
-    color: colors.text,
     fontSize: fontSize.md,
     fontWeight: "800",
-  },
-  languageOptionTextSelected: {
-    color: colors.primary,
   },
   modalActions: {
     flexDirection: "row",
@@ -123,7 +154,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   cancelText: {
-    color: colors.primary,
     fontSize: fontSize.md,
     fontWeight: "900",
   },
@@ -133,10 +163,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 4,
     paddingHorizontal: spacing.lg,
-    backgroundColor: colors.primary,
   },
   submitText: {
-    color: colors.primaryText,
     fontSize: fontSize.md,
     fontWeight: "900",
   },

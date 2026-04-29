@@ -1,7 +1,9 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { colors, fontSize, radius, spacing } from "@repo/theme";
+import { fontSize, radius, spacing } from "@repo/theme";
 import { BaseModal } from "@repo/ui";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+
+import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
 
 const visualIdentifiers = [
   "airplane",
@@ -18,36 +20,65 @@ type Props = {
 };
 
 export function NewCategoryModal({ onClose, visible }: Props) {
+  const themeColors = useThemeColors();
+  const resolvedTheme = useResolvedTheme();
+
   return (
     <BaseModal
-      contentStyle={styles.modalContent}
+      backdropStyle={
+        resolvedTheme === "dark" ? styles.lightBackdrop : undefined
+      }
+      contentStyle={[
+        styles.modalContent,
+        { backgroundColor: themeColors.background },
+      ]}
       visible={visible}
       onRequestClose={onClose}
     >
-      <Text style={styles.title}>New Category</Text>
-      <Text style={styles.subtitle}>
+      <Text style={[styles.title, { color: themeColors.text }]}>
+        New Category
+      </Text>
+      <Text style={[styles.subtitle, { color: themeColors.mutedText }]}>
         Organize your spending with custom budget limits.
       </Text>
 
       <View style={styles.fieldGroup}>
-        <Text style={styles.label}>CATEGORY NAME</Text>
+        <Text style={[styles.label, { color: themeColors.text }]}>
+          CATEGORY NAME
+        </Text>
         <TextInput
           placeholder="e.g. Travel & Leisure"
-          placeholderTextColor={colors.mutedText}
-          style={styles.input}
+          placeholderTextColor={themeColors.mutedText}
+          style={[
+            styles.input,
+            {
+              backgroundColor: themeColors.surface,
+              borderColor: themeColors.text,
+              color: themeColors.text,
+            },
+          ]}
         />
       </View>
 
       <View style={styles.fieldGroup}>
-        <Text style={styles.label}>VISUAL IDENTIFIER</Text>
+        <Text style={[styles.label, { color: themeColors.text }]}>
+          VISUAL IDENTIFIER
+        </Text>
         <View style={styles.iconGrid}>
           {visualIdentifiers.map((icon, index) => (
             <Pressable
               key={icon}
-              style={[styles.iconButton, index === 0 && styles.iconSelected]}
+              style={[
+                styles.iconButton,
+                { backgroundColor: themeColors.surface },
+                index === 0 && {
+                  backgroundColor: themeColors.primary,
+                  borderColor: themeColors.primary,
+                },
+              ]}
             >
               <MaterialCommunityIcons
-                color={index === 0 ? colors.primaryText : colors.text}
+                color={index === 0 ? themeColors.primaryText : themeColors.text}
                 name={icon}
                 size={24}
               />
@@ -57,21 +88,38 @@ export function NewCategoryModal({ onClose, visible }: Props) {
       </View>
 
       <View style={styles.fieldGroup}>
-        <Text style={styles.label}>MONTHLY LIMIT</Text>
+        <Text style={[styles.label, { color: themeColors.text }]}>
+          MONTHLY LIMIT
+        </Text>
         <TextInput
           keyboardType="decimal-pad"
           placeholder="$ 0.00"
-          placeholderTextColor={colors.mutedText}
-          style={[styles.input, styles.amountInput]}
+          placeholderTextColor={themeColors.mutedText}
+          style={[
+            styles.input,
+            styles.amountInput,
+            {
+              backgroundColor: themeColors.surface,
+              borderColor: themeColors.text,
+              color: themeColors.text,
+            },
+          ]}
         />
       </View>
 
       <View style={styles.actions}>
         <Pressable style={styles.cancelButton} onPress={onClose}>
-          <Text style={styles.cancelText}>Cancel</Text>
+          <Text style={[styles.cancelText, { color: themeColors.primary }]}>
+            Cancel
+          </Text>
         </Pressable>
-        <Pressable style={styles.addButton} onPress={onClose}>
-          <Text style={styles.addText}>Add Category</Text>
+        <Pressable
+          style={[styles.addButton, { backgroundColor: themeColors.primary }]}
+          onPress={onClose}
+        >
+          <Text style={[styles.addText, { color: themeColors.primaryText }]}>
+            Add Category
+          </Text>
         </Pressable>
       </View>
     </BaseModal>
@@ -79,17 +127,18 @@ export function NewCategoryModal({ onClose, visible }: Props) {
 }
 
 const styles = StyleSheet.create({
+  lightBackdrop: {
+    backgroundColor: "rgba(242, 240, 234, 0.42)",
+  },
   modalContent: {
     gap: spacing.lg,
   },
   title: {
-    color: colors.text,
     fontSize: fontSize.xl,
     fontWeight: "700",
   },
   subtitle: {
     maxWidth: 260,
-    color: colors.mutedText,
     fontSize: fontSize.md,
     fontWeight: "500",
     lineHeight: 20,
@@ -98,7 +147,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   label: {
-    color: colors.text,
     fontSize: fontSize.sm,
     fontWeight: "700",
     letterSpacing: 1,
@@ -106,13 +154,10 @@ const styles = StyleSheet.create({
   input: {
     minHeight: 52,
     borderWidth: 1,
-    borderColor: colors.text,
     borderRadius: radius.sm,
     paddingHorizontal: spacing.md,
-    color: colors.text,
     fontSize: fontSize.lg,
     fontWeight: "600",
-    backgroundColor: colors.surface,
   },
   amountInput: {
     fontSize: fontSize.xl,
@@ -127,12 +172,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,
-    backgroundColor: colors.surface,
-  },
-  iconSelected: {
     borderWidth: 2,
-    borderColor: colors.primary,
-    backgroundColor: colors.primary,
+    borderColor: "transparent",
   },
   actions: {
     flexDirection: "row",
@@ -147,7 +188,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   cancelText: {
-    color: colors.primary,
     fontSize: fontSize.md,
     fontWeight: "700",
   },
@@ -157,10 +197,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: radius.sm,
     paddingHorizontal: spacing.lg,
-    backgroundColor: colors.primary,
   },
   addText: {
-    color: colors.primaryText,
     fontSize: fontSize.md,
     fontWeight: "700",
   },

@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { colors, fontSize } from "@repo/theme";
+import { fontSize } from "@repo/theme";
 import {
   Icon,
   Label,
@@ -7,20 +7,27 @@ import {
   VectorIcon,
 } from "expo-router/unstable-native-tabs";
 
+import { useThemeColors } from "@/hooks/use-theme-colors";
+
 export default function TabLayout() {
+  const themeColors = useThemeColors();
+
   return (
     <NativeTabs
       minimizeBehavior="onScrollDown"
-      backgroundColor={colors.background}
-      iconColor={{ default: colors.surface, selected: colors.primary }}
+      backgroundColor={themeColors.background}
+      iconColor={{
+        default: themeColors.surface,
+        selected: themeColors.primary,
+      }}
       labelStyle={{
         default: {
-          color: colors.surface,
+          color: themeColors.surface,
           fontSize: fontSize.sm,
           fontWeight: "500",
         },
         selected: {
-          color: colors.primary,
+          color: themeColors.primary,
           fontSize: fontSize.sm,
           fontWeight: "700",
         },

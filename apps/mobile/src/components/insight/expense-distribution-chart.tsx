@@ -1,6 +1,8 @@
-import { colors, fontSize, radius, spacing } from "@repo/theme";
+import { fontSize, radius, spacing } from "@repo/theme";
 import { BarChart } from "react-native-gifted-charts";
 import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
+
+import { useThemeColors } from "@/hooks/use-theme-colors";
 
 const distributionData = [
   { label: "HOUSING", value: 1200 },
@@ -13,20 +15,27 @@ const distributionData = [
 
 export function ExpenseDistributionChart() {
   const { width } = useWindowDimensions();
+  const themeColors = useThemeColors();
   const chartWidth = Math.min(width - spacing.lg * 4, 320);
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: themeColors.text }]}>
       <View style={styles.header}>
         <View style={styles.titleBlock}>
-          <Text style={styles.title}>Expense Distribution</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: themeColors.primaryText }]}>
+            Expense Distribution
+          </Text>
+          <Text style={[styles.subtitle, { color: themeColors.mutedText }]}>
             Your spending patterns for this period
           </Text>
         </View>
         <View>
-          <Text style={styles.totalLabel}>TOTAL SPENT</Text>
-          <Text style={styles.totalValue}>$3,240.50</Text>
+          <Text style={[styles.totalLabel, { color: themeColors.mutedText }]}>
+            TOTAL SPENT
+          </Text>
+          <Text style={[styles.totalValue, { color: themeColors.primaryText }]}>
+            $3,240.50
+          </Text>
         </View>
       </View>
 
@@ -37,8 +46,13 @@ export function ExpenseDistributionChart() {
           data={distributionData.map((item) => ({
             ...item,
             frontColor:
-              item.value >= 450 ? colors.primaryText : colors.mutedText,
-            labelTextStyle: styles.labelText,
+              item.value >= 450
+                ? themeColors.primaryText
+                : themeColors.mutedText,
+            labelTextStyle: [
+              styles.labelText,
+              { color: themeColors.mutedText },
+            ],
           }))}
           height={172}
           hideRules
@@ -61,7 +75,6 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
     borderRadius: radius.lg,
     padding: spacing.lg,
-    backgroundColor: colors.text,
     boxShadow: "0 12px 0 rgba(16, 16, 16, 0.28)",
   },
   header: {
@@ -73,26 +86,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    color: colors.primaryText,
     fontSize: fontSize.lg,
     fontWeight: "700",
   },
   subtitle: {
     marginTop: spacing.xs,
     maxWidth: 130,
-    color: colors.mutedText,
     fontSize: fontSize.sm,
     fontWeight: "500",
     lineHeight: 16,
   },
   totalLabel: {
-    color: colors.mutedText,
     fontSize: fontSize.xs,
     fontWeight: "700",
     letterSpacing: 1,
   },
   totalValue: {
-    color: colors.primaryText,
     fontSize: fontSize.xl,
     fontWeight: "700",
   },
@@ -100,7 +109,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   labelText: {
-    color: colors.mutedText,
     fontSize: 7,
     fontWeight: "700",
   },

@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { colors, fontSize, radius, spacing } from "@repo/theme";
+import { fontSize, radius, spacing } from "@repo/theme";
 import {
   FlatList,
   Pressable,
@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
+import { useThemeColors } from "@/hooks/use-theme-colors";
 
 const dataArchives = [
   { id: "2026-04", month: "April", year: "2026", items: 42 },
@@ -21,8 +22,63 @@ const dataArchives = [
 ];
 
 export default function YourDataScreen() {
+  const themeColors = useThemeColors();
+
+  const renderArchiveItem: ListRenderItem<DataArchive> = ({ item }) => (
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: themeColors.surface,
+          borderColor: themeColors.text,
+        },
+      ]}
+    >
+      <View style={[styles.archiveIcon, { backgroundColor: "black" }]}>
+        <MaterialCommunityIcons
+          color={themeColors.primaryText}
+          name="calendar-month-outline"
+          size={28}
+        />
+      </View>
+
+      <View style={styles.archiveCopy}>
+        <Text style={[styles.archiveTitle, { color: themeColors.text }]}>
+          {item.month} {item.year}
+        </Text>
+        <Text style={[styles.archiveMeta, { color: themeColors.mutedText }]}>
+          {item.items} receipts and transactions
+        </Text>
+      </View>
+
+      <View style={styles.actions}>
+        <Pressable
+          style={[styles.iconButton, { backgroundColor: themeColors.primary }]}
+        >
+          <MaterialCommunityIcons
+            color={themeColors.primaryText}
+            name="export-variant"
+            size={20}
+          />
+        </Pressable>
+        <Pressable
+          style={[styles.iconButton, { backgroundColor: themeColors.surface }]}
+        >
+          <MaterialCommunityIcons
+            color={themeColors.primary}
+            name="trash-can-outline"
+            size={20}
+          />
+        </Pressable>
+      </View>
+    </View>
+  );
+
   return (
-    <SafeAreaView style={styles.screen} edges={["top"]}>
+    <SafeAreaView
+      style={[styles.screen, { backgroundColor: themeColors.background }]}
+      edges={["top"]}
+    >
       <FlatList
         contentContainerStyle={styles.content}
         data={dataArchives}
@@ -44,48 +100,9 @@ export default function YourDataScreen() {
 
 type DataArchive = (typeof dataArchives)[number];
 
-const renderArchiveItem: ListRenderItem<DataArchive> = ({ item }) => (
-  <View style={styles.card}>
-    <View style={styles.archiveIcon}>
-      <MaterialCommunityIcons
-        color={colors.primaryText}
-        name="calendar-month-outline"
-        size={28}
-      />
-    </View>
-
-    <View style={styles.archiveCopy}>
-      <Text style={styles.archiveTitle}>
-        {item.month} {item.year}
-      </Text>
-      <Text style={styles.archiveMeta}>
-        {item.items} receipts and transactions
-      </Text>
-    </View>
-
-    <View style={styles.actions}>
-      <Pressable style={styles.iconButton}>
-        <MaterialCommunityIcons
-          color={colors.primaryText}
-          name="export-variant"
-          size={20}
-        />
-      </Pressable>
-      <Pressable style={[styles.iconButton, styles.deleteButton]}>
-        <MaterialCommunityIcons
-          color={colors.primary}
-          name="trash-can-outline"
-          size={20}
-        />
-      </Pressable>
-    </View>
-  </View>
-);
-
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     gap: spacing.md,
@@ -100,9 +117,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
+    borderWidth: 1,
     borderRadius: radius.lg,
     padding: spacing.md,
-    backgroundColor: colors.text,
   },
   archiveIcon: {
     width: 54,
@@ -110,19 +127,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.md,
-    backgroundColor: "#2B2B2A",
   },
   archiveCopy: {
     flex: 1,
     gap: spacing.xs,
   },
   archiveTitle: {
-    color: colors.primaryText,
     fontSize: fontSize.lg,
     fontWeight: "700",
   },
   archiveMeta: {
-    color: colors.background,
     fontSize: fontSize.sm,
     fontWeight: "500",
   },
@@ -136,9 +150,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.md,
-    backgroundColor: colors.primary,
-  },
-  deleteButton: {
-    backgroundColor: colors.surface,
   },
 });

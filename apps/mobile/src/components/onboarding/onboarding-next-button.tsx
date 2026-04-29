@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { colors } from "@repo/theme";
 import { Animated, Pressable, StyleSheet } from "react-native";
+
+import { useThemeColors } from "@/hooks/use-theme-colors";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -21,6 +22,7 @@ export function OnboardingNextButton({
   progress,
   width,
 }: Props) {
+  const themeColors = useThemeColors();
   const inputRange = Array.from({ length }).map((_, index) => index * width);
   const buttonWidths = Array.from({ length }).map((_, index) =>
     index === length - 1 ? 154 : 62,
@@ -82,17 +84,24 @@ export function OnboardingNextButton({
       }
       accessibilityRole="button"
       disabled={disabled}
-      style={[styles.button, buttonStyle, disabled && styles.disabled]}
+      style={[
+        styles.button,
+        buttonStyle,
+        { backgroundColor: themeColors.primary },
+        disabled && styles.disabled,
+      ]}
       onPress={onPress}
     >
       <Animated.View style={[styles.icon, iconStyle]}>
         <MaterialCommunityIcons
-          color={colors.primaryText}
+          color={themeColors.primaryText}
           name="arrow-right"
           size={25}
         />
       </Animated.View>
-      <Animated.Text style={[styles.text, textStyle]}>
+      <Animated.Text
+        style={[styles.text, textStyle, { color: themeColors.primaryText }]}
+      >
         {disabled ? "Starting" : "Get Started"}
       </Animated.Text>
     </AnimatedPressable>
@@ -106,14 +115,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     overflow: "hidden",
     borderRadius: 999,
-    backgroundColor: colors.primary,
   },
   icon: {
     position: "absolute",
   },
   text: {
     position: "absolute",
-    color: colors.primaryText,
     fontSize: 16,
     fontWeight: "800",
     letterSpacing: 0,

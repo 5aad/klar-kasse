@@ -1,6 +1,8 @@
-import { colors, fontSize, radius, spacing } from "@repo/theme";
+import { fontSize, radius, spacing } from "@repo/theme";
 import { LineChart } from "react-native-gifted-charts";
 import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
+
+import { useThemeColors } from "@/hooks/use-theme-colors";
 
 const balanceData = [
   { value: 42 },
@@ -22,16 +24,17 @@ const ranges = ["1D", "5D", "1M", "3M", "6M", "1Y"];
 
 export function BalanceGraph() {
   const { width } = useWindowDimensions();
+  const themeColors = useThemeColors();
   const chartWidth = Math.min(width - spacing.lg * 4, 340);
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: themeColors.text }]}>
       <LineChart
         areaChart={false}
         curved
-        color={colors.primaryText}
+        color={themeColors.primaryText}
         data={balanceData}
-        dataPointsColor={colors.primary}
+        dataPointsColor={themeColors.primary}
         dataPointsRadius={0}
         endSpacing={8}
         height={168}
@@ -43,11 +46,23 @@ export function BalanceGraph() {
         noOfSections={4}
         pointerConfig={{
           pointerStripColor: "transparent",
-          pointerColor: colors.primary,
+          pointerColor: themeColors.primary,
           radius: 6,
           pointerLabelComponent: () => (
-            <View style={styles.pointerLabel}>
-              <Text style={styles.pointerLabelText}>$409</Text>
+            <View
+              style={[
+                styles.pointerLabel,
+                { backgroundColor: themeColors.primary },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.pointerLabelText,
+                  { color: themeColors.primaryText },
+                ]}
+              >
+                $409
+              </Text>
             </View>
           ),
         }}
@@ -65,12 +80,22 @@ export function BalanceGraph() {
         {ranges.map((range) => (
           <View
             key={range}
-            style={[styles.rangeItem, range === "5D" && styles.rangeSelected]}
+            style={[
+              styles.rangeItem,
+              range === "5D" && {
+                backgroundColor: themeColors.mutedText,
+              },
+            ]}
           >
             <Text
               style={[
                 styles.rangeText,
-                range === "5D" && styles.rangeSelectedText,
+                {
+                  color:
+                    range === "5D"
+                      ? themeColors.primaryText
+                      : themeColors.mutedText,
+                },
               ]}
             >
               {range}
@@ -87,11 +112,9 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderRadius: 28,
     padding: spacing.lg,
-    backgroundColor: colors.text,
     boxShadow: "0 12px 0 rgba(16, 16, 16, 0.28)",
   },
   axisText: {
-    color: colors.mutedText,
     fontSize: fontSize.xs,
     fontWeight: "700",
   },
@@ -99,10 +122,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     paddingHorizontal: spacing.xs,
     paddingVertical: 2,
-    backgroundColor: colors.primary,
   },
   pointerLabelText: {
-    color: colors.primaryText,
     fontSize: fontSize.xs,
     fontWeight: "900",
   },
@@ -119,15 +140,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.sm,
   },
-  rangeSelected: {
-    backgroundColor: colors.mutedText,
-  },
   rangeText: {
-    color: colors.mutedText,
     fontSize: fontSize.xs,
     fontWeight: "900",
-  },
-  rangeSelectedText: {
-    color: colors.primaryText,
   },
 });

@@ -1,5 +1,4 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { colors } from "@repo/theme";
 import { memo } from "react";
 import {
   Animated,
@@ -8,6 +7,8 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+
+import { useThemeColors } from "@/hooks/use-theme-colors";
 
 import type { OnboardingPage as OnboardingPageData } from "./onboarding-data";
 
@@ -19,6 +20,7 @@ type Props = {
 
 function OnboardingPage({ item, index, scrollX }: Props) {
   const { width } = useWindowDimensions();
+  const themeColors = useThemeColors();
   const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
 
   const imageStyle = {
@@ -66,12 +68,25 @@ function OnboardingPage({ item, index, scrollX }: Props) {
     <View style={[styles.page, { width }]}>
       <Animated.View style={[styles.visual, imageStyle]}>
         <View style={[styles.halo, { backgroundColor: item.softAccent }]} />
-        <View style={styles.phone}>
+        <View
+          style={[
+            styles.phone,
+            {
+              backgroundColor: themeColors.surface,
+              borderColor: themeColors.border,
+            },
+          ]}
+        >
           <View style={styles.phoneHeader}>
             <View
               style={[styles.headerDot, { backgroundColor: item.accent }]}
             />
-            <View style={styles.headerLine} />
+            <View
+              style={[
+                styles.headerLine,
+                { backgroundColor: themeColors.background },
+              ]}
+            />
           </View>
           <View style={[styles.iconWrap, { backgroundColor: item.softAccent }]}>
             <MaterialCommunityIcons
@@ -81,9 +96,25 @@ function OnboardingPage({ item, index, scrollX }: Props) {
             />
           </View>
           <View style={styles.receiptRows}>
-            <View style={[styles.receiptLine, styles.receiptLineLarge]} />
-            <View style={styles.receiptLine} />
-            <View style={styles.receiptLine} />
+            <View
+              style={[
+                styles.receiptLine,
+                styles.receiptLineLarge,
+                { backgroundColor: themeColors.mutedText },
+              ]}
+            />
+            <View
+              style={[
+                styles.receiptLine,
+                { backgroundColor: themeColors.mutedText },
+              ]}
+            />
+            <View
+              style={[
+                styles.receiptLine,
+                { backgroundColor: themeColors.mutedText },
+              ]}
+            />
             <View
               style={[styles.totalRow, { backgroundColor: item.softAccent }]}
             >
@@ -102,8 +133,12 @@ function OnboardingPage({ item, index, scrollX }: Props) {
         <Text style={[styles.eyebrow, { color: item.accent }]}>
           {item.eyebrow}
         </Text>
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.body}>{item.body}</Text>
+        <Text style={[styles.title, { color: themeColors.text }]}>
+          {item.title}
+        </Text>
+        <Text style={[styles.body, { color: themeColors.mutedText }]}>
+          {item.body}
+        </Text>
       </Animated.View>
     </View>
   );
@@ -137,9 +172,7 @@ const styles = StyleSheet.create({
     aspectRatio: 0.72,
     padding: 16,
     borderRadius: 30,
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
     gap: 18,
   },
   phoneHeader: {
@@ -156,7 +189,6 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 8,
     borderRadius: 999,
-    backgroundColor: colors.background,
   },
   iconWrap: {
     height: 120,
@@ -171,7 +203,6 @@ const styles = StyleSheet.create({
     width: "72%",
     height: 9,
     borderRadius: 999,
-    backgroundColor: colors.mutedText,
   },
   receiptLineLarge: {
     width: "92%",
@@ -209,7 +240,6 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   title: {
-    color: colors.text,
     fontSize: 33,
     fontWeight: "800",
     lineHeight: 39,
@@ -217,7 +247,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   body: {
-    color: colors.mutedText,
     fontSize: 16,
     lineHeight: 24,
     textAlign: "center",

@@ -1,7 +1,9 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { colors, fontSize, radius, spacing } from "@repo/theme";
+import { fontSize, radius, spacing } from "@repo/theme";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+
+import { useThemeColors } from "@/hooks/use-theme-colors";
 
 type Props = {
   subtitle?: string;
@@ -9,18 +11,27 @@ type Props = {
 };
 
 export function ScreenHeader({ subtitle, title }: Props) {
+  const themeColors = useThemeColors();
+
   return (
     <View style={styles.header}>
-      <Pressable style={styles.backButton} onPress={() => router.back()}>
+      <Pressable
+        style={[styles.backButton, { backgroundColor: themeColors.surface }]}
+        onPress={() => router.back()}
+      >
         <MaterialCommunityIcons
-          color={colors.text}
+          color={themeColors.text}
           name="chevron-left"
           size={28}
         />
       </Pressable>
       <View style={styles.headerCopy}>
-        <Text style={styles.title}>{title}</Text>
-        {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+        <Text style={[styles.title, { color: themeColors.text }]}>{title}</Text>
+        {subtitle ? (
+          <Text style={[styles.subtitle, { color: themeColors.mutedText }]}>
+            {subtitle}
+          </Text>
+        ) : null}
       </View>
     </View>
   );
@@ -38,18 +49,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.md,
-    backgroundColor: colors.surface,
   },
   headerCopy: {
     flex: 1,
   },
   title: {
-    color: colors.text,
     fontSize: fontSize.xxl,
     fontWeight: "700",
   },
   subtitle: {
-    color: colors.mutedText,
     fontSize: fontSize.md,
     fontWeight: "500",
   },
