@@ -1,6 +1,7 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { colors, fontSize, spacing } from "@repo/theme";
 import { Image } from "expo-image";
+import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -27,7 +28,11 @@ export default function SettingsScreen() {
 
       <View style={styles.menu}>
         <SettingsRow icon="cog-outline" label="Preferences" />
-        <SettingsRow icon="database-outline" label="Your Data" />
+        <SettingsRow
+          icon="database-outline"
+          label="Your Data"
+          onPress={() => router.push("/settings/your-data")}
+        />
         <SettingsRow
           icon="translate"
           label="Language"

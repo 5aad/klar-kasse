@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { BalanceGraph } from "@/components/dashboard/balance-graph";
-import { TransactionList } from "@/components/dashboard/transaction-list";
+import { TransactionList } from "@/components/shared/transaction-list";
 
 export default function DashboardScreen() {
   return (

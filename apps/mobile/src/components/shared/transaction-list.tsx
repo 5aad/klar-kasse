@@ -2,7 +2,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { colors, fontSize, radius, spacing } from "@repo/theme";
 import { StyleSheet, Text, View } from "react-native";
 
-type Transaction = {
+export type TransactionListItem = {
   amount: string;
   category: string;
   date: string;
@@ -10,7 +10,7 @@ type Transaction = {
   title: string;
 };
 
-const transactions: Transaction[] = [
+const transactions: TransactionListItem[] = [
   {
     icon: "sack-outline",
     title: "AI-Bank",
@@ -36,7 +36,7 @@ const transactions: Transaction[] = [
 
 type Props = {
   actionLabel?: string;
-  items?: readonly Transaction[];
+  items?: readonly TransactionListItem[];
   title?: string;
 };
 

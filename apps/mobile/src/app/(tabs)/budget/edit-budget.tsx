@@ -14,6 +14,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { ScreenHeader } from "@/components/shared/screen-header";
+
 export default function EditBudgetScreen() {
   const params = useLocalSearchParams<{
     icon?: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -70,6 +72,11 @@ export default function EditBudgetScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        <ScreenHeader
+          title="Edit Budget"
+          subtitle="Adjust monthly limits and allocation."
+        />
+
         <View style={styles.currentCard}>
           <View style={styles.currentAccent} />
           <View style={styles.currentHeader}>

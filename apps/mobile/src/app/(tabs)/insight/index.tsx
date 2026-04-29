@@ -3,8 +3,8 @@ import { colors, fontSize, radius, spacing } from "@repo/theme";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { TransactionList } from "@/components/dashboard/transaction-list";
 import { ExpenseDistributionChart } from "@/components/insight/expense-distribution-chart";
+import { TransactionList } from "@/components/shared/transaction-list";
 
 const categoryBreakdown = [
   { name: "Dining", amount: "$450.00", percent: "35%", progress: 0.75 },
