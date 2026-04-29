@@ -1,43 +1,53 @@
-import { Button } from '@repo/ui';
-import { StyleSheet, Text, View } from 'react-native';
+import { colors, fontSize, spacing } from "@repo/theme";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { BalanceGraph } from "@/components/dashboard/balance-graph";
+import { TransactionList } from "@/components/dashboard/transaction-list";
 
 export default function DashboardScreen() {
   return (
-    <View style={styles.screen}>
-      <Text style={styles.eyebrow}>Klar Kasse</Text>
-      <Text style={styles.title}>Dashboard</Text>
-      <Text style={styles.body}>Track today's spending and recent activity.</Text>
-      <Button label="Create receipt" style={styles.button} onPress={() => console.log('Create receipt')} />
-    </View>
+    <SafeAreaView style={styles.screen} edges={["top"]}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.balanceRow}>
+          <Text style={styles.balance}>$ 13,553.00</Text>
+          <Text style={styles.balanceLabel}>Balance</Text>
+        </View>
+
+        <BalanceGraph />
+        <TransactionList />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    justifyContent: 'center',
-    padding: 24,
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.background,
   },
-  eyebrow: {
-    marginBottom: 8,
-    color: '#2563eb',
-    fontSize: 13,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+  content: {
+    gap: spacing.xl,
+    padding: spacing.lg,
+    paddingBottom: 36,
   },
-  title: {
-    color: '#111827',
+  balanceRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: spacing.md,
+  },
+  balance: {
+    color: colors.text,
     fontSize: 34,
-    fontWeight: '700',
+    fontWeight: "700",
   },
-  body: {
-    marginTop: 12,
-    color: '#4b5563',
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  button: {
-    marginTop: 24,
+  balanceLabel: {
+    paddingBottom: 7,
+    color: colors.mutedText,
+    fontSize: fontSize.md,
+    fontWeight: "600",
   },
 });

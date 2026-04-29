@@ -210,18 +210,18 @@ const styles = StyleSheet.create({
   eyebrow: {
     color: colors.primary,
     fontSize: fontSize.xs,
-    fontWeight: "900",
+    fontWeight: "700",
     letterSpacing: 1.2,
   },
   title: {
     color: colors.text,
     fontSize: 31,
-    fontWeight: "900",
+    fontWeight: "700",
   },
   subtitle: {
     color: colors.mutedText,
     fontSize: fontSize.md,
-    fontWeight: "800",
+    fontWeight: "600",
   },
   iconBox: {
     width: 58,
@@ -245,13 +245,13 @@ const styles = StyleSheet.create({
   statLabel: {
     color: colors.mutedText,
     fontSize: fontSize.xs,
-    fontWeight: "900",
+    fontWeight: "700",
     letterSpacing: 1,
   },
   statValue: {
     color: colors.text,
     fontSize: fontSize.lg,
-    fontWeight: "900",
+    fontWeight: "700",
   },
   section: {
     gap: spacing.md,
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     color: colors.mutedText,
     fontSize: fontSize.sm,
-    fontWeight: "900",
+    fontWeight: "700",
     letterSpacing: 1.2,
   },
   amountInput: {
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     color: colors.text,
     fontSize: 42,
-    fontWeight: "900",
+    fontWeight: "700",
     backgroundColor: colors.surface,
   },
   infoRow: {
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: colors.mutedText,
     fontSize: fontSize.sm,
-    fontWeight: "700",
+    fontWeight: "500",
   },
   proportionHeader: {
     flexDirection: "row",
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
   proportionText: {
     color: colors.text,
     fontSize: fontSize.md,
-    fontWeight: "900",
+    fontWeight: "700",
   },
   sliderTrack: {
     height: 14,
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
   sliderLabel: {
     color: colors.mutedText,
     fontSize: fontSize.xs,
-    fontWeight: "900",
+    fontWeight: "700",
   },
   saveButton: {
     minHeight: 58,
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
   saveText: {
     color: colors.primaryText,
     fontSize: fontSize.lg,
-    fontWeight: "900",
+    fontWeight: "700",
   },
   discardButton: {
     alignItems: "center",
@@ -346,6 +346,6 @@ const styles = StyleSheet.create({
   discardText: {
     color: colors.mutedText,
     fontSize: fontSize.md,
-    fontWeight: "900",
+    fontWeight: "700",
   },
 });

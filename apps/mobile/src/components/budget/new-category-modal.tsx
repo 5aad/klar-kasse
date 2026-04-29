@@ -85,13 +85,13 @@ const styles = StyleSheet.create({
   title: {
     color: colors.text,
     fontSize: fontSize.xl,
-    fontWeight: "900",
+    fontWeight: "700",
   },
   subtitle: {
     maxWidth: 260,
     color: colors.mutedText,
     fontSize: fontSize.md,
-    fontWeight: "700",
+    fontWeight: "500",
     lineHeight: 20,
   },
   fieldGroup: {
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   label: {
     color: colors.text,
     fontSize: fontSize.sm,
-    fontWeight: "900",
+    fontWeight: "700",
     letterSpacing: 1,
   },
   input: {
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     color: colors.text,
     fontSize: fontSize.lg,
-    fontWeight: "800",
+    fontWeight: "600",
     backgroundColor: colors.surface,
   },
   amountInput: {
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   cancelText: {
     color: colors.primary,
     fontSize: fontSize.md,
-    fontWeight: "900",
+    fontWeight: "700",
   },
   addButton: {
     minHeight: 48,
@@ -162,6 +162,6 @@ const styles = StyleSheet.create({
   addText: {
     color: colors.primaryText,
     fontSize: fontSize.md,
-    fontWeight: "900",
+    fontWeight: "700",
   },
 });

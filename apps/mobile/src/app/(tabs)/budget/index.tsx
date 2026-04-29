@@ -255,12 +255,12 @@ const styles = StyleSheet.create({
   title: {
     color: colors.text,
     fontSize: fontSize.xxl,
-    fontWeight: "800",
+    fontWeight: "600",
   },
   subtitle: {
     color: colors.mutedText,
     fontSize: fontSize.md,
-    fontWeight: "600",
+    fontWeight: "500",
   },
   statusCard: {
     overflow: "hidden",
@@ -281,19 +281,19 @@ const styles = StyleSheet.create({
   cardEyebrow: {
     color: colors.mutedText,
     fontSize: fontSize.sm,
-    fontWeight: "800",
+    fontWeight: "600",
     letterSpacing: 2,
   },
   percent: {
     color: colors.text,
     fontSize: 46,
-    fontWeight: "900",
+    fontWeight: "700",
   },
   statusCopy: {
     maxWidth: 230,
     color: colors.mutedText,
     fontSize: fontSize.lg,
-    fontWeight: "700",
+    fontWeight: "500",
     lineHeight: 23,
   },
   strong: {
@@ -307,12 +307,12 @@ const styles = StyleSheet.create({
   primaryAmount: {
     color: colors.primary,
     fontSize: fontSize.md,
-    fontWeight: "800",
+    fontWeight: "600",
   },
   secondaryAmount: {
     color: colors.mutedText,
     fontSize: fontSize.md,
-    fontWeight: "800",
+    fontWeight: "600",
   },
   progressTrack: {
     height: 12,
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: colors.text,
     fontSize: fontSize.xl,
-    fontWeight: "900",
+    fontWeight: "700",
     lineHeight: 29,
   },
   addButton: {
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: colors.primaryText,
     fontSize: fontSize.md,
-    fontWeight: "800",
+    fontWeight: "600",
   },
   categoryList: {
     gap: spacing.md,
@@ -388,17 +388,17 @@ const styles = StyleSheet.create({
   categoryName: {
     color: colors.primaryText,
     fontSize: fontSize.lg,
-    fontWeight: "900",
+    fontWeight: "700",
   },
   categoryType: {
     color: colors.background,
     fontSize: fontSize.sm,
-    fontWeight: "800",
+    fontWeight: "600",
   },
   categoryAction: {
     color: colors.primary,
     fontSize: fontSize.sm,
-    fontWeight: "900",
+    fontWeight: "700",
   },
   categoryActionLight: {
     color: colors.primaryText,
@@ -411,12 +411,12 @@ const styles = StyleSheet.create({
   categorySpent: {
     color: colors.background,
     fontSize: fontSize.md,
-    fontWeight: "800",
+    fontWeight: "600",
   },
   categoryRemaining: {
     color: colors.primary,
     fontSize: fontSize.md,
-    fontWeight: "900",
+    fontWeight: "700",
   },
   categoryRemainingLight: {
     color: colors.primaryText,
@@ -433,6 +433,6 @@ const styles = StyleSheet.create({
   warningText: {
     color: colors.primary,
     fontSize: fontSize.sm,
-    fontWeight: "900",
+    fontWeight: "700",
   },
 });
