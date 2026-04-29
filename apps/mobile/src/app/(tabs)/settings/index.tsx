@@ -1,13 +1,20 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { colors, fontSize, spacing } from "@repo/theme";
 import { Image } from "expo-image";
+import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import { CustomerSupportModal } from "@/components/settings/customer-support-modal";
+import { LanguageModal } from "@/components/settings/language-modal";
 
 const PROFILE_IMAGE =
   "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=240&q=80";
 
 export default function SettingsScreen() {
+  const [isLanguageModalVisible, setIsLanguageModalVisible] = useState(false);
+  const [isSupportModalVisible, setIsSupportModalVisible] = useState(false);
+
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.profile}>
@@ -21,9 +28,26 @@ export default function SettingsScreen() {
       <View style={styles.menu}>
         <SettingsRow icon="cog-outline" label="Preferences" />
         <SettingsRow icon="database-outline" label="Your Data" />
-        <SettingsRow icon="translate" label="Language" />
-        <SettingsRow icon="help-circle-outline" label="Customer Support" />
+        <SettingsRow
+          icon="translate"
+          label="Language"
+          onPress={() => setIsLanguageModalVisible(true)}
+        />
+        <SettingsRow
+          icon="help-circle-outline"
+          label="Customer Support"
+          onPress={() => setIsSupportModalVisible(true)}
+        />
       </View>
+
+      <CustomerSupportModal
+        visible={isSupportModalVisible}
+        onClose={() => setIsSupportModalVisible(false)}
+      />
+      <LanguageModal
+        visible={isLanguageModalVisible}
+        onClose={() => setIsLanguageModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -31,12 +55,18 @@ export default function SettingsScreen() {
 type SettingsRowProps = {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   label: string;
+  onPress?: () => void;
   showChevron?: boolean;
 };
 
-function SettingsRow({ icon, label, showChevron = true }: SettingsRowProps) {
+function SettingsRow({
+  icon,
+  label,
+  onPress,
+  showChevron = true,
+}: SettingsRowProps) {
   return (
-    <Pressable style={styles.row}>
+    <Pressable style={styles.row} onPress={onPress}>
       <MaterialCommunityIcons name={icon} size={30} color={colors.text} />
       <Text style={styles.rowLabel}>{label}</Text>
       {showChevron ? (
