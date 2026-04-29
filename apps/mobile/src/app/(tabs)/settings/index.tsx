@@ -27,7 +27,11 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.menu}>
-        <SettingsRow icon="cog-outline" label="Preferences" />
+        <SettingsRow
+          icon="cog-outline"
+          label="Preferences"
+          onPress={() => router.push("/settings/preferences")}
+        />
         <SettingsRow
           icon="database-outline"
           label="Your Data"
