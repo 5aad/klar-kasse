@@ -44,14 +44,6 @@ export default function ReceiptCameraLayout() {
           headerBackButtonDisplayMode: "minimal",
         }}
       />
-            <Stack.Screen
-        name="captured2"
-        options={{
-          title: "Receipt Preview2",
-          headerTitleAlign: "center",
-          headerBackButtonDisplayMode: "minimal",
-        }}
-      />
     </Stack>
   );
 }

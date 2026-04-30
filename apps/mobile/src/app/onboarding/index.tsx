@@ -1,77 +1,129 @@
-import { router } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import type { ViewToken } from "react-native";
+import { colors } from "@repo/theme";
+import { router } from "expo-router";
+import { useCallback, useRef, useState } from "react";
+import {
+  Animated,
+  FlatList,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
-import { setIsOnboardingDone } from '@/utils/onboarding-storage';
+import {
+  onboardingPages,
+  type OnboardingPage as OnboardingPageData,
+} from "@/components/onboarding/onboarding-data";
+import { OnboardingNextButton } from "@/components/onboarding/onboarding-next-button";
+import OnboardingPage from "@/components/onboarding/onboarding-page";
+import { OnboardingPagination } from "@/components/onboarding/onboarding-pagination";
+import { setIsOnboardingDone } from "@/utils/onboarding-storage";
 
 export default function OnboardingScreen() {
+  const { bottom } = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const flatListRef = useRef<FlatList<OnboardingPageData>>(null);
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const [pageIndex, setPageIndex] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
 
-  const goToDashboard = async () => {
+  const finishOnboarding = useCallback(async () => {
     if (isSaving) {
       return;
     }
 
     setIsSaving(true);
     await setIsOnboardingDone(true);
-    router.replace('/dashboard');
-  };
+    router.replace("/dashboard");
+  }, [isSaving]);
+
+  const handleButtonPress = useCallback(() => {
+    if (pageIndex === onboardingPages.length - 1) {
+      finishOnboarding();
+      return;
+    }
+
+    flatListRef.current?.scrollToOffset({
+      animated: true,
+      offset: (pageIndex + 1) * width,
+    });
+  }, [finishOnboarding, pageIndex, width]);
+
+  const handleScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+    { useNativeDriver: false },
+  );
+
+  const handleViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      const nextIndex = viewableItems[0]?.index ?? 0;
+
+      setPageIndex(nextIndex);
+    },
+    [],
+  );
+
+  const renderItem = useCallback(
+    ({ item, index }: { item: OnboardingPageData; index: number }) => (
+      <OnboardingPage index={index} item={item} scrollX={scrollX} />
+    ),
+    [scrollX],
+  );
 
   return (
-    <ScrollView contentContainerStyle={styles.content} contentInsetAdjustmentBehavior="automatic" style={styles.screen}>
-      <Text style={styles.eyebrow}>Klar Kasse</Text>
-      <Text style={styles.title}>Keep receipts and spending in one place.</Text>
-      <Text style={styles.body}>Scan receipts, review activity, and stay close to your budget from the dashboard.</Text>
-      <Pressable accessibilityRole="button" disabled={isSaving} style={[styles.button, isSaving && styles.disabled]} onPress={goToDashboard}>
-        <Text style={styles.buttonText}>Go to dashboard</Text>
-      </Pressable>
-    </ScrollView>
+    <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
+      <Animated.FlatList
+        ref={flatListRef}
+        bounces={false}
+        data={onboardingPages}
+        horizontal
+        keyExtractor={(item) => item.key}
+        pagingEnabled
+        renderItem={renderItem}
+        scrollEventThrottle={16}
+        showsHorizontalScrollIndicator={false}
+        viewabilityConfig={viewabilityConfig}
+        onScroll={handleScroll}
+        onViewableItemsChanged={handleViewableItemsChanged}
+      />
+
+      <View style={[styles.footer, { paddingBottom: Math.max(bottom, 18) }]}>
+        <OnboardingPagination
+          length={onboardingPages.length}
+          scrollX={scrollX}
+        />
+        <OnboardingNextButton
+          disabled={isSaving}
+          length={onboardingPages.length}
+          pageIndex={pageIndex}
+          progress={scrollX}
+          width={width}
+          onPress={handleButtonPress}
+        />
+      </View>
+    </SafeAreaView>
   );
 }
+
+const viewabilityConfig = {
+  itemVisiblePercentThreshold: 60,
+};
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.surface,
   },
-  content: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 24,
-  },
-  eyebrow: {
-    color: '#2563eb',
-    fontSize: 13,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  title: {
-    marginTop: 10,
-    color: '#111827',
-    fontSize: 34,
-    fontWeight: '700',
-    lineHeight: 40,
-  },
-  body: {
-    marginTop: 14,
-    color: '#4b5563',
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  button: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 50,
-    marginTop: 28,
-    borderRadius: 8,
-    backgroundColor: '#2563eb',
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  disabled: {
-    opacity: 0.6,
+  footer: {
+    minHeight: 104,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
 });

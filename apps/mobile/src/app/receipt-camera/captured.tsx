@@ -1,189 +1,272 @@
+import TextRecognition, {
+  TextRecognitionScript,
+} from "@react-native-ml-kit/text-recognition";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
-import { OCR_GERMAN, useOCR } from "react-native-executorch";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import { useReceiptScanStore } from "@/stores/receipt-scan-store";
-function parseReceipt(lines: string[]) {
-  const clean = (s: string) =>
-    s
-      .replace(/_/g, " ")
-      .replace(/[ỊĪ]/g, "l")
-      .replace(/[^\p{L}\p{N}\s.,€:/;-]/gu, "")
-      .replace(/\s+/g, " ")
-      .trim();
+import { parseNormaReceipt } from "@/utils/receipt-parser";
 
-  const normalized = lines.map(clean).filter(Boolean);
-  const text = normalized.join(" ");
-
-  const isPrice = (line: string) =>
-    /^\d+[,.]\d{2}\s*€?$/.test(line) || /^€?\s*\d+[,.]\d{2}$/.test(line);
-
-  const toNumber = (s: string) =>
-    Number(s.replace("€", "").replace(",", "."));
-
-  const isValidItemName = (line: string) =>
-    !/^\d+$/.test(line) && // not just number
-    !/^\d{5}\s+/.test(line) && // not postal code
-    !/\b(gasse|straße|strasse|weg|platz)\b/i.test(line) && // not address
-    !/^(norma|www|ust|einkaufswert|summe|artikel|gegeben|visa|mwst|netto|terminal|bnr|ta-nr|pan|karte|emv|vu-nr|genehmigung|datum|zahlung|bitte|trnr)/i.test(line);
-
-  const items: any[] = [];
-
-  for (let i = 1; i < normalized.length; i++) {
-    const line = normalized[i];
-
-    if (isPrice(line)) {
-      const prev = normalized[i - 1];
-
-      if (prev && isValidItemName(prev)) {
-        items.push({
-          name: prev,
-          price: toNumber(line),
-        });
-      }
-    }
-
-    // handle weight items (kg + €/kg)
-    if (/kg/i.test(line) && normalized[i + 1]?.includes("€/kg")) {
-      const prev = normalized[i - 1];
-
-      if (prev && isValidItemName(prev)) {
-        items.push({
-          name: prev,
-          quantity: line.replace(",", "."),
-          unit_price: normalized[i + 1]
-            .replace(",", ".")
-            .replace("€", "EUR"),
-          price: null,
-        });
-      }
-    }
-  }
-
-  const postalCity = text.match(/(\d{5})\s+([A-Za-zÄÖÜäöüß]+)/);
-  const street =
-    normalized.find(line =>
-      /\b[A-Za-zÄÖÜäöüß]+(?:gasse|straße|strasse|weg|platz)\s*\d+\b/i.test(line)
-    ) || null;
-
-  const dateTime = text.match(
-    /Datum\s+(\d{2})\.(\d{2})\.(\d{2})\s+(\d{1,2})[;:](\d{2})/i
-  );
-
-  const total = text.match(/EUR\s+(\d+[,.]\d{2})/i);
-
-  return {
-    store_name: normalized[0] || null,
-    address: {
-      street,
-      postal_code: postalCity?.[1] || null,
-      city: postalCity?.[2] || null,
-      country: "Germany",
-    },
-    date: dateTime ? `20${dateTime[3]}-${dateTime[2]}-${dateTime[1]}` : null,
-    time: dateTime
-      ? `${dateTime[4].padStart(2, "0")}:${dateTime[5]}`
-      : null,
-    total_price: {
-      amount: total ? toNumber(total[1]) : null,
-      currency: "EUR",
-    },
-    payment_method: /visa kontaktlos/i.test(text)
-      ? "Visa kontaktlos"
-      : null,
-    items,
-  };
-}
-export default function CapturedReceiptScreen() {
-  const [ocrText, setOcrText] = useState("");
+export default function CapturedReceiptMlKitScreen() {
   const croppedImage = useReceiptScanStore((state) => state.croppedImage);
   const clearReceiptImages = useReceiptScanStore(
     (state) => state.clearReceiptImages,
   );
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [merchantName, setMerchantName] = useState("");
+  const [date, setDate] = useState("");
+  const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState("Food & Drinks");
+  const [note, setNote] = useState("");
 
-  const { isReady, isGenerating, error, forward } = useOCR({
-    model: OCR_GERMAN,
-  });
+  const fileName = useMemo(() => {
+    const uri = croppedImage?.uri ?? "";
+    const name = uri.split("/").at(-1);
+
+    return name || "receipt.jpg";
+  }, [croppedImage?.uri]);
+
+  useEffect(() => {
+    if (!croppedImage?.uri) return;
+
+    let isMounted = true;
+
+    const analyzeReceipt = async () => {
+      setIsAnalyzing(true);
+      setErrorMessage(null);
+
+      try {
+        const result = await TextRecognition.recognize(
+          croppedImage.uri,
+          TextRecognitionScript.LATIN,
+        );
+        const parsedReceipt = parseNormaReceipt(result.text);
+
+        console.log("ML Kit OCR Result:", result.text);
+        console.log("Receipt parser result:", parsedReceipt);
+
+        if (!isMounted) return;
+
+        setMerchantName(parsedReceipt.store || "");
+        setDate(parsedReceipt.date || "");
+        setAmount(parsedReceipt.total ? parsedReceipt.total.toFixed(2) : "");
+      } catch (error) {
+        console.error("Receipt processing failed:", error);
+
+        if (isMounted) {
+          setErrorMessage(
+            String(error instanceof Error ? error.message : error),
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setIsAnalyzing(false);
+        }
+      }
+    };
+
+    analyzeReceipt();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [croppedImage?.uri]);
 
   const retakeReceipt = () => {
     clearReceiptImages();
     router.back();
   };
 
-  const runModel = async () => {
-    if (!croppedImage?.uri || !isReady || isGenerating) return;
+  const discardScan = () => {
+    clearReceiptImages();
+    router.replace("/");
+  };
 
-    try {
-      const detections = await forward(croppedImage.uri);
-      const text = detections.map((detection) => detection.text);
-
-      // setOcrText(text);
-      console.log("OCR Result:", text);
-      console.log(parseReceipt(text));
-    } catch (err) {
-      console.error("OCR failed:", err);
-    }
+  const confirmReceipt = () => {
+    console.log("Confirmed receipt:", {
+      merchantName,
+      date,
+      amount,
+      category,
+      note,
+    });
   };
 
   if (!croppedImage?.uri) {
     return (
-      <View style={styles.emptyScreen}>
+      <SafeAreaView style={styles.emptyScreen}>
         <Text style={styles.emptyTitle}>No receipt image found</Text>
 
         <Pressable style={styles.primaryButton} onPress={() => router.back()}>
           <Text style={styles.primaryButtonText}>Go back</Text>
         </Pressable>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.screen}>
-      <Image
-        source={{ uri: croppedImage.uri }}
-        style={styles.receiptImage}
-        contentFit="contain"
-      />
-
-      {ocrText ? (
-        <View style={styles.resultBox}>
-          <Text style={styles.resultText}>{ocrText}</Text>
+    <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Text style={styles.stepText}>STEP 2 OF 2</Text>
+          <Text style={styles.title}>Review Scan</Text>
+          <Text style={styles.subtitle}>
+            We&apos;ve extracted the details from your receipt. Please verify
+            they are correct before adding to your gallery.
+          </Text>
         </View>
-      ) : null}
 
-      {error ? (
-        <Text style={styles.errorText}>{String(error.message ?? error)}</Text>
-      ) : null}
-
-      <View style={styles.footer}>
-        <Pressable style={styles.secondaryButton} onPress={retakeReceipt}>
-          <Text style={styles.secondaryButtonText}>Retake</Text>
-        </Pressable>
-
-        <Pressable
-          style={[
-            styles.primaryButton,
-            (!isReady || isGenerating) && styles.disabledButton,
-          ]}
-          onPress={runModel}
-          disabled={!isReady || isGenerating}
-        >
-          {isGenerating ? (
-            <ActivityIndicator />
-          ) : (
-            <Text style={styles.primaryButtonText}>
-              {isReady ? "Read Receipt" : "Loading OCR..."}
+        <View style={styles.previewPanel}>
+          <View style={styles.statusBadge}>
+            {isAnalyzing ? (
+              <ActivityIndicator size="small" color="#07845f" />
+            ) : (
+              <MaterialCommunityIcons
+                name="check-circle"
+                size={13}
+                color="#07845f"
+              />
+            )}
+            <Text style={styles.statusText}>
+              {isAnalyzing ? "ANALYZING SCAN" : "ANALYSIS COMPLETE"}
             </Text>
-          )}
+          </View>
+
+          <Image
+            source={{ uri: croppedImage.uri }}
+            style={styles.receiptImage}
+            contentFit="contain"
+          />
+
+          <View style={styles.previewFooter}>
+            <Text numberOfLines={1} style={styles.fileName}>
+              {fileName}
+            </Text>
+            <Pressable onPress={retakeReceipt}>
+              <Text style={styles.retakeText}>Retake Scan</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {errorMessage ? (
+          <Text style={styles.errorText}>{errorMessage}</Text>
+        ) : null}
+
+        <ReviewField
+          label="MERCHANT NAME"
+          value={merchantName}
+          onChangeText={setMerchantName}
+          placeholder="Merchant name"
+        />
+
+        <View style={styles.fieldRow}>
+          <ReviewField
+            compact
+            label="DATE"
+            value={date}
+            onChangeText={setDate}
+            placeholder="Date"
+          />
+          <ReviewField
+            compact
+            label="AMOUNT ($)"
+            value={amount}
+            onChangeText={setAmount}
+            placeholder="0.00"
+            keyboardType="decimal-pad"
+          />
+        </View>
+
+        <View style={styles.selectField}>
+          <View>
+            <Text style={styles.fieldLabel}>CATEGORY</Text>
+            <TextInput
+              style={styles.fieldInput}
+              value={category}
+              onChangeText={setCategory}
+              placeholder="Category"
+              placeholderTextColor="#94a3b8"
+            />
+          </View>
+          <MaterialCommunityIcons
+            name="chevron-down"
+            size={24}
+            color="#0f172a"
+          />
+        </View>
+
+        <ReviewField
+          label="PERSONAL NOTE (OPTIONAL)"
+          value={note}
+          onChangeText={setNote}
+          placeholder="Coffee with the design team..."
+          multiline
+        />
+
+        <Pressable style={styles.confirmButton} onPress={confirmReceipt}>
+          <MaterialCommunityIcons
+            name="plus-circle"
+            size={18}
+            color="#ffffff"
+          />
+          <Text style={styles.confirmButtonText}>Confirm & Add</Text>
         </Pressable>
-      </View>
+
+        <Pressable style={styles.discardButton} onPress={discardScan}>
+          <Text style={styles.discardButtonText}>DISCARD SCAN</Text>
+        </Pressable>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+type ReviewFieldProps = {
+  compact?: boolean;
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+  placeholder: string;
+  keyboardType?: "default" | "decimal-pad";
+  multiline?: boolean;
+};
+
+function ReviewField({
+  compact,
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  keyboardType = "default",
+  multiline,
+}: ReviewFieldProps) {
+  return (
+    <View style={[styles.field, compact && styles.compactField]}>
+      <Text style={styles.fieldLabel}>{label}</Text>
+      <TextInput
+        style={[styles.fieldInput, multiline && styles.multilineInput]}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor="#94a3b8"
+        keyboardType={keyboardType}
+        multiline={multiline}
+      />
     </View>
   );
 }
@@ -191,21 +274,153 @@ export default function CapturedReceiptScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#0f172a",
+    backgroundColor: "#f5f7f8",
+  },
+  content: {
+    gap: 16,
+    padding: 18,
+    paddingBottom: 28,
+  },
+  header: {
+    gap: 7,
+  },
+  stepText: {
+    color: "#027a5a",
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 3,
+  },
+  title: {
+    color: "#020617",
+    fontSize: 28,
+    fontWeight: "800",
+  },
+  subtitle: {
+    color: "#334155",
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  previewPanel: {
+    gap: 12,
+    overflow: "hidden",
+    borderRadius: 8,
+    padding: 16,
+    backgroundColor: "#ffffff",
+  },
+  statusBadge: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: "#f1f5f4",
+  },
+  statusText: {
+    color: "#64748b",
+    fontSize: 10,
+    fontWeight: "800",
   },
   receiptImage: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    filter: [
-      { grayscale: 1 },
-      { contrast: 1.85 },
-      { brightness: 1.18 },
-      { saturate: 0 },
-    ],
+    width: "100%",
+    height: 252,
+    backgroundColor: "#f8fafc",
   },
-  footer: {
-    padding: 16,
-    backgroundColor: "#111827",
+  previewFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 16,
+  },
+  fileName: {
+    flex: 1,
+    color: "#0f172a",
+    fontSize: 12,
+  },
+  retakeText: {
+    color: "#008060",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  fieldRow: {
+    flexDirection: "row",
+    gap: 16,
+  },
+  field: {
+    minHeight: 78,
+    justifyContent: "center",
+    gap: 6,
+    borderRadius: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    backgroundColor: "#ffffff",
+  },
+  compactField: {
+    flex: 1,
+  },
+  selectField: {
+    minHeight: 78,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 14,
+    borderRadius: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    backgroundColor: "#ffffff",
+  },
+  fieldLabel: {
+    color: "#64748b",
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 1.5,
+  },
+  fieldInput: {
+    minWidth: 0,
+    padding: 0,
+    color: "#020617",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  multilineInput: {
+    minHeight: 42,
+    color: "#475569",
+    fontSize: 13,
+    fontWeight: "500",
+    lineHeight: 18,
+    textAlignVertical: "top",
+  },
+  confirmButton: {
+    minHeight: 56,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    borderRadius: 8,
+    backgroundColor: "#E63C3A",
+    boxShadow: "0 6px 12px rgba(230, 60, 58, 0.22)",
+  },
+  confirmButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  discardButton: {
+    alignItems: "center",
+    paddingVertical: 10,
+  },
+  discardButtonText: {
+    color: "#0f172a",
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 2,
+  },
+  errorText: {
+    borderRadius: 8,
+    padding: 12,
+    color: "#b91c1c",
+    backgroundColor: "#fee2e2",
   },
   emptyScreen: {
     flex: 1,
@@ -230,34 +445,5 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 16,
     fontWeight: "700",
-  },
-  secondaryButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 48,
-    borderRadius: 8,
-    backgroundColor: "#ffffff",
-  },
-  secondaryButtonText: {
-    color: "#111827",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  resultBox: {
-    maxHeight: 180,
-    padding: 12,
-    backgroundColor: "#ffffff",
-  },
-  resultText: {
-    color: "#111827",
-    fontSize: 14,
-  },
-  errorText: {
-    padding: 12,
-    color: "#ef4444",
-    backgroundColor: "#111827",
-  },
-  disabledButton: {
-    opacity: 0.5,
   },
 });

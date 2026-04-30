@@ -1,44 +1,65 @@
-import { Pressable, StyleSheet, Text, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+import { colors } from "@repo/theme";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  type PressableProps,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 
 export type ButtonProps = PressableProps & {
   label: string;
-  variant?: 'primary' | 'secondary';
+  variant?: "primary" | "secondary";
   style?: StyleProp<ViewStyle>;
 };
 
-export function Button({ label, variant = 'primary', disabled, style, ...props }: ButtonProps) {
+export function Button({
+  label,
+  variant = "primary",
+  disabled,
+  style,
+  ...props
+}: ButtonProps) {
   return (
     <Pressable
       accessibilityRole="button"
       disabled={disabled}
       style={({ pressed }) => [
         styles.base,
-        variant === 'primary' ? styles.primary : styles.secondary,
+        variant === "primary" ? styles.primary : styles.secondary,
         disabled && styles.disabled,
         pressed && !disabled && styles.pressed,
         style,
       ]}
       {...props}
     >
-      <Text style={[styles.label, variant === 'secondary' && styles.secondaryLabel]}>{label}</Text>
+      <Text
+        style={[styles.label, variant === "secondary" && styles.secondaryLabel]}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   base: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 48,
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 18,
     borderRadius: 8,
+    minHeight: 56,
+    flexDirection: "row",
+    gap: 10,
+    boxShadow: "0 6px 12px rgba(230, 60, 58, 0.22)",
   },
   primary: {
-    backgroundColor: '#2563eb',
+    backgroundColor: colors.primary,
   },
   secondary: {
-    backgroundColor: '#ffffff',
-    borderColor: '#d1d5db',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     borderWidth: 1,
   },
   disabled: {
@@ -48,11 +69,11 @@ const styles = StyleSheet.create({
     opacity: 0.82,
   },
   label: {
-    color: '#ffffff',
+    color: colors.primaryText,
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   secondaryLabel: {
-    color: '#111827',
+    color: colors.text,
   },
 });

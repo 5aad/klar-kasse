@@ -1,11 +1,21 @@
 export const colors = {
-  background: '#ffffff',
-  surface: '#f8fafc',
-  text: '#111827',
-  mutedText: '#4b5563',
-  border: '#e5e7eb',
-  primary: '#2563eb',
-  primaryText: '#ffffff',
+  background: "#D6D4CE",
+  surface: "#F2F0EA",
+  text: "#101010",
+  mutedText: "#91908D",
+  border: "#91908D",
+  primary: "#E63C3A",
+  primaryText: "#FFFFFF",
+} as const;
+
+export const darkColors = {
+  background: "#101010",
+  surface: "#2B2B2A",
+  text: "#F2F0EA",
+  mutedText: "#D6D4CE",
+  border: "#91908D",
+  primary: "#E63C3A",
+  primaryText: "#FFFFFF",
 } as const;
 
 export const spacing = {
@@ -22,10 +32,21 @@ export const radius = {
   lg: 12,
 } as const;
 
+export const fontSize = {
+  xs: 10,
+  sm: 12,
+  md: 14,
+  lg: 16,
+  xl: 24,
+  xxl: 32,
+} as const;
+
 export const theme = {
   colors,
+  darkColors,
   spacing,
   radius,
+  fontSize,
 } as const;
 
 export type Theme = typeof theme;
