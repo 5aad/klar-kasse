@@ -1,11 +1,12 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { colors, fontSize, radius, spacing } from "@repo/theme";
+import { fontSize, radius, spacing } from "@repo/theme";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { NewCategoryModal } from "@/components/budget/new-category-modal";
+import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
 
 type CategoryBudget = {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -78,6 +79,7 @@ const categoryBudgets: CategoryBudget[] = [
 ] as const;
 
 export default function BudgetScreen() {
+  const themeColors = useThemeColors();
   const [isNewCategoryModalVisible, setIsNewCategoryModalVisible] =
     useState(false);
   const totalBudget = 5000;
@@ -85,46 +87,81 @@ export default function BudgetScreen() {
   const totalProgress = totalSpent / totalBudget;
 
   return (
-    <SafeAreaView style={styles.screen} edges={["top"]}>
+    <SafeAreaView
+      style={[styles.screen, { backgroundColor: themeColors.background }]}
+      edges={["top"]}
+    >
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Budget</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: themeColors.text }]}>
+            Budget
+          </Text>
+          <Text style={[styles.subtitle, { color: themeColors.mutedText }]}>
             Track spending across every category.
           </Text>
         </View>
 
-        <View style={styles.statusCard}>
-          <View style={styles.statusAccent} />
-          <Text style={styles.cardEyebrow}>TOTAL BUDGET STATUS</Text>
-          <Text style={styles.percent}>65%</Text>
-          <Text style={styles.statusCopy}>
-            of your <Text style={styles.strong}>$5,000</Text> monthly budget
-            used
+        <View
+          style={[styles.statusCard, { backgroundColor: themeColors.surface }]}
+        >
+          <View
+            style={[
+              styles.statusAccent,
+              { backgroundColor: themeColors.primary },
+            ]}
+          />
+          <Text style={[styles.cardEyebrow, { color: themeColors.mutedText }]}>
+            TOTAL BUDGET STATUS
+          </Text>
+          <Text style={[styles.percent, { color: themeColors.text }]}>65%</Text>
+          <Text style={[styles.statusCopy, { color: themeColors.mutedText }]}>
+            of your{" "}
+            <Text style={[styles.strong, { color: themeColors.text }]}>
+              $5,000
+            </Text>{" "}
+            monthly budget used
           </Text>
 
           <View style={styles.statusAmounts}>
-            <Text style={styles.primaryAmount}>$3,250 spent</Text>
-            <Text style={styles.secondaryAmount}>$1,750 left</Text>
+            <Text
+              style={[styles.primaryAmount, { color: themeColors.primary }]}
+            >
+              $3,250 spent
+            </Text>
+            <Text
+              style={[styles.secondaryAmount, { color: themeColors.mutedText }]}
+            >
+              $1,750 left
+            </Text>
           </View>
-          <ProgressBar progress={totalProgress} />
+          <ProgressBar
+            fillColor={themeColors.primary}
+            progress={totalProgress}
+            trackColor={themeColors.text}
+          />
         </View>
 
         <View style={styles.categoryHeader}>
-          <Text style={styles.sectionTitle}>Category Budgets</Text>
+          <Text style={[styles.sectionTitle, { color: themeColors.text }]}>
+            Category Budgets
+          </Text>
           <Pressable
-            style={styles.addButton}
+            style={[styles.addButton, { backgroundColor: themeColors.primary }]}
             onPress={() => setIsNewCategoryModalVisible(true)}
           >
             <MaterialCommunityIcons
-              color={colors.primaryText}
+              color={themeColors.primaryText}
               name="plus-circle"
               size={18}
             />
-            <Text style={styles.addButtonText}>Add</Text>
+            <Text
+              style={[styles.addButtonText, { color: themeColors.primaryText }]}
+            >
+              Add
+            </Text>
           </Pressable>
         </View>
 
@@ -144,13 +181,15 @@ export default function BudgetScreen() {
 
 function ProgressBar({
   progress,
-  fillColor = colors.primary,
+  fillColor,
+  trackColor,
 }: {
+  fillColor: string;
   progress: number;
-  fillColor?: string;
+  trackColor: string;
 }) {
   return (
-    <View style={styles.progressTrack}>
+    <View style={[styles.progressTrack, { backgroundColor: trackColor }]}>
       <View
         style={[
           styles.progressFill,
@@ -162,23 +201,49 @@ function ProgressBar({
 }
 
 function CategoryBudgetCard({ budget }: { budget: CategoryBudget }) {
+  const themeColors = useThemeColors();
+  const resolvedTheme = useResolvedTheme();
   const remaining = budget.limit - budget.spent;
   const progress = budget.spent / budget.limit;
   const isAlert = Boolean(budget.alert);
+  const cardBackground =
+    resolvedTheme === "dark" ? themeColors.surface : themeColors.text;
+  const cardText =
+    resolvedTheme === "dark" ? themeColors.text : themeColors.primaryText;
+  const cardMutedText =
+    resolvedTheme === "dark" ? themeColors.mutedText : themeColors.background;
 
   return (
-    <View style={[styles.categoryCard, isAlert && styles.alertCard]}>
+    <View
+      style={[
+        styles.categoryCard,
+        { backgroundColor: cardBackground },
+        isAlert && styles.alertCard,
+        isAlert && { borderColor: themeColors.primary },
+      ]}
+    >
       <View style={styles.categoryTopRow}>
-        <View style={[styles.categoryIconBox, isAlert && styles.alertIconBox]}>
+        <View
+          style={[
+            styles.categoryIconBox,
+            {
+              backgroundColor: "#101010",
+            },
+          ]}
+        >
           <MaterialCommunityIcons
-            color={isAlert ? colors.primary : colors.primaryText}
+            color={isAlert ? themeColors.primary : themeColors.primaryText}
             name={budget.icon}
             size={25}
           />
         </View>
         <View style={styles.categoryCopy}>
-          <Text style={styles.categoryName}>{budget.name}</Text>
-          <Text style={styles.categoryType}>{budget.type}</Text>
+          <Text style={[styles.categoryName, { color: cardText }]}>
+            {budget.name}
+          </Text>
+          <Text style={[styles.categoryType, { color: cardMutedText }]}>
+            {budget.type}
+          </Text>
         </View>
         <Pressable
           onPress={() => {
@@ -199,7 +264,7 @@ function CategoryBudgetCard({ budget }: { budget: CategoryBudget }) {
           <Text
             style={[
               styles.categoryAction,
-              !isAlert && styles.categoryActionLight,
+              { color: isAlert ? themeColors.primary : cardText },
             ]}
           >
             {budget.action}
@@ -208,31 +273,39 @@ function CategoryBudgetCard({ budget }: { budget: CategoryBudget }) {
       </View>
 
       <View style={styles.categoryAmounts}>
-        <Text style={styles.categorySpent}>
+        <Text style={[styles.categorySpent, { color: cardMutedText }]}>
           ${budget.spent.toLocaleString()} of ${budget.limit.toLocaleString()}
         </Text>
         <Text
           style={[
             styles.categoryRemaining,
-            !isAlert && styles.categoryRemainingLight,
+            { color: isAlert ? themeColors.primary : cardText },
           ]}
         >
           ${remaining.toLocaleString()} remaining
         </Text>
       </View>
       <ProgressBar
-        fillColor={isAlert ? colors.primary : colors.primaryText}
+        fillColor={isAlert ? themeColors.primary : cardText}
         progress={progress}
+        trackColor={themeColors.mutedText}
       />
 
       {budget.alert ? (
-        <View style={styles.warningPill}>
+        <View
+          style={[
+            styles.warningPill,
+            { backgroundColor: `${themeColors.primary}26` },
+          ]}
+        >
           <MaterialCommunityIcons
-            color={colors.primary}
+            color={themeColors.primary}
             name="alert"
             size={15}
           />
-          <Text style={styles.warningText}>{budget.alert}</Text>
+          <Text style={[styles.warningText, { color: themeColors.primary }]}>
+            {budget.alert}
+          </Text>
         </View>
       ) : null}
     </View>
@@ -242,7 +315,6 @@ function CategoryBudgetCard({ budget }: { budget: CategoryBudget }) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     gap: spacing.lg,
@@ -253,12 +325,10 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   title: {
-    color: colors.text,
     fontSize: fontSize.xxl,
     fontWeight: "600",
   },
   subtitle: {
-    color: colors.mutedText,
     fontSize: fontSize.md,
     fontWeight: "500",
   },
@@ -267,7 +337,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     borderRadius: radius.lg,
     padding: spacing.lg,
-    backgroundColor: colors.surface,
     boxShadow: "0 12px 0 rgba(16, 16, 16, 0.28)",
   },
   statusAccent: {
@@ -276,41 +345,33 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     width: 6,
-    backgroundColor: colors.primary,
   },
   cardEyebrow: {
-    color: colors.mutedText,
     fontSize: fontSize.sm,
     fontWeight: "600",
     letterSpacing: 2,
   },
   percent: {
-    color: colors.text,
     fontSize: 46,
     fontWeight: "700",
   },
   statusCopy: {
     maxWidth: 230,
-    color: colors.mutedText,
     fontSize: fontSize.lg,
     fontWeight: "500",
     lineHeight: 23,
   },
-  strong: {
-    color: colors.text,
-  },
+  strong: {},
   statusAmounts: {
     marginTop: spacing.sm,
     flexDirection: "row",
     justifyContent: "space-between",
   },
   primaryAmount: {
-    color: colors.primary,
     fontSize: fontSize.md,
     fontWeight: "600",
   },
   secondaryAmount: {
-    color: colors.mutedText,
     fontSize: fontSize.md,
     fontWeight: "600",
   },
@@ -318,7 +379,6 @@ const styles = StyleSheet.create({
     height: 12,
     overflow: "hidden",
     borderRadius: 999,
-    backgroundColor: "#2B2B2A",
   },
   progressFill: {
     height: "100%",
@@ -332,7 +392,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     flex: 1,
-    color: colors.text,
     fontSize: fontSize.xl,
     fontWeight: "700",
     lineHeight: 29,
@@ -345,11 +404,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     borderRadius: radius.md,
     paddingHorizontal: spacing.lg,
-    backgroundColor: colors.primary,
     boxShadow: "0 6px 12px rgba(230, 60, 58, 0.22)",
   },
   addButtonText: {
-    color: colors.primaryText,
     fontSize: fontSize.md,
     fontWeight: "600",
   },
@@ -360,11 +417,9 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     borderRadius: radius.lg,
     padding: spacing.lg,
-    backgroundColor: colors.text,
   },
   alertCard: {
     borderWidth: 1.5,
-    borderColor: colors.primary,
   },
   categoryTopRow: {
     flexDirection: "row",
@@ -377,31 +432,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.md,
-    backgroundColor: "#2B2B2A",
-  },
-  alertIconBox: {
-    backgroundColor: "#E63C3A26",
   },
   categoryCopy: {
     flex: 1,
   },
   categoryName: {
-    color: colors.primaryText,
     fontSize: fontSize.lg,
     fontWeight: "700",
   },
   categoryType: {
-    color: colors.background,
     fontSize: fontSize.sm,
     fontWeight: "600",
   },
   categoryAction: {
-    color: colors.primary,
     fontSize: fontSize.sm,
     fontWeight: "700",
-  },
-  categoryActionLight: {
-    color: colors.primaryText,
   },
   categoryAmounts: {
     flexDirection: "row",
@@ -409,17 +454,12 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   categorySpent: {
-    color: colors.background,
     fontSize: fontSize.md,
     fontWeight: "600",
   },
   categoryRemaining: {
-    color: colors.primary,
     fontSize: fontSize.md,
     fontWeight: "700",
-  },
-  categoryRemainingLight: {
-    color: colors.primaryText,
   },
   warningPill: {
     minHeight: 28,
@@ -428,10 +468,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: spacing.xs,
     borderRadius: 999,
-    backgroundColor: "#E63C3A26",
   },
   warningText: {
-    color: colors.primary,
     fontSize: fontSize.sm,
     fontWeight: "700",
   },

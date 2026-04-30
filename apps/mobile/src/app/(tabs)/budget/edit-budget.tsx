@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { colors, fontSize, radius, spacing } from "@repo/theme";
+import { fontSize, radius, spacing } from "@repo/theme";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useRef, useState } from "react";
 import {
@@ -15,8 +15,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
+import { useThemeColors } from "@/hooks/use-theme-colors";
 
 export default function EditBudgetScreen() {
+  const themeColors = useThemeColors();
   const params = useLocalSearchParams<{
     icon?: keyof typeof MaterialCommunityIcons.glyphMap;
     limit?: string;
@@ -67,7 +69,10 @@ export default function EditBudgetScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.screen} edges={["top"]}>
+    <SafeAreaView
+      style={[styles.screen, { backgroundColor: themeColors.background }]}
+      edges={["top"]}
+    >
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -77,17 +82,35 @@ export default function EditBudgetScreen() {
           subtitle="Adjust monthly limits and allocation."
         />
 
-        <View style={styles.currentCard}>
-          <View style={styles.currentAccent} />
+        <View
+          style={[styles.currentCard, { backgroundColor: themeColors.surface }]}
+        >
+          <View
+            style={[
+              styles.currentAccent,
+              { backgroundColor: themeColors.primary },
+            ]}
+          />
           <View style={styles.currentHeader}>
             <View style={styles.currentCopy}>
-              <Text style={styles.eyebrow}>CURRENT ALLOCATION</Text>
-              <Text style={styles.title}>{name}</Text>
-              <Text style={styles.subtitle}>{formatType(type)}</Text>
+              <Text style={[styles.eyebrow, { color: themeColors.primary }]}>
+                CURRENT ALLOCATION
+              </Text>
+              <Text style={[styles.title, { color: themeColors.text }]}>
+                {name}
+              </Text>
+              <Text style={[styles.subtitle, { color: themeColors.mutedText }]}>
+                {formatType(type)}
+              </Text>
             </View>
-            <View style={styles.iconBox}>
+            <View
+              style={[
+                styles.iconBox,
+                { backgroundColor: `${themeColors.primary}26` },
+              ]}
+            >
               <MaterialCommunityIcons
-                color={colors.primary}
+                color={themeColors.primary}
                 name={icon}
                 size={34}
               />
@@ -95,22 +118,53 @@ export default function EditBudgetScreen() {
           </View>
 
           <View style={styles.statRow}>
-            <View style={styles.statBox}>
-              <Text style={styles.statLabel}>USED</Text>
-              <Text style={styles.statValue}>${spent.toFixed(2)}</Text>
+            <View
+              style={[
+                styles.statBox,
+                { backgroundColor: themeColors.background },
+              ]}
+            >
+              <Text
+                style={[styles.statLabel, { color: themeColors.mutedText }]}
+              >
+                USED
+              </Text>
+              <Text style={[styles.statValue, { color: themeColors.text }]}>
+                ${spent.toFixed(2)}
+              </Text>
             </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statLabel}>CURRENT LIMIT</Text>
-              <Text style={styles.statValue}>${limit.toFixed(2)}</Text>
+            <View
+              style={[
+                styles.statBox,
+                { backgroundColor: themeColors.background },
+              ]}
+            >
+              <Text
+                style={[styles.statLabel, { color: themeColors.mutedText }]}
+              >
+                CURRENT LIMIT
+              </Text>
+              <Text style={[styles.statValue, { color: themeColors.text }]}>
+                ${limit.toFixed(2)}
+              </Text>
             </View>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>NEW MONTHLY LIMIT</Text>
+          <Text style={[styles.sectionLabel, { color: themeColors.mutedText }]}>
+            NEW MONTHLY LIMIT
+          </Text>
           <TextInput
             keyboardType="decimal-pad"
-            style={styles.amountInput}
+            style={[
+              styles.amountInput,
+              {
+                backgroundColor: themeColors.surface,
+                borderColor: themeColors.text,
+                color: themeColors.text,
+              },
+            ]}
             value={`$${limitValue}`}
             onChangeText={(value) =>
               setLimitValue(value.replace(/[^\d.]/g, ""))
@@ -118,11 +172,11 @@ export default function EditBudgetScreen() {
           />
           <View style={styles.infoRow}>
             <MaterialCommunityIcons
-              color={colors.mutedText}
+              color={themeColors.mutedText}
               name="information"
               size={16}
             />
-            <Text style={styles.infoText}>
+            <Text style={[styles.infoText, { color: themeColors.mutedText }]}>
               This limit will apply to the current billing cycle.
             </Text>
           </View>
@@ -130,14 +184,21 @@ export default function EditBudgetScreen() {
 
         <View style={styles.section}>
           <View style={styles.proportionHeader}>
-            <Text style={styles.sectionLabel}>ADJUST PROPORTION</Text>
-            <Text style={styles.proportionText}>
+            <Text
+              style={[styles.sectionLabel, { color: themeColors.mutedText }]}
+            >
+              ADJUST PROPORTION
+            </Text>
+            <Text style={[styles.proportionText, { color: themeColors.text }]}>
               {proportionPercent}% of total income
             </Text>
           </View>
 
           <Pressable
-            style={styles.sliderTrack}
+            style={[
+              styles.sliderTrack,
+              { backgroundColor: themeColors.mutedText },
+            ]}
             onLayout={(event) => {
               sliderWidthRef.current = event.nativeEvent.layout.width;
             }}
@@ -145,30 +206,58 @@ export default function EditBudgetScreen() {
             {...sliderPanResponder.panHandlers}
           >
             <View
-              style={[styles.sliderFill, { width: `${proportion * 100}%` }]}
+              style={[
+                styles.sliderFill,
+                {
+                  backgroundColor: themeColors.text,
+                  width: `${proportion * 100}%`,
+                },
+              ]}
             />
             <View
-              style={[styles.sliderThumb, { left: `${proportion * 100}%` }]}
+              style={[
+                styles.sliderThumb,
+                {
+                  backgroundColor: themeColors.surface,
+                  borderColor: themeColors.text,
+                  left: `${proportion * 100}%`,
+                },
+              ]}
             />
           </Pressable>
 
           <View style={styles.sliderLabels}>
-            <Text style={styles.sliderLabel}>$100</Text>
-            <Text style={styles.sliderLabel}>$1,200</Text>
+            <Text
+              style={[styles.sliderLabel, { color: themeColors.mutedText }]}
+            >
+              $100
+            </Text>
+            <Text
+              style={[styles.sliderLabel, { color: themeColors.mutedText }]}
+            >
+              $1,200
+            </Text>
           </View>
         </View>
 
-        <Pressable style={styles.saveButton} onPress={() => router.back()}>
+        <Pressable
+          style={[styles.saveButton, { backgroundColor: themeColors.primary }]}
+          onPress={() => router.back()}
+        >
           <MaterialCommunityIcons
-            color={colors.primaryText}
+            color={themeColors.primaryText}
             name="content-save-outline"
             size={20}
           />
-          <Text style={styles.saveText}>Save Changes</Text>
+          <Text style={[styles.saveText, { color: themeColors.primaryText }]}>
+            Save Changes
+          </Text>
         </Pressable>
 
         <Pressable style={styles.discardButton} onPress={() => router.back()}>
-          <Text style={styles.discardText}>Discard Edits</Text>
+          <Text style={[styles.discardText, { color: themeColors.mutedText }]}>
+            Discard Edits
+          </Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -182,7 +271,6 @@ function formatType(type: string) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     gap: spacing.xl,
@@ -194,7 +282,6 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
     borderRadius: radius.lg,
     padding: spacing.lg,
-    backgroundColor: colors.surface,
     boxShadow: "0 12px 0 rgba(16, 16, 16, 0.16)",
   },
   currentAccent: {
@@ -203,7 +290,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     width: 6,
-    backgroundColor: colors.primary,
   },
   currentHeader: {
     flexDirection: "row",
@@ -215,18 +301,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   eyebrow: {
-    color: colors.primary,
     fontSize: fontSize.xs,
     fontWeight: "700",
     letterSpacing: 1.2,
   },
   title: {
-    color: colors.text,
     fontSize: 31,
     fontWeight: "700",
   },
   subtitle: {
-    color: colors.mutedText,
     fontSize: fontSize.md,
     fontWeight: "600",
   },
@@ -236,7 +319,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.md,
-    backgroundColor: "#E63C3A26",
   },
   statRow: {
     flexDirection: "row",
@@ -247,16 +329,13 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     borderRadius: radius.md,
     padding: spacing.md,
-    backgroundColor: colors.background,
   },
   statLabel: {
-    color: colors.mutedText,
     fontSize: fontSize.xs,
     fontWeight: "700",
     letterSpacing: 1,
   },
   statValue: {
-    color: colors.text,
     fontSize: fontSize.lg,
     fontWeight: "700",
   },
@@ -264,7 +343,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   sectionLabel: {
-    color: colors.mutedText,
     fontSize: fontSize.sm,
     fontWeight: "700",
     letterSpacing: 1.2,
@@ -272,13 +350,10 @@ const styles = StyleSheet.create({
   amountInput: {
     minHeight: 98,
     borderWidth: 1,
-    borderColor: colors.text,
     borderRadius: radius.md,
     paddingHorizontal: spacing.lg,
-    color: colors.text,
     fontSize: 42,
     fontWeight: "700",
-    backgroundColor: colors.surface,
   },
   infoRow: {
     flexDirection: "row",
@@ -287,7 +362,6 @@ const styles = StyleSheet.create({
   },
   infoText: {
     flex: 1,
-    color: colors.mutedText,
     fontSize: fontSize.sm,
     fontWeight: "500",
   },
@@ -298,7 +372,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   proportionText: {
-    color: colors.text,
     fontSize: fontSize.md,
     fontWeight: "700",
   },
@@ -306,12 +379,10 @@ const styles = StyleSheet.create({
     height: 14,
     justifyContent: "center",
     borderRadius: 999,
-    backgroundColor: colors.mutedText,
   },
   sliderFill: {
     height: "100%",
     borderRadius: 999,
-    backgroundColor: colors.text,
   },
   sliderThumb: {
     position: "absolute",
@@ -320,15 +391,12 @@ const styles = StyleSheet.create({
     marginLeft: -14,
     borderRadius: radius.sm,
     borderWidth: 4,
-    borderColor: colors.text,
-    backgroundColor: colors.surface,
   },
   sliderLabels: {
     flexDirection: "row",
     justifyContent: "space-between",
   },
   sliderLabel: {
-    color: colors.mutedText,
     fontSize: fontSize.xs,
     fontWeight: "700",
   },
@@ -339,11 +407,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: spacing.sm,
     borderRadius: radius.md,
-    backgroundColor: colors.primary,
     boxShadow: "0 6px 12px rgba(230, 60, 58, 0.22)",
   },
   saveText: {
-    color: colors.primaryText,
     fontSize: fontSize.lg,
     fontWeight: "700",
   },
@@ -351,7 +417,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   discardText: {
-    color: colors.mutedText,
     fontSize: fontSize.md,
     fontWeight: "700",
   },
