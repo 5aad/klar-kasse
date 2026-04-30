@@ -2,7 +2,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { StyleSheet, Text, View } from "react-native";
 
-import { useThemeColors } from "@/hooks/use-theme-colors";
+import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
 
 export type TransactionListItem = {
   amount: string;
@@ -48,6 +48,11 @@ export function TransactionList({
   title = "Transaction List",
 }: Props) {
   const themeColors = useThemeColors();
+  const resolvedTheme = useResolvedTheme();
+  const iconBackground =
+    resolvedTheme === "dark" ? themeColors.text : themeColors.text;
+  const iconColor =
+    resolvedTheme === "dark" ? themeColors.background : themeColors.primaryText;
 
   return (
     <View style={styles.section}>
@@ -61,11 +66,9 @@ export function TransactionList({
       <View style={styles.list}>
         {items.map((transaction) => (
           <View key={transaction.title} style={styles.row}>
-            <View
-              style={[styles.iconBox, { backgroundColor: themeColors.text }]}
-            >
+            <View style={[styles.iconBox, { backgroundColor: iconBackground }]}>
               <MaterialCommunityIcons
-                color={themeColors.primaryText}
+                color={iconColor}
                 name={transaction.icon}
                 size={26}
               />

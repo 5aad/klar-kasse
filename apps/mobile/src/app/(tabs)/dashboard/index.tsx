@@ -1,20 +1,30 @@
-import { colors, fontSize, spacing } from "@repo/theme";
+import { fontSize, spacing } from "@repo/theme";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { BalanceGraph } from "@/components/dashboard/balance-graph";
 import { TransactionList } from "@/components/shared/transaction-list";
+import { useThemeColors } from "@/hooks/use-theme-colors";
 
 export default function DashboardScreen() {
+  const themeColors = useThemeColors();
+
   return (
-    <SafeAreaView style={styles.screen} edges={["top"]}>
+    <SafeAreaView
+      style={[styles.screen, { backgroundColor: themeColors.background }]}
+      edges={["top"]}
+    >
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.balanceRow}>
-          <Text style={styles.balance}>$ 13,553.00</Text>
-          <Text style={styles.balanceLabel}>Balance</Text>
+          <Text style={[styles.balance, { color: themeColors.text }]}>
+            $ 13,553.00
+          </Text>
+          <Text style={[styles.balanceLabel, { color: themeColors.mutedText }]}>
+            Balance
+          </Text>
         </View>
 
         <BalanceGraph />
@@ -27,7 +37,6 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     gap: spacing.xl,
@@ -40,13 +49,11 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   balance: {
-    color: colors.text,
     fontSize: 34,
     fontWeight: "700",
   },
   balanceLabel: {
     paddingBottom: 7,
-    color: colors.mutedText,
     fontSize: fontSize.md,
     fontWeight: "600",
   },
