@@ -2,7 +2,7 @@ import { fontSize, radius, spacing } from "@repo/theme";
 import { BarChart } from "react-native-gifted-charts";
 import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
-import { useThemeColors } from "@/hooks/use-theme-colors";
+import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
 
 const distributionData = [
   { label: "HOUSING", value: 1200 },
@@ -16,24 +16,29 @@ const distributionData = [
 export function ExpenseDistributionChart() {
   const { width } = useWindowDimensions();
   const themeColors = useThemeColors();
+  const resolvedTheme = useResolvedTheme();
   const chartWidth = Math.min(width - spacing.lg * 4, 320);
+  const chartForeground =
+    resolvedTheme === "dark" ? themeColors.background : themeColors.primaryText;
+  const chartMuted =
+    resolvedTheme === "dark" ? themeColors.background : themeColors.mutedText;
 
   return (
     <View style={[styles.card, { backgroundColor: themeColors.text }]}>
       <View style={styles.header}>
         <View style={styles.titleBlock}>
-          <Text style={[styles.title, { color: themeColors.primaryText }]}>
+          <Text style={[styles.title, { color: chartForeground }]}>
             Expense Distribution
           </Text>
-          <Text style={[styles.subtitle, { color: themeColors.mutedText }]}>
+          <Text style={[styles.subtitle, { color: chartMuted }]}>
             Your spending patterns for this period
           </Text>
         </View>
         <View>
-          <Text style={[styles.totalLabel, { color: themeColors.mutedText }]}>
+          <Text style={[styles.totalLabel, { color: chartMuted }]}>
             TOTAL SPENT
           </Text>
-          <Text style={[styles.totalValue, { color: themeColors.primaryText }]}>
+          <Text style={[styles.totalValue, { color: chartForeground }]}>
             $3,240.50
           </Text>
         </View>
@@ -45,14 +50,8 @@ export function ExpenseDistributionChart() {
           barWidth={24}
           data={distributionData.map((item) => ({
             ...item,
-            frontColor:
-              item.value >= 450
-                ? themeColors.primaryText
-                : themeColors.mutedText,
-            labelTextStyle: [
-              styles.labelText,
-              { color: themeColors.mutedText },
-            ],
+            frontColor: item.value >= 450 ? chartForeground : chartMuted,
+            labelTextStyle: [styles.labelText, { color: chartMuted }],
           }))}
           height={172}
           hideRules

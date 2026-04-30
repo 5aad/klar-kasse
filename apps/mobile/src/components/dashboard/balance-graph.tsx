@@ -2,7 +2,7 @@ import { fontSize, radius, spacing } from "@repo/theme";
 import { LineChart } from "react-native-gifted-charts";
 import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
-import { useThemeColors } from "@/hooks/use-theme-colors";
+import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
 
 const balanceData = [
   { value: 42 },
@@ -25,14 +25,19 @@ const ranges = ["1D", "5D", "1M", "3M", "6M", "1Y"];
 export function BalanceGraph() {
   const { width } = useWindowDimensions();
   const themeColors = useThemeColors();
+  const resolvedTheme = useResolvedTheme();
   const chartWidth = Math.min(width - spacing.lg * 4, 340);
+  const chartForeground =
+    resolvedTheme === "dark" ? themeColors.background : themeColors.primaryText;
+  const chartMuted =
+    resolvedTheme === "dark" ? themeColors.background : themeColors.mutedText;
 
   return (
     <View style={[styles.card, { backgroundColor: themeColors.text }]}>
       <LineChart
         areaChart={false}
         curved
-        color={themeColors.primaryText}
+        color={chartForeground}
         data={balanceData}
         dataPointsColor={themeColors.primary}
         dataPointsRadius={0}
@@ -66,14 +71,14 @@ export function BalanceGraph() {
             </View>
           ),
         }}
-        rulesColor="#252525"
+        rulesColor={chartMuted}
         rulesType="solid"
         spacing={chartWidth / balanceData.length}
         thickness={4}
         width={chartWidth}
         xAxisColor="transparent"
         yAxisColor="transparent"
-        yAxisTextStyle={styles.axisText}
+        yAxisTextStyle={{ ...styles.axisText, color: chartMuted }}
       />
 
       <View style={styles.rangeRow}>
@@ -91,10 +96,7 @@ export function BalanceGraph() {
               style={[
                 styles.rangeText,
                 {
-                  color:
-                    range === "5D"
-                      ? themeColors.primaryText
-                      : themeColors.mutedText,
+                  color: range === "5D" ? chartForeground : chartMuted,
                 },
               ]}
             >
