@@ -15,7 +15,7 @@ export default function Index() {
       const isOnboardingDone = await getIsOnboardingDone();
 
       if (isMounted) {
-        router.replace(isOnboardingDone ? "/dashboard" : "/onboarding");
+        router.replace(isOnboardingDone ? "/(dashboard)" : "/onboarding");
       }
     }
 

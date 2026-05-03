@@ -38,7 +38,7 @@ export default function OnboardingScreen() {
 
     setIsSaving(true);
     await setIsOnboardingDone(true);
-    router.replace("/dashboard");
+    router.replace("/(dashboard)");
   }, [isSaving]);
 
   const handleButtonPress = useCallback(() => {

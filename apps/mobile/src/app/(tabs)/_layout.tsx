@@ -33,7 +33,7 @@ export default function TabLayout() {
         },
       }}
     >
-      <NativeTabs.Trigger name="dashboard">
+      <NativeTabs.Trigger name="(dashboard)">
         <Icon
           src={
             <VectorIcon
@@ -44,7 +44,7 @@ export default function TabLayout() {
         />
         <Label>Dashboard</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="insight">
+      <NativeTabs.Trigger name="(insight)">
         <Icon
           src={<VectorIcon family={MaterialCommunityIcons} name="chart-line" />}
         />
