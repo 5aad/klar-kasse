@@ -2,6 +2,7 @@ import TextRecognition, {
   TextRecognitionScript,
 } from "@react-native-ml-kit/text-recognition";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { fontSize, radius, spacing } from "@repo/theme";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -16,10 +17,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useReceiptScanStore } from "@/stores/receipt-scan-store";
 import { parseNormaReceipt } from "@/utils/receipt-parser";
 
+type ThemeColors = ReturnType<typeof useThemeColors>;
+
 export default function CapturedReceiptMlKitScreen() {
+  const themeColors = useThemeColors();
   const croppedImage = useReceiptScanStore((state) => state.croppedImage);
   const clearReceiptImages = useReceiptScanStore(
     (state) => state.clearReceiptImages,
@@ -107,65 +112,120 @@ export default function CapturedReceiptMlKitScreen() {
 
   if (!croppedImage?.uri) {
     return (
-      <SafeAreaView style={styles.emptyScreen}>
-        <Text style={styles.emptyTitle}>No receipt image found</Text>
+      <SafeAreaView
+        style={[
+          styles.emptyScreen,
+          { backgroundColor: themeColors.background },
+        ]}
+      >
+        <Text style={[styles.emptyTitle, { color: themeColors.text }]}>
+          No receipt image found
+        </Text>
 
-        <Pressable style={styles.primaryButton} onPress={() => router.back()}>
-          <Text style={styles.primaryButtonText}>Go back</Text>
+        <Pressable
+          style={[
+            styles.primaryButton,
+            { backgroundColor: themeColors.primary },
+          ]}
+          onPress={() => router.back()}
+        >
+          <Text
+            style={[
+              styles.primaryButtonText,
+              { color: themeColors.primaryText },
+            ]}
+          >
+            Go back
+          </Text>
         </Pressable>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
+    <SafeAreaView
+      style={[styles.screen, { backgroundColor: themeColors.background }]}
+      edges={["top", "bottom"]}
+    >
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.stepText}>STEP 2 OF 2</Text>
-          <Text style={styles.title}>Review Scan</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.stepText, { color: themeColors.primary }]}>
+            STEP 2 OF 2
+          </Text>
+          <Text style={[styles.title, { color: themeColors.text }]}>
+            Review Scan
+          </Text>
+          <Text style={[styles.subtitle, { color: themeColors.text }]}>
             We&apos;ve extracted the details from your receipt. Please verify
             they are correct before adding to your gallery.
           </Text>
         </View>
 
-        <View style={styles.previewPanel}>
-          <View style={styles.statusBadge}>
+        <View
+          style={[
+            styles.previewPanel,
+            { backgroundColor: themeColors.surface },
+          ]}
+        >
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: themeColors.background },
+            ]}
+          >
             {isAnalyzing ? (
-              <ActivityIndicator size="small" color="#07845f" />
+              <ActivityIndicator size="small" color={themeColors.primary} />
             ) : (
               <MaterialCommunityIcons
                 name="check-circle"
                 size={13}
-                color="#07845f"
+                color={themeColors.primary}
               />
             )}
-            <Text style={styles.statusText}>
+            <Text style={[styles.statusText, { color: themeColors.mutedText }]}>
               {isAnalyzing ? "ANALYZING SCAN" : "ANALYSIS COMPLETE"}
             </Text>
           </View>
 
           <Image
             source={{ uri: croppedImage.uri }}
-            style={styles.receiptImage}
+            style={[
+              styles.receiptImage,
+              { backgroundColor: themeColors.background },
+            ]}
             contentFit="contain"
           />
 
           <View style={styles.previewFooter}>
-            <Text numberOfLines={1} style={styles.fileName}>
+            <Text
+              numberOfLines={1}
+              style={[styles.fileName, { color: themeColors.text }]}
+            >
               {fileName}
             </Text>
             <Pressable onPress={retakeReceipt}>
-              <Text style={styles.retakeText}>Retake Scan</Text>
+              <Text style={[styles.retakeText, { color: themeColors.primary }]}>
+                Retake Scan
+              </Text>
             </Pressable>
           </View>
         </View>
 
         {errorMessage ? (
-          <Text style={styles.errorText}>{errorMessage}</Text>
+          <Text
+            style={[
+              styles.errorText,
+              {
+                backgroundColor: `${themeColors.primary}26`,
+                color: themeColors.primary,
+              },
+            ]}
+          >
+            {errorMessage}
+          </Text>
         ) : null}
 
         <ReviewField
@@ -173,6 +233,7 @@ export default function CapturedReceiptMlKitScreen() {
           value={merchantName}
           onChangeText={setMerchantName}
           placeholder="Merchant name"
+          themeColors={themeColors}
         />
 
         <View style={styles.fieldRow}>
@@ -182,6 +243,7 @@ export default function CapturedReceiptMlKitScreen() {
             value={date}
             onChangeText={setDate}
             placeholder="Date"
+            themeColors={themeColors}
           />
           <ReviewField
             compact
@@ -190,24 +252,29 @@ export default function CapturedReceiptMlKitScreen() {
             onChangeText={setAmount}
             placeholder="0.00"
             keyboardType="decimal-pad"
+            themeColors={themeColors}
           />
         </View>
 
-        <View style={styles.selectField}>
+        <View
+          style={[styles.selectField, { backgroundColor: themeColors.surface }]}
+        >
           <View>
-            <Text style={styles.fieldLabel}>CATEGORY</Text>
+            <Text style={[styles.fieldLabel, { color: themeColors.mutedText }]}>
+              CATEGORY
+            </Text>
             <TextInput
-              style={styles.fieldInput}
+              style={[styles.fieldInput, { color: themeColors.text }]}
               value={category}
               onChangeText={setCategory}
               placeholder="Category"
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={themeColors.mutedText}
             />
           </View>
           <MaterialCommunityIcons
             name="chevron-down"
             size={24}
-            color="#0f172a"
+            color={themeColors.text}
           />
         </View>
 
@@ -217,19 +284,35 @@ export default function CapturedReceiptMlKitScreen() {
           onChangeText={setNote}
           placeholder="Coffee with the design team..."
           multiline
+          themeColors={themeColors}
         />
 
-        <Pressable style={styles.confirmButton} onPress={confirmReceipt}>
+        <Pressable
+          style={[
+            styles.confirmButton,
+            { backgroundColor: themeColors.primary },
+          ]}
+          onPress={confirmReceipt}
+        >
           <MaterialCommunityIcons
             name="plus-circle"
             size={18}
-            color="#ffffff"
+            color={themeColors.primaryText}
           />
-          <Text style={styles.confirmButtonText}>Confirm & Add</Text>
+          <Text
+            style={[
+              styles.confirmButtonText,
+              { color: themeColors.primaryText },
+            ]}
+          >
+            Confirm & Add
+          </Text>
         </Pressable>
 
         <Pressable style={styles.discardButton} onPress={discardScan}>
-          <Text style={styles.discardButtonText}>DISCARD SCAN</Text>
+          <Text style={[styles.discardButtonText, { color: themeColors.text }]}>
+            DISCARD SCAN
+          </Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -244,6 +327,7 @@ type ReviewFieldProps = {
   placeholder: string;
   keyboardType?: "default" | "decimal-pad";
   multiline?: boolean;
+  themeColors: ThemeColors;
 };
 
 function ReviewField({
@@ -254,16 +338,29 @@ function ReviewField({
   placeholder,
   keyboardType = "default",
   multiline,
+  themeColors,
 }: ReviewFieldProps) {
   return (
-    <View style={[styles.field, compact && styles.compactField]}>
-      <Text style={styles.fieldLabel}>{label}</Text>
+    <View
+      style={[
+        styles.field,
+        { backgroundColor: themeColors.surface },
+        compact && styles.compactField,
+      ]}
+    >
+      <Text style={[styles.fieldLabel, { color: themeColors.mutedText }]}>
+        {label}
+      </Text>
       <TextInput
-        style={[styles.fieldInput, multiline && styles.multilineInput]}
+        style={[
+          styles.fieldInput,
+          { color: themeColors.text },
+          multiline && styles.multilineInput,
+        ]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor="#94a3b8"
+        placeholderTextColor={themeColors.mutedText}
         keyboardType={keyboardType}
         multiline={multiline}
       />
@@ -274,87 +371,76 @@ function ReviewField({
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f5f7f8",
   },
   content: {
-    gap: 16,
-    padding: 18,
-    paddingBottom: 28,
+    gap: spacing.md,
+    padding: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   header: {
-    gap: 7,
+    gap: spacing.sm,
   },
   stepText: {
-    color: "#027a5a",
-    fontSize: 11,
+    fontSize: fontSize.xs,
     fontWeight: "800",
     letterSpacing: 3,
   },
   title: {
-    color: "#020617",
     fontSize: 28,
     fontWeight: "800",
   },
   subtitle: {
-    color: "#334155",
-    fontSize: 14,
+    fontSize: fontSize.md,
     lineHeight: 21,
   },
   previewPanel: {
-    gap: 12,
+    gap: spacing.md,
     overflow: "hidden",
-    borderRadius: 8,
-    padding: 16,
-    backgroundColor: "#ffffff",
+    borderRadius: radius.md,
+    padding: spacing.md,
   },
   statusBadge: {
     alignSelf: "flex-start",
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: spacing.sm,
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    backgroundColor: "#f1f5f4",
   },
   statusText: {
-    color: "#64748b",
-    fontSize: 10,
+    fontSize: fontSize.xs,
     fontWeight: "800",
   },
   receiptImage: {
     width: "100%",
     height: 252,
-    backgroundColor: "#f8fafc",
   },
   previewFooter: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 16,
+    gap: spacing.md,
   },
   fileName: {
     flex: 1,
-    color: "#0f172a",
-    fontSize: 12,
+    fontSize: fontSize.sm,
   },
   retakeText: {
-    color: "#008060",
-    fontSize: 12,
+    fontSize: fontSize.sm,
     fontWeight: "800",
   },
   fieldRow: {
     flexDirection: "row",
-    gap: 16,
+    gap: spacing.md,
   },
   field: {
     minHeight: 78,
     justifyContent: "center",
-    gap: 6,
-    borderRadius: 8,
+    gap: spacing.sm,
+    borderRadius: radius.md,
     paddingHorizontal: 18,
     paddingVertical: 14,
-    backgroundColor: "#ffffff",
   },
   compactField: {
     flex: 1,
@@ -364,29 +450,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 14,
-    borderRadius: 8,
+    gap: spacing.md,
+    borderRadius: radius.md,
     paddingHorizontal: 18,
     paddingVertical: 14,
-    backgroundColor: "#ffffff",
   },
   fieldLabel: {
-    color: "#64748b",
-    fontSize: 10,
+    fontSize: fontSize.xs,
     fontWeight: "800",
     letterSpacing: 1.5,
   },
   fieldInput: {
     minWidth: 0,
     padding: 0,
-    color: "#020617",
-    fontSize: 16,
+    fontSize: fontSize.lg,
     fontWeight: "700",
   },
   multilineInput: {
     minHeight: 42,
-    color: "#475569",
-    fontSize: 13,
+    fontSize: fontSize.sm,
     fontWeight: "500",
     lineHeight: 18,
     textAlignVertical: "top",
@@ -396,14 +478,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
-    borderRadius: 8,
-    backgroundColor: "#E63C3A",
+    gap: spacing.sm,
+    borderRadius: radius.md,
     boxShadow: "0 6px 12px rgba(230, 60, 58, 0.22)",
   },
   confirmButtonText: {
-    color: "#ffffff",
-    fontSize: 16,
+    fontSize: fontSize.lg,
     fontWeight: "800",
   },
   discardButton: {
@@ -411,25 +491,20 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   discardButtonText: {
-    color: "#0f172a",
-    fontSize: 11,
+    fontSize: fontSize.xs,
     fontWeight: "800",
     letterSpacing: 2,
   },
   errorText: {
-    borderRadius: 8,
+    borderRadius: radius.md,
     padding: 12,
-    color: "#b91c1c",
-    backgroundColor: "#fee2e2",
   },
   emptyScreen: {
     flex: 1,
     justifyContent: "center",
-    padding: 24,
-    backgroundColor: "#ffffff",
+    padding: spacing.lg,
   },
   emptyTitle: {
-    color: "#111827",
     fontSize: 28,
     fontWeight: "700",
   },
@@ -437,13 +512,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     minHeight: 48,
-    marginTop: 24,
-    borderRadius: 8,
-    backgroundColor: "#2563eb",
+    marginTop: spacing.lg,
+    borderRadius: radius.md,
   },
   primaryButtonText: {
-    color: "#ffffff",
-    fontSize: 16,
+    fontSize: fontSize.lg,
     fontWeight: "700",
   },
 });
