@@ -1,5 +1,6 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
+import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -47,8 +48,48 @@ const significantSpending = [
   },
 ] as const;
 
+const monthNames = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
+function getInitialMonth() {
+  const today = new Date();
+
+  return new Date(today.getFullYear(), today.getMonth(), 1);
+}
+
+function shiftMonth(month: Date, offset: number) {
+  return new Date(month.getFullYear(), month.getMonth() + offset, 1);
+}
+
+function isSameMonth(left: Date, right: Date) {
+  return (
+    left.getFullYear() === right.getFullYear() &&
+    left.getMonth() === right.getMonth()
+  );
+}
+
 export default function InsightScreen() {
   const themeColors = useThemeColors();
+  const [selectedMonth, setSelectedMonth] = useState(getInitialMonth);
+  const currentMonth = useMemo(getInitialMonth, []);
+  const isCurrentMonth = isSameMonth(selectedMonth, currentMonth);
+  const selectedMonthLabel = useMemo(
+    () =>
+      `${monthNames[selectedMonth.getMonth()]} ${selectedMonth.getFullYear()}`,
+    [selectedMonth],
+  );
 
   return (
     <SafeAreaView
@@ -74,7 +115,10 @@ export default function InsightScreen() {
             { backgroundColor: themeColors.surface },
           ]}
         >
-          <Pressable style={styles.monthButton}>
+          <Pressable
+            style={styles.monthButton}
+            onPress={() => setSelectedMonth((month) => shiftMonth(month, -1))}
+          >
             <MaterialCommunityIcons
               color={themeColors.text}
               name="chevron-left"
@@ -82,11 +126,15 @@ export default function InsightScreen() {
             />
           </Pressable>
           <Text style={[styles.monthText, { color: themeColors.text }]}>
-            October 2023
+            {selectedMonthLabel}
           </Text>
-          <Pressable style={styles.monthButton}>
+          <Pressable
+            disabled={isCurrentMonth}
+            style={[styles.monthButton, isCurrentMonth && styles.disabledMonthButton]}
+            onPress={() => setSelectedMonth((month) => shiftMonth(month, 1))}
+          >
             <MaterialCommunityIcons
-              color={themeColors.text}
+              color={isCurrentMonth ? themeColors.mutedText : themeColors.text}
               name="chevron-right"
               size={20}
             />
@@ -201,6 +249,9 @@ const styles = StyleSheet.create({
     height: 26,
     alignItems: "center",
     justifyContent: "center",
+  },
+  disabledMonthButton: {
+    opacity: 0.45,
   },
   monthText: {
     fontSize: fontSize.sm,
