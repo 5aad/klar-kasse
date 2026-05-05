@@ -16,8 +16,9 @@ export default function TabLayout() {
     <NativeTabs
       minimizeBehavior="onScrollDown"
       backgroundColor={themeColors.background}
+      indicatorColor={themeColors.surface}
       iconColor={{
-        default: themeColors.surface,
+        default: themeColors.text,
         selected: themeColors.primary,
       }}
       labelStyle={{
