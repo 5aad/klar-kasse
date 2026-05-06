@@ -61,7 +61,7 @@ export function TransactionList({
         <Text style={[styles.title, { color: themeColors.text }]}>{title}</Text>
         {actionLabel ? (
           <Pressable
-            onPress={() => router.push("/search ")}
+            onPress={() => router.push("/(dashboard)/search")}
           >
             <Text style={[styles.viewAll, { color: themeColors.primary }]}>
               {actionLabel}

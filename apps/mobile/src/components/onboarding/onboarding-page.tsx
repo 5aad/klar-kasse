@@ -67,7 +67,12 @@ function OnboardingPage({ item, index, scrollX }: Props) {
   return (
     <View style={[styles.page, { width }]}>
       <Animated.View style={[styles.visual, imageStyle]}>
-        <View style={[styles.halo, { backgroundColor: item.softAccent }]} />
+        <View
+          style={[
+            styles.halo,
+            { backgroundColor: `${themeColors.primary}24` },
+          ]}
+        />
         <View
           style={[
             styles.phone,
@@ -79,7 +84,10 @@ function OnboardingPage({ item, index, scrollX }: Props) {
         >
           <View style={styles.phoneHeader}>
             <View
-              style={[styles.headerDot, { backgroundColor: item.accent }]}
+              style={[
+                styles.headerDot,
+                { backgroundColor: themeColors.primary },
+              ]}
             />
             <View
               style={[
@@ -88,9 +96,14 @@ function OnboardingPage({ item, index, scrollX }: Props) {
               ]}
             />
           </View>
-          <View style={[styles.iconWrap, { backgroundColor: item.softAccent }]}>
+          <View
+            style={[
+              styles.iconWrap,
+              { backgroundColor: themeColors.background },
+            ]}
+          >
             <MaterialCommunityIcons
-              color={item.accent}
+              color={themeColors.primary}
               name={item.icon}
               size={74}
             />
@@ -116,13 +129,22 @@ function OnboardingPage({ item, index, scrollX }: Props) {
               ]}
             />
             <View
-              style={[styles.totalRow, { backgroundColor: item.softAccent }]}
+              style={[
+                styles.totalRow,
+                { backgroundColor: themeColors.background },
+              ]}
             >
               <View
-                style={[styles.totalLine, { backgroundColor: item.accent }]}
+                style={[
+                  styles.totalLine,
+                  { backgroundColor: themeColors.primary },
+                ]}
               />
               <View
-                style={[styles.totalPill, { backgroundColor: item.accent }]}
+                style={[
+                  styles.totalPill,
+                  { backgroundColor: themeColors.primary },
+                ]}
               />
             </View>
           </View>
@@ -130,7 +152,7 @@ function OnboardingPage({ item, index, scrollX }: Props) {
       </Animated.View>
 
       <Animated.View style={[styles.copy, textStyle]}>
-        <Text style={[styles.eyebrow, { color: item.accent }]}>
+        <Text style={[styles.eyebrow, { color: themeColors.primary }]}>
           {item.eyebrow}
         </Text>
         <Text style={[styles.title, { color: themeColors.text }]}>
