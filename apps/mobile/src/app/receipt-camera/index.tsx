@@ -3,6 +3,7 @@ import {
   useCameraPermissions,
   type CameraCapturedPicture,
 } from "expo-camera";
+import { fontSize, radius, spacing } from "@repo/theme";
 import { SaveFormat, manipulateAsync } from "expo-image-manipulator";
 import { router } from "expo-router";
 import { useRef, useState } from "react";
@@ -16,8 +17,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useReceiptScanStore } from "@/stores/receipt-scan-store";
+import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useAndroidBackToHome } from "@/hooks/use-android-back-to-home";
+import { useReceiptScanStore } from "@/stores/receipt-scan-store";
 
 const FRAME_WIDTH_RATIO = 0.74;
 const FRAME_ASPECT_RATIO = 0.44;
@@ -37,6 +39,7 @@ type Size = {
 };
 
 export default function ReceiptCameraScreen() {
+  const themeColors = useThemeColors();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [isCapturing, setIsCapturing] = useState(false);
@@ -95,26 +98,53 @@ export default function ReceiptCameraScreen() {
 
   if (!permission) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator />
+      <View
+        style={[styles.centered, { backgroundColor: themeColors.background }]}
+      >
+        <ActivityIndicator color={themeColors.primary} />
       </View>
     );
   }
 
   if (!permission.granted) {
     return (
-      <View style={styles.permissionScreen}>
-        <Text style={styles.title}>Camera access</Text>
-        <Text style={styles.body}>Allow camera access to scan receipts.</Text>
-        <Pressable style={styles.primaryButton} onPress={requestPermission}>
-          <Text style={styles.primaryButtonText}>Allow camera</Text>
+      <View
+        style={[
+          styles.permissionScreen,
+          { backgroundColor: themeColors.background },
+        ]}
+      >
+        <Text style={[styles.title, { color: themeColors.text }]}>
+          Camera access
+        </Text>
+        <Text style={[styles.body, { color: themeColors.mutedText }]}>
+          Allow camera access to scan receipts.
+        </Text>
+        <Pressable
+          style={[
+            styles.primaryButton,
+            { backgroundColor: themeColors.primary },
+          ]}
+          onPress={requestPermission}
+        >
+          <Text
+            style={[
+              styles.primaryButtonText,
+              { color: themeColors.primaryText },
+            ]}
+          >
+            Allow camera
+          </Text>
         </Pressable>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
+    <SafeAreaView
+      style={[styles.screen, { backgroundColor: themeColors.text }]}
+      edges={["top", "bottom"]}
+    >
       <View style={styles.cameraWrap} onLayout={handleCameraLayout}>
         <CameraView
           ref={cameraRef}
@@ -175,14 +205,23 @@ export default function ReceiptCameraScreen() {
         </View>
       </View>
 
-      {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
+      {errorMessage ? (
+        <Text style={[styles.error, { color: themeColors.primary }]}>
+          {errorMessage}
+        </Text>
+      ) : null}
 
       <Pressable
         style={[styles.captureButton, isCapturing && styles.disabled]}
         disabled={isCapturing}
         onPress={captureReceipt}
       >
-        <View style={styles.captureButtonInner} />
+        <View
+          style={[
+            styles.captureButtonInner,
+            { backgroundColor: themeColors.primaryText },
+          ]}
+        />
       </Pressable>
     </SafeAreaView>
   );
@@ -263,29 +302,24 @@ async function cropReceiptFrame(
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#0f172a",
   },
   centered: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#0f172a",
   },
   permissionScreen: {
     flex: 1,
     justifyContent: "center",
-    padding: 24,
-    backgroundColor: "#ffffff",
+    padding: spacing.lg,
   },
   title: {
-    color: "#111827",
-    fontSize: 32,
+    fontSize: fontSize.xxl,
     fontWeight: "700",
   },
   body: {
-    marginTop: 12,
-    color: "#4b5563",
-    fontSize: 16,
+    marginTop: spacing.md,
+    fontSize: fontSize.lg,
     lineHeight: 24,
   },
   cameraWrap: {
@@ -301,7 +335,7 @@ const styles = StyleSheet.create({
   },
   dim: {
     position: "absolute",
-    backgroundColor: "rgba(15, 23, 42, 0.58)",
+    backgroundColor: "rgba(16, 16, 16, 0.64)",
   },
   topDim: {
     top: 0,
@@ -322,42 +356,42 @@ const styles = StyleSheet.create({
   receiptFrame: {
     position: "absolute",
     borderColor: "#ffffff",
-    borderRadius: 18,
+    borderRadius: radius.lg,
     borderWidth: 2,
   },
   corner: {
     position: "absolute",
     width: 32,
     height: 32,
-    borderColor: "#22c55e",
+    borderColor: "#E63C3A",
   },
   topLeft: {
     top: -2,
     left: -2,
     borderTopWidth: 5,
     borderLeftWidth: 5,
-    borderTopLeftRadius: 18,
+    borderTopLeftRadius: radius.lg,
   },
   topRight: {
     top: -2,
     right: -2,
     borderTopWidth: 5,
     borderRightWidth: 5,
-    borderTopRightRadius: 18,
+    borderTopRightRadius: radius.lg,
   },
   bottomLeft: {
     bottom: -2,
     left: -2,
     borderBottomWidth: 5,
     borderLeftWidth: 5,
-    borderBottomLeftRadius: 18,
+    borderBottomLeftRadius: radius.lg,
   },
   bottomRight: {
     right: -2,
     bottom: -2,
     borderRightWidth: 5,
     borderBottomWidth: 5,
-    borderBottomRightRadius: 18,
+    borderBottomRightRadius: radius.lg,
   },
   instructions: {
     position: "absolute",
@@ -371,15 +405,14 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    backgroundColor: "rgba(15, 23, 42, 0.72)",
+    backgroundColor: "rgba(16, 16, 16, 0.78)",
     color: "#ffffff",
-    fontSize: 14,
+    fontSize: fontSize.md,
     fontWeight: "700",
   },
   error: {
     paddingHorizontal: 20,
     paddingTop: 12,
-    color: "#fecaca",
     textAlign: "center",
   },
   captureButton: {
@@ -397,7 +430,6 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: "#ffffff",
   },
   disabled: {
     opacity: 0.55,
@@ -406,13 +438,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     minHeight: 48,
-    marginTop: 24,
-    borderRadius: 8,
-    backgroundColor: "#2563eb",
+    marginTop: spacing.lg,
+    borderRadius: radius.md,
   },
   primaryButtonText: {
-    color: "#ffffff",
-    fontSize: 16,
+    fontSize: fontSize.lg,
     fontWeight: "700",
   },
 });

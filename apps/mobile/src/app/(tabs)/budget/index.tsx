@@ -2,7 +2,14 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { NewCategoryModal } from "@/components/budget/new-category-modal";
@@ -82,9 +89,18 @@ export default function BudgetScreen() {
   const themeColors = useThemeColors();
   const [isNewCategoryModalVisible, setIsNewCategoryModalVisible] =
     useState(false);
-  const totalBudget = 5000;
+  const [monthlyBudget, setMonthlyBudget] = useState("5000");
+  const budgetMonth = new Intl.DateTimeFormat("en", {
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
+  const totalBudget = Number(monthlyBudget.replace(/[^\d.]/g, "")) || 0;
   const totalSpent = 3250;
-  const totalProgress = totalSpent / totalBudget;
+  const totalLeft = Math.max(totalBudget - totalSpent, 0);
+  const totalProgress =
+    totalBudget > 0 ? Math.min(totalSpent / totalBudget, 1) : 0;
+  const totalPercent = Math.round(totalProgress * 100);
+  const formattedBudget = totalBudget.toLocaleString();
 
   return (
     <SafeAreaView
@@ -116,11 +132,55 @@ export default function BudgetScreen() {
           <Text style={[styles.cardEyebrow, { color: themeColors.mutedText }]}>
             TOTAL BUDGET STATUS
           </Text>
-          <Text style={[styles.percent, { color: themeColors.text }]}>65%</Text>
+
+          <View style={styles.budgetSetup}>
+            <View style={styles.budgetField}>
+              <Text style={[styles.budgetLabel, { color: themeColors.text }]}>
+                MONTH
+              </Text>
+              <View
+                style={[
+                  styles.monthValueContainer,
+                  {
+                    backgroundColor: themeColors.background,
+                  },
+                ]}
+              >
+                <Text style={[styles.monthValue, { color: themeColors.text }]}>
+                  {budgetMonth}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.budgetField}>
+              <Text style={[styles.budgetLabel, { color: themeColors.text }]}>
+                BUDGET
+              </Text>
+              <TextInput
+                keyboardType="decimal-pad"
+                value={`$${monthlyBudget}`}
+                onChangeText={(value) =>
+                  setMonthlyBudget(value.replace(/[^\d.]/g, ""))
+                }
+                placeholder="$0"
+                placeholderTextColor={themeColors.mutedText}
+                style={[
+                  styles.budgetInput,
+                  {
+                    borderColor: themeColors.text,
+                    color: themeColors.text,
+                  },
+                ]}
+              />
+            </View>
+          </View>
+
+          <Text style={[styles.percent, { color: themeColors.text }]}>
+            {totalPercent}%
+          </Text>
           <Text style={[styles.statusCopy, { color: themeColors.mutedText }]}>
             of your{" "}
             <Text style={[styles.strong, { color: themeColors.text }]}>
-              $5,000
+              ${formattedBudget}
             </Text>{" "}
             monthly budget used
           </Text>
@@ -134,7 +194,7 @@ export default function BudgetScreen() {
             <Text
               style={[styles.secondaryAmount, { color: themeColors.mutedText }]}
             >
-              $1,750 left
+              ${totalLeft.toLocaleString()} left
             </Text>
           </View>
           <ProgressBar
@@ -350,6 +410,37 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     fontWeight: "600",
     letterSpacing: 2,
+  },
+  budgetSetup: {
+    flexDirection: "row",
+    gap: spacing.md,
+  },
+  budgetField: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  budgetLabel: {
+    fontSize: fontSize.xs,
+    fontWeight: "800",
+    letterSpacing: 1,
+  },
+  budgetInput: {
+    minHeight: 46,
+    borderWidth: 1,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.md,
+    fontSize: fontSize.lg,
+    fontWeight: "800",
+  },
+  monthValueContainer: {
+    minHeight: 46,
+    justifyContent: "center",
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.md,
+  },
+  monthValue: {
+    fontSize: fontSize.lg,
+    fontWeight: "800",
   },
   percent: {
     fontSize: 46,

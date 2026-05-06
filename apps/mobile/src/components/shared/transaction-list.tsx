@@ -1,6 +1,7 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
-import { StyleSheet, Text, View } from "react-native";
+import { router } from "expo-router";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
 
@@ -37,7 +38,7 @@ const transactions: TransactionListItem[] = [
 ] as const;
 
 type Props = {
-  actionLabel?: string;
+  actionLabel?: string | null;
   items?: readonly TransactionListItem[];
   title?: string;
 };
@@ -58,9 +59,15 @@ export function TransactionList({
     <View style={styles.section}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: themeColors.text }]}>{title}</Text>
-        <Text style={[styles.viewAll, { color: themeColors.primary }]}>
-          {actionLabel}
-        </Text>
+        {actionLabel ? (
+          <Pressable
+            onPress={() => router.push("/search ")}
+          >
+            <Text style={[styles.viewAll, { color: themeColors.primary }]}>
+              {actionLabel}
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
 
       <View style={styles.list}>

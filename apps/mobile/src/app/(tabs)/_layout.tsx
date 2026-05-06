@@ -16,8 +16,9 @@ export default function TabLayout() {
     <NativeTabs
       minimizeBehavior="onScrollDown"
       backgroundColor={themeColors.background}
+      indicatorColor={themeColors.surface}
       iconColor={{
-        default: themeColors.surface,
+        default: themeColors.text,
         selected: themeColors.primary,
       }}
       labelStyle={{
@@ -33,7 +34,7 @@ export default function TabLayout() {
         },
       }}
     >
-      <NativeTabs.Trigger name="dashboard">
+      <NativeTabs.Trigger name="(dashboard)">
         <Icon
           src={
             <VectorIcon
@@ -44,7 +45,7 @@ export default function TabLayout() {
         />
         <Label>Dashboard</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="insight">
+      <NativeTabs.Trigger name="(insight)">
         <Icon
           src={<VectorIcon family={MaterialCommunityIcons} name="chart-line" />}
         />
