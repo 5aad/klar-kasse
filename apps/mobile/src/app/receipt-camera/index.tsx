@@ -4,6 +4,7 @@ import {
   type CameraCapturedPicture,
 } from "expo-camera";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useIsFocused } from "@react-navigation/native";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { SaveFormat, manipulateAsync } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
@@ -43,6 +44,7 @@ type Size = {
 
 export default function ReceiptCameraScreen() {
   const themeColors = useThemeColors();
+  const isFocused = useIsFocused();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [isCapturing, setIsCapturing] = useState(false);
@@ -64,7 +66,7 @@ export default function ReceiptCameraScreen() {
   };
 
   const captureReceipt = async () => {
-    if (!cameraRef.current || !cameraSize || !frame || isCapturing) {
+    if (!isFocused || !cameraRef.current || !cameraSize || !frame || isCapturing) {
       return;
     }
 
@@ -216,12 +218,16 @@ export default function ReceiptCameraScreen() {
       </View>
 
       <View style={styles.cameraWrap} onLayout={handleCameraLayout}>
-        <CameraView
-          ref={cameraRef}
-          style={styles.camera}
-          facing="back"
-          flash="on"
-        />
+        {isFocused ? (
+          <CameraView
+            ref={cameraRef}
+            style={styles.camera}
+            facing="back"
+            flash="on"
+          />
+        ) : (
+          <View style={styles.camera} />
+        )}
         {frame ? (
           <View pointerEvents="none" style={styles.overlay}>
             <View style={[styles.dim, styles.topDim, { height: frame.y }]} />
