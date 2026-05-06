@@ -8,7 +8,7 @@ export default function ReceiptCameraLayout() {
   const setIsScanScreen = useReceiptScanStore((state) => state.setIsScanScreen);
   const goToDashboard = () => {
     setIsScanScreen(true);
-    router.replace("/dashboard");
+    router.replace("/(dashboard)");
   };
 
   return (
@@ -17,7 +17,7 @@ export default function ReceiptCameraLayout() {
         name="index"
         options={{
           title: "Scan Receipt",
-          headerShown: true,
+          headerShown: false,
           headerTitleAlign: "center",
           headerBackButtonDisplayMode: "minimal",
           headerLeft: () => (
