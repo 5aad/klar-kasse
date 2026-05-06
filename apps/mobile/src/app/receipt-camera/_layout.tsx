@@ -39,6 +39,7 @@ export default function ReceiptCameraLayout() {
       <Stack.Screen
         name="captured"
         options={{
+          headerShown: false,
           title: "Receipt Preview",
           headerTitleAlign: "center",
           headerBackButtonDisplayMode: "minimal",

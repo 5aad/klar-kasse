@@ -50,9 +50,12 @@ importers:
       expo-image-manipulator:
         specifier: ^14.0.8
         version: 14.0.8(expo@54.0.33)
+      expo-image-picker:
+        specifier: ~17.0.10
+        version: 17.0.10(expo@54.0.33)
       expo-linear-gradient:
-        specifier: ^55.0.13
-        version: 55.0.13(expo@54.0.33)(react-native@0.81.5)(react@19.1.0)
+        specifier: 15.0.8
+        version: 15.0.8(expo@54.0.33)(react-native@0.81.5)(react@19.1.0)
       expo-router:
         specifier: ~6.0.23
         version: 6.0.23(@expo/metro-runtime@6.1.2)(@types/react@19.1.17)(expo-constants@18.0.13)(expo-linking@8.0.11)(expo@54.0.33)(react-dom@19.1.0)(react-native-gesture-handler@2.28.0)(react-native-reanimated@4.1.7)(react-native-safe-area-context@5.6.2)(react-native-screens@4.16.0)(react-native-web@0.21.2)(react-native@0.81.5)(react@19.1.0)
@@ -88,7 +91,7 @@ importers:
         version: 2.28.0(react-native@0.81.5)(react@19.1.0)
       react-native-gifted-charts:
         specifier: ^1.4.76
-        version: 1.4.76(expo-linear-gradient@55.0.13)(react-native-svg@15.15.4)(react-native@0.81.5)(react@19.1.0)
+        version: 1.4.76(expo-linear-gradient@15.0.8)(react-native-svg@15.15.4)(react-native@0.81.5)(react@19.1.0)
       react-native-reanimated:
         specifier: ~4.1.1
         version: 4.1.7(react-native-worklets@0.8.1)(react-native@0.81.5)(react@19.1.0)
@@ -4790,6 +4793,15 @@ packages:
       expo-image-loader: 6.0.0(expo@54.0.33)
     dev: false
 
+  /expo-image-picker@17.0.10(expo@54.0.33):
+    resolution: {integrity: sha512-a2xrowp2trmvXyUWgX3O6Q2rZaa2C59AqivKI7+bm+wLvMfTEbZgldLX4rEJJhM8xtmEDTNU+lzjtObwzBRGaw==}
+    peerDependencies:
+      expo: '*'
+    dependencies:
+      expo: 54.0.33(@babel/core@7.29.0)(@expo/metro-runtime@6.1.2)(expo-router@6.0.23)(react-native@0.81.5)(react@19.1.0)(typescript@5.9.3)
+      expo-image-loader: 6.0.0(expo@54.0.33)
+    dev: false
+
   /expo-image@3.0.11(expo@54.0.33)(react-native-web@0.21.2)(react-native@0.81.5)(react@19.1.0):
     resolution: {integrity: sha512-4TudfUCLgYgENv+f48omnU8tjS2S0Pd9EaON5/s1ZUBRwZ7K8acEr4NfvLPSaeXvxW24iLAiyQ7sV7BXQH3RoA==}
     peerDependencies:
@@ -4817,8 +4829,8 @@ packages:
       react: 19.1.0
     dev: false
 
-  /expo-linear-gradient@55.0.13(expo@54.0.33)(react-native@0.81.5)(react@19.1.0):
-    resolution: {integrity: sha512-Qz2T4jpkA15RIk29DBqI1TwW+8O9AN8MyC4TJPbh/5UnihH0yNNz3waplUO8Szh5OZ3czTGvtPQU4ysF3RDxwQ==}
+  /expo-linear-gradient@15.0.8(expo@54.0.33)(react-native@0.81.5)(react@19.1.0):
+    resolution: {integrity: sha512-V2d8Wjn0VzhPHO+rrSBtcl+Fo+jUUccdlmQ6OoL9/XQB7Qk3d9lYrqKDJyccwDxmQT10JdST3Tmf2K52NLc3kw==}
     peerDependencies:
       expo: '*'
       react: '*'
@@ -7053,7 +7065,7 @@ packages:
       react-native: 0.81.5(@babel/core@7.29.0)(@react-native/metro-config@0.85.2)(@types/react@19.1.17)(react@19.1.0)
     dev: false
 
-  /react-native-gifted-charts@1.4.76(expo-linear-gradient@55.0.13)(react-native-svg@15.15.4)(react-native@0.81.5)(react@19.1.0):
+  /react-native-gifted-charts@1.4.76(expo-linear-gradient@15.0.8)(react-native-svg@15.15.4)(react-native@0.81.5)(react@19.1.0):
     resolution: {integrity: sha512-GmaICcCouL7Z13KRfeVT6ngfQ2cByrVQ7TzWY8SPNUyQf+6/dZZ2+ySChNTsaFFhuwW2eTFBrDSz6HXBIzd0PA==}
     peerDependencies:
       expo-linear-gradient: '*'
@@ -7067,7 +7079,7 @@ packages:
       react-native-linear-gradient:
         optional: true
     dependencies:
-      expo-linear-gradient: 55.0.13(expo@54.0.33)(react-native@0.81.5)(react@19.1.0)
+      expo-linear-gradient: 15.0.8(expo@54.0.33)(react-native@0.81.5)(react@19.1.0)
       gifted-charts-core: 0.1.80(react-native-svg@15.15.4)(react-native@0.81.5)(react@19.1.0)
       react: 19.1.0
       react-native: 0.81.5(@babel/core@7.29.0)(@react-native/metro-config@0.85.2)(@types/react@19.1.17)(react@19.1.0)

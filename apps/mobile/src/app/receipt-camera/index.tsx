@@ -19,6 +19,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { ScreenHeader } from "@/components/shared/screen-header";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useAndroidBackToHome } from "@/hooks/use-android-back-to-home";
 import { useReceiptScanStore } from "@/stores/receipt-scan-store";
@@ -53,6 +54,9 @@ export default function ReceiptCameraScreen() {
   );
   useAndroidBackToHome("/(dashboard)");
   const frame = cameraSize ? getReceiptFrame(cameraSize) : null;
+  const goToDashboard = () => {
+    router.replace("/(dashboard)");
+  };
 
   const handleCameraLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
@@ -203,6 +207,14 @@ export default function ReceiptCameraScreen() {
       style={[styles.screen, { backgroundColor: themeColors.background }]}
       edges={["top", "bottom"]}
     >
+      <View style={styles.headerWrap}>
+        <ScreenHeader
+          title="Scan Receipt"
+          subtitle="Place the receipt inside the frame."
+          onBack={goToDashboard}
+        />
+      </View>
+
       <View style={styles.cameraWrap} onLayout={handleCameraLayout}>
         <CameraView
           ref={cameraRef}
@@ -415,6 +427,11 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     fontSize: fontSize.lg,
     lineHeight: 24,
+  },
+  headerWrap: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
   },
   cameraWrap: {
     flex: 1,

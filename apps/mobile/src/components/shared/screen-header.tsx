@@ -6,18 +6,19 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 
 type Props = {
+  onBack?: () => void;
   subtitle?: string;
   title: string;
 };
 
-export function ScreenHeader({ subtitle, title }: Props) {
+export function ScreenHeader({ onBack, subtitle, title }: Props) {
   const themeColors = useThemeColors();
 
   return (
     <View style={styles.header}>
       <Pressable
         style={[styles.backButton, { backgroundColor: themeColors.surface }]}
-        onPress={() => router.back()}
+        onPress={onBack ?? (() => router.back())}
       >
         <MaterialCommunityIcons
           color={themeColors.text}
