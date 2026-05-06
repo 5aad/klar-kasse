@@ -1,13 +1,15 @@
 import { fontSize, spacing } from "@repo/theme";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BalanceGraph } from "@/components/dashboard/balance-graph";
 import { TransactionList } from "@/components/shared/transaction-list";
 import { useThemeColors } from "@/hooks/use-theme-colors";
+import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 export default function DashboardScreen() {
   const themeColors = useThemeColors();
+  const { bottom } = useSafeAreaInsets();
 
   return (
     <SafeAreaView
@@ -15,7 +17,10 @@ export default function DashboardScreen() {
       edges={["top"]}
     >
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.balanceRow}>

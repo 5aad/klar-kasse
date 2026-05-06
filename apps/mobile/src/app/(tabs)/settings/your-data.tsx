@@ -8,10 +8,11 @@ import {
   View,
   type ListRenderItem,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
 import { useThemeColors } from "@/hooks/use-theme-colors";
+import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 const dataArchives = [
   { id: "2026-04", month: "April", year: "2026", items: 42 },
@@ -23,6 +24,7 @@ const dataArchives = [
 
 export default function YourDataScreen() {
   const themeColors = useThemeColors();
+  const { bottom } = useSafeAreaInsets();
 
   const renderArchiveItem: ListRenderItem<DataArchive> = ({ item }) => (
     <View
@@ -80,7 +82,10 @@ export default function YourDataScreen() {
       edges={["top"]}
     >
       <FlatList
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
+        ]}
         data={dataArchives}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={

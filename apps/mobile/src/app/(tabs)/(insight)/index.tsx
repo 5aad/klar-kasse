@@ -2,11 +2,12 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ExpenseDistributionChart } from "@/components/insight/expense-distribution-chart";
 import { TransactionList } from "@/components/shared/transaction-list";
 import { useThemeColors } from "@/hooks/use-theme-colors";
+import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 type ThemeColors = ReturnType<typeof useThemeColors>;
 
@@ -82,6 +83,7 @@ function isSameMonth(left: Date, right: Date) {
 
 export default function InsightScreen() {
   const themeColors = useThemeColors();
+  const { bottom } = useSafeAreaInsets();
   const [selectedMonth, setSelectedMonth] = useState(getInitialMonth);
   const currentMonth = useMemo(getInitialMonth, []);
   const isCurrentMonth = isSameMonth(selectedMonth, currentMonth);
@@ -97,7 +99,10 @@ export default function InsightScreen() {
       edges={["top"]}
     >
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>

@@ -9,7 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
 import {
@@ -17,6 +17,7 @@ import {
   type TransactionListItem,
 } from "@/components/shared/transaction-list";
 import { useThemeColors } from "@/hooks/use-theme-colors";
+import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 type FilterKey = "all" | "food" | "housing" | "travel" | "significant";
 
@@ -89,6 +90,7 @@ const transactions: SearchTransaction[] = [
 
 export default function SearchScreen() {
   const themeColors = useThemeColors();
+  const { bottom } = useSafeAreaInsets();
   const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
 
   const filteredTransactions = useMemo(
@@ -116,7 +118,10 @@ export default function SearchScreen() {
       edges={["top"]}
     >
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <ScreenHeader

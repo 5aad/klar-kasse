@@ -10,11 +10,12 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useThemeStore, type ThemePreference } from "@/stores/theme-store";
+import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 const doodles = [
   "face-man-profile",
@@ -34,6 +35,7 @@ const themeOptions = [
 export default function PreferencesScreen() {
   const { width } = useWindowDimensions();
   const themeColors = useThemeColors();
+  const { bottom } = useSafeAreaInsets();
   const [name, setName] = useState("Tom Hillson");
   const [selectedDoodle, setSelectedDoodle] = useState(0);
   const selectedTheme = useThemeStore((state) => state.themePreference);
@@ -46,7 +48,10 @@ export default function PreferencesScreen() {
       edges={["top"]}
     >
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <ScreenHeader
