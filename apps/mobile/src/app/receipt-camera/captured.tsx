@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { ScreenHeader } from "@/components/shared/screen-header";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useReceiptScanStore } from "@/stores/receipt-scan-store";
 import { parseNormaReceipt } from "@/utils/receipt-parser";
@@ -151,18 +152,10 @@ export default function CapturedReceiptMlKitScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <Text style={[styles.stepText, { color: themeColors.primary }]}>
-            STEP 2 OF 2
-          </Text>
-          <Text style={[styles.title, { color: themeColors.text }]}>
-            Review Scan
-          </Text>
-          <Text style={[styles.subtitle, { color: themeColors.text }]}>
-            We&apos;ve extracted the details from your receipt. Please verify
-            they are correct before adding to your gallery.
-          </Text>
-        </View>
+        <ScreenHeader
+          title="Review Scan"
+          subtitle="Verify the extracted receipt details before adding them."
+        />
 
         <View
           style={[
@@ -376,14 +369,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.lg,
     paddingBottom: spacing.xl,
-  },
-  header: {
-    gap: spacing.sm,
-  },
-  stepText: {
-    fontSize: fontSize.xs,
-    fontWeight: "800",
-    letterSpacing: 3,
   },
   title: {
     fontSize: 28,

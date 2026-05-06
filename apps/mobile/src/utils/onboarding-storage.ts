@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 const ONBOARDING_DONE_KEY = 'isOnboardingDone';
 
 export async function getIsOnboardingDone() {
-  return (await SecureStore.getItemAsync(ONBOARDING_DONE_KEY)) === 'true';
+  return (await SecureStore.getItemAsync(ONBOARDING_DONE_KEY)) === 'false';
 }
 
 export async function setIsOnboardingDone(isDone: boolean) {

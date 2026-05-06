@@ -3,8 +3,11 @@ import {
   useCameraPermissions,
   type CameraCapturedPicture,
 } from "expo-camera";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useIsFocused } from "@react-navigation/native";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { SaveFormat, manipulateAsync } from "expo-image-manipulator";
+import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useRef, useState } from "react";
 import {
@@ -17,6 +20,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { ScreenHeader } from "@/components/shared/screen-header";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useAndroidBackToHome } from "@/hooks/use-android-back-to-home";
 import { useReceiptScanStore } from "@/stores/receipt-scan-store";
@@ -40,16 +44,21 @@ type Size = {
 
 export default function ReceiptCameraScreen() {
   const themeColors = useThemeColors();
+  const isFocused = useIsFocused();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [isCapturing, setIsCapturing] = useState(false);
+  const [isPickingImage, setIsPickingImage] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [cameraSize, setCameraSize] = useState<Size | null>(null);
   const setReceiptImages = useReceiptScanStore(
     (state) => state.setReceiptImages,
   );
-  useAndroidBackToHome("/");
+  useAndroidBackToHome("/(dashboard)");
   const frame = cameraSize ? getReceiptFrame(cameraSize) : null;
+  const goToDashboard = () => {
+    router.replace("/(dashboard)");
+  };
 
   const handleCameraLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
@@ -57,7 +66,7 @@ export default function ReceiptCameraScreen() {
   };
 
   const captureReceipt = async () => {
-    if (!cameraRef.current || !cameraSize || !frame || isCapturing) {
+    if (!isFocused || !cameraRef.current || !cameraSize || !frame || isCapturing) {
       return;
     }
 
@@ -93,6 +102,61 @@ export default function ReceiptCameraScreen() {
       );
     } finally {
       setIsCapturing(false);
+    }
+  };
+
+  const pickReceiptFromGallery = async () => {
+    if (isCapturing || isPickingImage) {
+      return;
+    }
+
+    setIsPickingImage(true);
+    setErrorMessage(null);
+
+    try {
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permissionResult.granted) {
+        setErrorMessage("Allow photo library access to choose a receipt.");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        allowsEditing: false,
+        mediaTypes: ["images"],
+        quality: 1,
+      });
+
+      if (result.canceled) {
+        return;
+      }
+
+      const asset = result.assets[0];
+      const normalized = await normalizePickedReceipt(asset);
+
+      setReceiptImages({
+        originalImage: {
+          uri: asset.uri,
+          width: asset.width,
+          height: asset.height,
+        },
+        croppedImage: {
+          uri: normalized.uri,
+          width: normalized.width,
+          height: normalized.height,
+        },
+      });
+      router.push("/receipt-camera/captured");
+    } catch (error) {
+      console.error("Gallery receipt pick failed:", error);
+      setErrorMessage(
+        `Could not open the receipt. ${
+          error instanceof Error ? error.message : "Try again."
+        }`,
+      );
+    } finally {
+      setIsPickingImage(false);
     }
   };
 
@@ -142,16 +206,28 @@ export default function ReceiptCameraScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.screen, { backgroundColor: themeColors.text }]}
+      style={[styles.screen, { backgroundColor: themeColors.background }]}
       edges={["top", "bottom"]}
     >
-      <View style={styles.cameraWrap} onLayout={handleCameraLayout}>
-        <CameraView
-          ref={cameraRef}
-          style={styles.camera}
-          facing="back"
-          flash="on"
+      <View style={styles.headerWrap}>
+        <ScreenHeader
+          title="Scan Receipt"
+          subtitle="Place the receipt inside the frame."
+          onBack={goToDashboard}
         />
+      </View>
+
+      <View style={styles.cameraWrap} onLayout={handleCameraLayout}>
+        {isFocused ? (
+          <CameraView
+            ref={cameraRef}
+            style={styles.camera}
+            facing="back"
+            flash="on"
+          />
+        ) : (
+          <View style={styles.camera} />
+        )}
         {frame ? (
           <View pointerEvents="none" style={styles.overlay}>
             <View style={[styles.dim, styles.topDim, { height: frame.y }]} />
@@ -211,18 +287,43 @@ export default function ReceiptCameraScreen() {
         </Text>
       ) : null}
 
-      <Pressable
-        style={[styles.captureButton, isCapturing && styles.disabled]}
-        disabled={isCapturing}
-        onPress={captureReceipt}
-      >
-        <View
+      <View style={styles.footer}>
+        <Pressable
+          accessibilityLabel="Choose receipt from gallery"
+          accessibilityRole="button"
           style={[
-            styles.captureButtonInner,
-            { backgroundColor: themeColors.primaryText },
+            styles.galleryButton,
+            { backgroundColor: themeColors.surface },
+            (isCapturing || isPickingImage) && styles.disabled,
           ]}
-        />
-      </Pressable>
+          disabled={isCapturing || isPickingImage}
+          onPress={pickReceiptFromGallery}
+        >
+          <MaterialCommunityIcons
+            color={themeColors.text}
+            name="image-outline"
+            size={25}
+          />
+        </Pressable>
+
+        <Pressable
+          style={[
+            styles.captureButton,
+            (isCapturing || isPickingImage) && styles.disabled,
+          ]}
+          disabled={isCapturing || isPickingImage}
+          onPress={captureReceipt}
+        >
+          <View
+            style={[
+              styles.captureButtonInner,
+              { backgroundColor: themeColors.primaryText },
+            ]}
+          />
+        </Pressable>
+
+        <View style={styles.footerSpacer} />
+      </View>
     </SafeAreaView>
   );
 }
@@ -299,6 +400,17 @@ async function cropReceiptFrame(
   );
 }
 
+async function normalizePickedReceipt(asset: ImagePicker.ImagePickerAsset) {
+  return manipulateAsync(
+    asset.uri,
+    [{ resize: { width: Math.min(asset.width || OUTPUT_WIDTH, OUTPUT_WIDTH) } }],
+    {
+      compress: 0.92,
+      format: SaveFormat.JPEG,
+    },
+  );
+}
+
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -321,6 +433,11 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     fontSize: fontSize.lg,
     lineHeight: 24,
+  },
+  headerWrap: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
   },
   cameraWrap: {
     flex: 1,
@@ -415,21 +532,37 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     textAlign: "center",
   },
-  captureButton: {
-    alignSelf: "center",
+  footer: {
+    minHeight: 92,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.lg,
+  },
+  galleryButton: {
+    width: 48,
+    height: 48,
     alignItems: "center",
     justifyContent: "center",
-    width: 76,
-    height: 76,
-    marginVertical: 22,
+    borderRadius: radius.md,
+  },
+  captureButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 64,
+    height: 64,
     borderColor: "#ffffff",
-    borderRadius: 38,
+    borderRadius: 32,
     borderWidth: 4,
   },
   captureButtonInner: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  footerSpacer: {
+    width: 48,
+    height: 48,
   },
   disabled: {
     opacity: 0.55,

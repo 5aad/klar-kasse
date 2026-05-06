@@ -1,5 +1,4 @@
 import type { ViewToken } from "react-native";
-import { colors } from "@repo/theme";
 import { router } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {
@@ -21,11 +20,13 @@ import {
 import { OnboardingNextButton } from "@/components/onboarding/onboarding-next-button";
 import OnboardingPage from "@/components/onboarding/onboarding-page";
 import { OnboardingPagination } from "@/components/onboarding/onboarding-pagination";
+import { useThemeColors } from "@/hooks/use-theme-colors";
 import { setIsOnboardingDone } from "@/utils/onboarding-storage";
 
 export default function OnboardingScreen() {
   const { bottom } = useSafeAreaInsets();
   const { width } = useWindowDimensions();
+  const themeColors = useThemeColors();
   const flatListRef = useRef<FlatList<OnboardingPageData>>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   const [pageIndex, setPageIndex] = useState(0);
@@ -75,7 +76,10 @@ export default function OnboardingScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
+    <SafeAreaView
+      style={[styles.screen, { backgroundColor: themeColors.background }]}
+      edges={["top", "bottom"]}
+    >
       <Animated.FlatList
         ref={flatListRef}
         bounces={false}
@@ -116,7 +120,6 @@ const viewabilityConfig = {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.surface,
   },
   footer: {
     minHeight: 104,

@@ -10,10 +10,11 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { NewCategoryModal } from "@/components/budget/new-category-modal";
 import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
+import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 type CategoryBudget = {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -87,6 +88,7 @@ const categoryBudgets: CategoryBudget[] = [
 
 export default function BudgetScreen() {
   const themeColors = useThemeColors();
+  const { bottom } = useSafeAreaInsets();
   const [isNewCategoryModalVisible, setIsNewCategoryModalVisible] =
     useState(false);
   const [monthlyBudget, setMonthlyBudget] = useState("5000");
@@ -108,7 +110,10 @@ export default function BudgetScreen() {
       edges={["top"]}
     >
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>

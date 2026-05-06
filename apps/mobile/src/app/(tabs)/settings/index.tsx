@@ -4,11 +4,12 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { CustomerSupportModal } from "@/components/settings/customer-support-modal";
 import { LanguageModal } from "@/components/settings/language-modal";
 import { useThemeColors } from "@/hooks/use-theme-colors";
+import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 type ThemeColors = ReturnType<typeof useThemeColors>;
 
@@ -17,12 +18,19 @@ const PROFILE_IMAGE =
 
 export default function SettingsScreen() {
   const themeColors = useThemeColors();
+  const { bottom } = useSafeAreaInsets();
   const [isLanguageModalVisible, setIsLanguageModalVisible] = useState(false);
   const [isSupportModalVisible, setIsSupportModalVisible] = useState(false);
 
   return (
     <SafeAreaView
-      style={[styles.screen, { backgroundColor: themeColors.background }]}
+      style={[
+        styles.screen,
+        {
+          backgroundColor: themeColors.background,
+          paddingBottom: getTabScreenBottomPadding(bottom, 0),
+        },
+      ]}
     >
       <View style={styles.profile}>
         <View style={styles.avatarWrap}>

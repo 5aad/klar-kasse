@@ -12,13 +12,15 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
 import { useThemeColors } from "@/hooks/use-theme-colors";
+import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 export default function EditBudgetScreen() {
   const themeColors = useThemeColors();
+  const { bottom } = useSafeAreaInsets();
   const params = useLocalSearchParams<{
     icon?: keyof typeof MaterialCommunityIcons.glyphMap;
     limit?: string;
@@ -74,7 +76,10 @@ export default function EditBudgetScreen() {
       edges={["top"]}
     >
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: getTabScreenBottomPadding(bottom, 42) },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <ScreenHeader
