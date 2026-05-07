@@ -98,7 +98,7 @@ export default function CapturedReceiptMlKitScreen() {
 
   const discardScan = () => {
     clearReceiptImages();
-    router.replace("/");
+    router.replace("/(tabs)/(dashboard)");
   };
 
   const confirmReceipt = () => {
