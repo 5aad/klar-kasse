@@ -14,6 +14,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
 import { ScreenHeader } from "@/components/shared/screen-header";
 import { useThemeColors } from "@/hooks/use-theme-colors";
+import { useCategoriesQuery } from "@/queries/categories";
 import { usePostReceiptMutation } from "@/queries/receipts";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
@@ -22,15 +23,6 @@ type ManualItem = {
   name: string;
   price: string;
 };
-
-const categories = [
-  "Food & Drinks",
-  "Groceries",
-  "Housing",
-  "Travel",
-  "Shopping",
-  "Health",
-] as const;
 
 const paymentMethods = ["Cash", "Visa", "Mastercard", "Debit"] as const;
 
@@ -49,6 +41,7 @@ function parseAmount(value: string) {
 export default function AddReceiptScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
+  const categoriesQuery = useCategoriesQuery();
   const postReceiptMutation = usePostReceiptMutation();
   const [store, setStore] = useState("");
   const [date, setDate] = useState(() => new Date().toLocaleDateString("de-DE"));
@@ -56,14 +49,15 @@ export default function AddReceiptScreen() {
   const [total, setTotal] = useState("");
   const [paymentMethod, setPaymentMethod] =
     useState<(typeof paymentMethods)[number]>("Visa");
-  const [category, setCategory] =
-    useState<(typeof categories)[number]>("Food & Drinks");
+  const [category, setCategory] = useState("");
   const [items, setItems] = useState<ManualItem[]>([createItem()]);
   const itemsTotal = useMemo(
     () => items.reduce((sum, item) => sum + parseAmount(item.price), 0),
     [items],
   );
   const displayedTotal = total || itemsTotal.toFixed(2);
+  const categoryOptions =
+    categoriesQuery.data?.map((categoryItem) => categoryItem.name) ?? [];
 
   const updateItem = (
     id: string,
@@ -165,7 +159,8 @@ export default function AddReceiptScreen() {
 
         <ChoiceGroup
           label="CATEGORY"
-          options={categories}
+          emptyText="Add categories from the Budget screen first."
+          options={categoryOptions}
           value={category}
           onChange={setCategory}
         />
@@ -303,11 +298,13 @@ function ManualField({
 }
 
 function ChoiceGroup<TValue extends string>({
+  emptyText,
   label,
   onChange,
   options,
   value,
 }: {
+  emptyText?: string;
   label: string;
   onChange: (value: TValue) => void;
   options: readonly TValue[];
@@ -321,7 +318,8 @@ function ChoiceGroup<TValue extends string>({
         {label}
       </Text>
       <View style={styles.choiceList}>
-        {options.map((option) => {
+        {options.length ? (
+          options.map((option) => {
           const isSelected = option === value;
 
           return (
@@ -351,7 +349,12 @@ function ChoiceGroup<TValue extends string>({
               </Text>
             </Pressable>
           );
-        })}
+          })
+        ) : (
+          <Text style={[styles.choiceEmptyText, { color: themeColors.mutedText }]}>
+            {emptyText ?? "No options available."}
+          </Text>
+        )}
       </View>
     </View>
   );
@@ -416,6 +419,10 @@ const styles = StyleSheet.create({
   choiceText: {
     fontSize: fontSize.sm,
     fontWeight: "800",
+  },
+  choiceEmptyText: {
+    fontSize: fontSize.md,
+    fontWeight: "600",
   },
   sectionHeader: {
     flexDirection: "row",
