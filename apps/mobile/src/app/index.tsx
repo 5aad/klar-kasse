@@ -1,17 +1,19 @@
 import { router } from "expo-router";
 import { useEffect } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+
+import { useThemeColors } from "@/hooks/use-theme-colors";
+import { getIsOnboardingDone } from "@/utils/onboarding-storage";
 // import { initExecutorch } from "react-native-executorch";
 // import { ExpoResourceFetcher } from "react-native-executorch-expo-resource-fetcher";
 export default function Index() {
+  const themeColors = useThemeColors();
+
   // initExecutorch({ resourceFetcher: ExpoResourceFetcher });
   useEffect(() => {
     let isMounted = true;
 
     async function routeFromOnboardingStatus() {
-      const { getIsOnboardingDone } = await import(
-        "@/utils/onboarding-storage"
-      );
       const isOnboardingDone = await getIsOnboardingDone();
 
       if (isMounted) {
@@ -27,17 +29,14 @@ export default function Index() {
   }, []);
 
   return (
-    <View style={styles.screen}>
-      <ActivityIndicator />
-    </View>
+    <View
+      style={[styles.screen, { backgroundColor: themeColors.background }]}
+    />
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#f8fafc",
   },
 });

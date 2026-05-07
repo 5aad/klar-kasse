@@ -22,7 +22,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
 import { useThemeColors } from "@/hooks/use-theme-colors";
-import { useAndroidBackToHome } from "@/hooks/use-android-back-to-home";
 import { useReceiptScanStore } from "@/stores/receipt-scan-store";
 
 const FRAME_WIDTH_RATIO = 0.74;
@@ -42,7 +41,7 @@ type Size = {
   height: number;
 };
 
-export default function ReceiptCameraScreen() {
+export default function ScanReceiptScreen() {
   const themeColors = useThemeColors();
   const isFocused = useIsFocused();
   const cameraRef = useRef<CameraView>(null);
@@ -54,11 +53,7 @@ export default function ReceiptCameraScreen() {
   const setReceiptImages = useReceiptScanStore(
     (state) => state.setReceiptImages,
   );
-  useAndroidBackToHome("/(dashboard)");
   const frame = cameraSize ? getReceiptFrame(cameraSize) : null;
-  const goToDashboard = () => {
-    router.replace("/(dashboard)");
-  };
 
   const handleCameraLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
@@ -92,7 +87,7 @@ export default function ReceiptCameraScreen() {
           height: cropped.height,
         },
       });
-      router.push("/receipt-camera/captured");
+      router.push("/scan/receipt-preview");
     } catch (error) {
       console.error("Receipt capture failed:", error);
       setErrorMessage(
@@ -147,7 +142,7 @@ export default function ReceiptCameraScreen() {
           height: normalized.height,
         },
       });
-      router.push("/receipt-camera/captured");
+      router.push("/scan/receipt-preview");
     } catch (error) {
       console.error("Gallery receipt pick failed:", error);
       setErrorMessage(
@@ -213,7 +208,7 @@ export default function ReceiptCameraScreen() {
         <ScreenHeader
           title="Scan Receipt"
           subtitle="Place the receipt inside the frame."
-          onBack={goToDashboard}
+          onBack={() => router.back()}
         />
       </View>
 
