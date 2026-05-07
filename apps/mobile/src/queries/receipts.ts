@@ -34,6 +34,9 @@ export function usePostReceiptMutation() {
     mutationFn: (input: PostReceiptInput) => postReceipt(input),
     onSuccess: (receipt) => {
       queryClient.invalidateQueries({ queryKey: receiptQueryKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["monthly-budget"] });
+      queryClient.invalidateQueries({ queryKey: ["monthly-budgets"] });
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
 
       if (receipt) {
         queryClient.setQueryData(receiptQueryKeys.detail(receipt.id), receipt);

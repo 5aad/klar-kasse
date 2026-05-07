@@ -2,6 +2,9 @@ import { desc, eq, isNull } from "drizzle-orm";
 
 import { db, initializeDatabase } from "@/db";
 import {
+  categories,
+  categoryBudgets,
+  monthlyBudgets,
   receiptItems,
   receipts,
   receiptVat,
@@ -65,6 +68,36 @@ function parseAddress(value: string | null) {
   }
 }
 
+function getCurrentMonthKey() {
+  const now = new Date();
+
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function getMonthKeyFromDateText(dateText?: string | null) {
+  if (!dateText) return null;
+
+  const germanDate = dateText.match(/^(\d{2})\.(\d{2})\.(\d{2}|\d{4})$/);
+  if (germanDate) {
+    const year =
+      germanDate[3].length === 2 ? `20${germanDate[3]}` : germanDate[3];
+
+    return `${year}-${germanDate[2]}`;
+  }
+
+  const date = new Date(dateText);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+    2,
+    "0",
+  )}`;
+}
+
+function roundMoney(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
 function toReceiptWithDetails(
   receipt: Receipt,
   items: ReceiptItem[],
@@ -83,10 +116,21 @@ export async function postReceipt(input: PostReceiptInput) {
 
   const now = new Date().toISOString();
   const receiptId = createLocalId("receipt");
+  const monthKey = getMonthKeyFromDateText(input.date) ?? getCurrentMonthKey();
+  const category =
+    input.category
+      ? db
+          .select()
+          .from(categories)
+          .where(eq(categories.name, input.category))
+          .all()
+          .find((row) => !row.deletedAt)
+      : null;
   const receiptRows = [
     {
       id: receiptId,
       store: input.store.trim() || "Unknown merchant",
+      categoryId: category?.id,
       categoryName: input.category,
       addressJson: JSON.stringify(input.address ?? []),
       dateText: input.date,
@@ -152,6 +196,141 @@ export async function postReceipt(input: PostReceiptInput) {
         entityId: receiptId,
         operation: "create",
         payloadJson: JSON.stringify(input),
+        status: "pending",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
+
+    const existingMonthlyBudget =
+      tx
+        .select()
+        .from(monthlyBudgets)
+        .where(eq(monthlyBudgets.monthKey, monthKey))
+        .get() ?? null;
+    const monthlyBudgetId =
+      existingMonthlyBudget?.id ?? createLocalId("monthly_budget");
+    const monthlyBudgetOperation = existingMonthlyBudget ? "update" : "create";
+    const currentMonthlySpent =
+      existingMonthlyBudget && !existingMonthlyBudget.deletedAt
+        ? existingMonthlyBudget.spentAmount
+        : 0;
+    const nextMonthlySpent = roundMoney(currentMonthlySpent + input.total);
+
+    if (existingMonthlyBudget) {
+      tx.update(monthlyBudgets)
+        .set({
+          deletedAt: null,
+          limitAmount: existingMonthlyBudget.deletedAt
+            ? 0
+            : existingMonthlyBudget.limitAmount,
+          spentAmount: nextMonthlySpent,
+          syncStatus: "pending",
+          syncAction:
+            existingMonthlyBudget.syncAction === "create"
+              ? "create"
+              : "update",
+          updatedAt: now,
+        })
+        .where(eq(monthlyBudgets.id, existingMonthlyBudget.id))
+        .run();
+    } else {
+      tx.insert(monthlyBudgets)
+        .values({
+          id: monthlyBudgetId,
+          monthKey,
+          limitAmount: 0,
+          spentAmount: nextMonthlySpent,
+          currency: "EUR",
+          syncStatus: "pending",
+          syncAction: "create",
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
+    }
+
+    tx.insert(syncOutbox)
+      .values({
+        id: createLocalId("sync"),
+        entityType: "monthly_budget",
+        entityId: monthlyBudgetId,
+        operation: monthlyBudgetOperation,
+        payloadJson: JSON.stringify({
+          monthKey,
+          spentAmount: nextMonthlySpent,
+        }),
+        status: "pending",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
+
+    if (!category) return;
+
+    const existingCategoryBudget =
+      tx
+        .select()
+        .from(categoryBudgets)
+        .where(eq(categoryBudgets.monthlyBudgetId, monthlyBudgetId))
+        .all()
+        .find((row) => row.categoryId === category.id) ?? null;
+    const categoryBudgetId =
+      existingCategoryBudget?.id ?? createLocalId("category_budget");
+    const categoryBudgetOperation = existingCategoryBudget
+      ? "update"
+      : "create";
+    const currentCategorySpent =
+      existingCategoryBudget && !existingCategoryBudget.deletedAt
+        ? existingCategoryBudget.spentAmount
+        : 0;
+    const nextCategorySpent = roundMoney(currentCategorySpent + input.total);
+
+    if (existingCategoryBudget) {
+      tx.update(categoryBudgets)
+        .set({
+          deletedAt: null,
+          limitAmount: existingCategoryBudget.deletedAt
+            ? 0
+            : existingCategoryBudget.limitAmount,
+          spentAmount: nextCategorySpent,
+          syncStatus: "pending",
+          syncAction:
+            existingCategoryBudget.syncAction === "create"
+              ? "create"
+              : "update",
+          updatedAt: now,
+        })
+        .where(eq(categoryBudgets.id, existingCategoryBudget.id))
+        .run();
+    } else {
+      tx.insert(categoryBudgets)
+        .values({
+          id: categoryBudgetId,
+          monthlyBudgetId,
+          categoryId: category.id,
+          limitAmount: 0,
+          spentAmount: nextCategorySpent,
+          syncStatus: "pending",
+          syncAction: "create",
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
+    }
+
+    tx.insert(syncOutbox)
+      .values({
+        id: createLocalId("sync"),
+        entityType: "category_budget",
+        entityId: categoryBudgetId,
+        operation: categoryBudgetOperation,
+        payloadJson: JSON.stringify({
+          categoryId: category.id,
+          monthKey,
+          monthlyBudgetId,
+          spentAmount: nextCategorySpent,
+        }),
         status: "pending",
         createdAt: now,
         updatedAt: now,

@@ -1,7 +1,14 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ExpenseDistributionChart } from "@/components/insight/expense-distribution-chart";
@@ -146,6 +153,10 @@ export default function InsightScreen() {
       .sort((left, right) => right.progress - left.progress)
       .slice(0, 5);
   }, [categoriesQuery.data, receiptsQuery.data, selectedMonth]);
+  const refreshInsights = () => {
+    categoriesQuery.refetch();
+    receiptsQuery.refetch();
+  };
 
   return (
     <SafeAreaView
@@ -157,6 +168,15 @@ export default function InsightScreen() {
           styles.content,
           { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
         ]}
+        refreshControl={
+          <RefreshControl
+            refreshing={categoriesQuery.isRefetching || receiptsQuery.isRefetching}
+            tintColor={themeColors.primary}
+            colors={[themeColors.primary]}
+            progressBackgroundColor={themeColors.surface}
+            onRefresh={refreshInsights}
+          />
+        }
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>

@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import {
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -38,6 +39,13 @@ function parseAmount(value: string) {
   return Number(value.replace(",", ".").replace(/[^\d.]/g, "")) || 0;
 }
 
+function getCurrentTime() {
+  return new Intl.DateTimeFormat("de-DE", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date());
+}
+
 export default function AddReceiptScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
@@ -45,7 +53,7 @@ export default function AddReceiptScreen() {
   const postReceiptMutation = usePostReceiptMutation();
   const [store, setStore] = useState("");
   const [date, setDate] = useState(() => new Date().toLocaleDateString("de-DE"));
-  const [time, setTime] = useState("");
+  const [time, setTime] = useState(getCurrentTime);
   const [total, setTotal] = useState("");
   const [paymentMethod, setPaymentMethod] =
     useState<(typeof paymentMethods)[number]>("Visa");
@@ -55,7 +63,7 @@ export default function AddReceiptScreen() {
     () => items.reduce((sum, item) => sum + parseAmount(item.price), 0),
     [items],
   );
-  const displayedTotal = total || itemsTotal.toFixed(2);
+  const displayedTotal = total || (itemsTotal > 0 ? itemsTotal.toFixed(2) : "");
   const categoryOptions =
     categoriesQuery.data?.map((categoryItem) => categoryItem.name) ?? [];
 
@@ -118,6 +126,15 @@ export default function AddReceiptScreen() {
           { paddingBottom: getTabScreenBottomPadding(bottom, 42) },
         ]}
         keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={categoriesQuery.isRefetching}
+            tintColor={themeColors.primary}
+            colors={[themeColors.primary]}
+            progressBackgroundColor={themeColors.surface}
+            onRefresh={categoriesQuery.refetch}
+          />
+        }
         showsVerticalScrollIndicator={false}
       >
         <ScreenHeader

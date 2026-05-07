@@ -5,6 +5,7 @@ import {
   categories,
   categoryBudgets,
   monthlyBudgets,
+  receipts,
   syncOutbox,
   type Category,
 } from "@/db/schema";
@@ -43,6 +44,46 @@ function getCurrentMonthKey() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
+function getMonthKeyFromDateText(dateText?: string | null) {
+  if (!dateText) return null;
+
+  const germanDate = dateText.match(/^(\d{2})\.(\d{2})\.(\d{2}|\d{4})$/);
+  if (germanDate) {
+    const year =
+      germanDate[3].length === 2 ? `20${germanDate[3]}` : germanDate[3];
+
+    return `${year}-${germanDate[2]}`;
+  }
+
+  const date = new Date(dateText);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+    2,
+    "0",
+  )}`;
+}
+
+function getCategorySpentAmount(category: Category, monthKey: string) {
+  return db
+    .select()
+    .from(receipts)
+    .where(isNull(receipts.deletedAt))
+    .all()
+    .filter((receipt) => {
+      const receiptMonthKey =
+        getMonthKeyFromDateText(receipt.dateText) ??
+        getMonthKeyFromDateText(receipt.createdAt);
+
+      return (
+        receiptMonthKey === monthKey &&
+        (receipt.categoryId === category.id ||
+          receipt.categoryName === category.name)
+      );
+    })
+    .reduce((sum, receipt) => sum + receipt.total, 0);
+}
+
 function withCurrentBudget(category: Category): CategoryWithBudget {
   const monthKey = getCurrentMonthKey();
   const monthlyBudget = db
@@ -51,13 +92,13 @@ function withCurrentBudget(category: Category): CategoryWithBudget {
     .where(eq(monthlyBudgets.monthKey, monthKey))
     .get();
 
-  if (!monthlyBudget) {
+  if (!monthlyBudget || monthlyBudget.deletedAt) {
     return {
       ...category,
       budgetId: null,
       limitAmount: 0,
       monthKey,
-      spentAmount: 0,
+      spentAmount: getCategorySpentAmount(category, monthKey),
     };
   }
 
@@ -77,7 +118,7 @@ function withCurrentBudget(category: Category): CategoryWithBudget {
     budgetId: budget?.id ?? null,
     limitAmount: budget?.limitAmount ?? 0,
     monthKey,
-    spentAmount: budget?.spentAmount ?? 0,
+    spentAmount: getCategorySpentAmount(category, monthKey),
   };
 }
 
@@ -111,6 +152,17 @@ function upsertCurrentCategoryBudget(
         updatedAt: input.now,
       })
       .run();
+  } else if (existingMonthlyBudget.deletedAt) {
+    tx.update(monthlyBudgets)
+      .set({
+        deletedAt: null,
+        syncStatus: "pending",
+        syncAction:
+          existingMonthlyBudget.syncAction === "create" ? "create" : "update",
+        updatedAt: input.now,
+      })
+      .where(eq(monthlyBudgets.id, existingMonthlyBudget.id))
+      .run();
   }
 
   const existingCategoryBudget = tx
@@ -130,6 +182,7 @@ function upsertCurrentCategoryBudget(
   if (existingCategoryBudget) {
     tx.update(categoryBudgets)
       .set({
+        deletedAt: null,
         limitAmount: input.limitAmount,
         syncStatus: "pending",
         syncAction:
