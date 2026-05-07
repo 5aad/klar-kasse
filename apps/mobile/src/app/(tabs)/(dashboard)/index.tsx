@@ -7,11 +7,41 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { BalanceGraph } from "@/components/dashboard/balance-graph";
 import { TransactionList } from "@/components/shared/transaction-list";
 import { useThemeColors } from "@/hooks/use-theme-colors";
+import { useReceiptsQuery } from "@/queries/receipts";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
+
+const categoryIcons = {
+  "Food & Drinks": "silverware-fork-knife",
+  Groceries: "cart",
+  Housing: "home",
+  Shopping: "shopping",
+  Travel: "airplane",
+} as const;
+
+function formatReceiptAmount(total: number) {
+  return `- €${total.toFixed(2)}`;
+}
+
+function getReceiptIcon(category?: string | null) {
+  return (
+    categoryIcons[category as keyof typeof categoryIcons] ??
+    "receipt-text-outline"
+  );
+}
 
 export default function DashboardScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
+  const receiptsQuery = useReceiptsQuery();
+  const receiptTransactions =
+    receiptsQuery.data?.map((receipt) => ({
+      id: receipt.id,
+      icon: getReceiptIcon(receipt.categoryName),
+      title: receipt.store,
+      category: receipt.categoryName ?? "Receipt",
+      date: receipt.dateText ?? receipt.createdAt,
+      amount: formatReceiptAmount(receipt.total),
+    })) ?? [];
 
   return (
     <SafeAreaView
@@ -54,7 +84,9 @@ export default function DashboardScreen() {
         </View>
 
         <BalanceGraph />
-        <TransactionList />
+        <TransactionList
+          items={receiptTransactions.length ? receiptTransactions : undefined}
+        />
       </ScrollView>
     </SafeAreaView>
   );

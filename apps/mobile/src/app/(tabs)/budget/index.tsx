@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useState } from "react";
 import {
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,82 +14,30 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { NewCategoryModal } from "@/components/budget/new-category-modal";
-import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
+import { useThemeColors } from "@/hooks/use-theme-colors";
+import { useCategoriesQuery } from "@/queries/categories";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 type CategoryBudget = {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  id: string;
   name: string;
   type: string;
   spent: number;
   limit: number;
-  action: string;
   alert?: string;
 };
 
-const categoryBudgets: CategoryBudget[] = [
-  {
-    icon: "home",
-    name: "Housing",
-    type: "FIXED EXPENSE",
-    spent: 1200,
-    limit: 1500,
-    action: "Edit Budget",
-  },
-  {
-    icon: "cart",
-    name: "Groceries",
-    type: "VARIABLE EXPENSE",
-    spent: 740,
-    limit: 800,
-    action: "Edit Budget",
-    alert: "Warning: 90% limit reached",
-  },
-  {
-    icon: "silverware-fork-knife",
-    name: "Dining",
-    type: "LIFESTYLE",
-    spent: 450,
-    limit: 1000,
-    action: "Set Limit",
-  },
-  {
-    icon: "movie-open",
-    name: "Entertainment",
-    type: "LEISURE",
-    spent: 120,
-    limit: 500,
-    action: "Edit Budget",
-  },
-  {
-    icon: "car",
-    name: "Transport",
-    type: "COMMUTE",
-    spent: 260,
-    limit: 400,
-    action: "Edit Budget",
-  },
-  {
-    icon: "shopping",
-    name: "Shopping",
-    type: "PERSONAL",
-    spent: 380,
-    limit: 600,
-    action: "Edit Budget",
-  },
-  {
-    icon: "heart-pulse",
-    name: "Health",
-    type: "WELLNESS",
-    spent: 95,
-    limit: 300,
-    action: "Set Limit",
-  },
-] as const;
+function isValidIcon(
+  icon?: string | null,
+): icon is keyof typeof MaterialCommunityIcons.glyphMap {
+  return Boolean(icon && icon in MaterialCommunityIcons.glyphMap);
+}
 
 export default function BudgetScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
+  const categoriesQuery = useCategoriesQuery();
   const [isNewCategoryModalVisible, setIsNewCategoryModalVisible] =
     useState(false);
   const [monthlyBudget, setMonthlyBudget] = useState("5000");
@@ -103,6 +52,15 @@ export default function BudgetScreen() {
     totalBudget > 0 ? Math.min(totalSpent / totalBudget, 1) : 0;
   const totalPercent = Math.round(totalProgress * 100);
   const formattedBudget = totalBudget.toLocaleString();
+  const categoryBudgets: CategoryBudget[] =
+    categoriesQuery.data?.map((category) => ({
+      id: category.id,
+      icon: isValidIcon(category.icon) ? category.icon : "tag-outline",
+      name: category.name,
+      type: "CUSTOM",
+      spent: 0,
+      limit: 0,
+    })) ?? [];
 
   return (
     <SafeAreaView
@@ -114,6 +72,15 @@ export default function BudgetScreen() {
           styles.content,
           { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
         ]}
+        refreshControl={
+          <RefreshControl
+            refreshing={categoriesQuery.isRefetching}
+            tintColor={themeColors.primary}
+            colors={[themeColors.primary]}
+            progressBackgroundColor={themeColors.surface}
+            onRefresh={categoriesQuery.refetch}
+          />
+        }
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
@@ -231,9 +198,27 @@ export default function BudgetScreen() {
         </View>
 
         <View style={styles.categoryList}>
-          {categoryBudgets.map((budget) => (
-            <CategoryBudgetCard key={budget.name} budget={budget} />
-          ))}
+          {categoryBudgets.length ? (
+            categoryBudgets.map((budget) => (
+              <CategoryBudgetCard key={budget.id} budget={budget} />
+            ))
+          ) : (
+            <View
+              style={[
+                styles.emptyCategoryCard,
+                { backgroundColor: themeColors.surface },
+              ]}
+            >
+              <Text style={[styles.emptyTitle, { color: themeColors.text }]}>
+                No categories yet
+              </Text>
+              <Text
+                style={[styles.emptyCopy, { color: themeColors.mutedText }]}
+              >
+                Add your first category to start tracking budgets.
+              </Text>
+            </View>
+          )}
         </View>
       </ScrollView>
       <NewCategoryModal
@@ -267,22 +252,19 @@ function ProgressBar({
 
 function CategoryBudgetCard({ budget }: { budget: CategoryBudget }) {
   const themeColors = useThemeColors();
-  const resolvedTheme = useResolvedTheme();
   const remaining = budget.limit - budget.spent;
-  const progress = budget.spent / budget.limit;
+  const progress = budget.limit > 0 ? budget.spent / budget.limit : 0;
   const isAlert = Boolean(budget.alert);
-  const cardBackground =
-    resolvedTheme === "dark" ? themeColors.surface : themeColors.text;
-  const cardText =
-    resolvedTheme === "dark" ? themeColors.text : themeColors.primaryText;
-  const cardMutedText =
-    resolvedTheme === "dark" ? themeColors.mutedText : themeColors.background;
 
   return (
     <View
       style={[
         styles.categoryCard,
-        { backgroundColor: cardBackground },
+        {
+          backgroundColor: themeColors.surface,
+          borderColor: themeColors.text,
+          borderWidth: 1,
+        },
         isAlert && styles.alertCard,
         isAlert && { borderColor: themeColors.primary },
       ]}
@@ -303,16 +285,22 @@ function CategoryBudgetCard({ budget }: { budget: CategoryBudget }) {
           />
         </View>
         <View style={styles.categoryCopy}>
-          <Text style={[styles.categoryName, { color: cardText }]}>
+          <Text style={[styles.categoryName, { color: themeColors.text }]}>
             {budget.name}
           </Text>
-          <Text style={[styles.categoryType, { color: cardMutedText }]}>
+          <Text style={[styles.categoryType, { color: themeColors.text }]}>
             {budget.type}
           </Text>
         </View>
-        <Pressable
-          onPress={() => {
-            if (budget.action === "Edit Budget") {
+        <View style={styles.categoryActions}>
+          <Pressable
+            accessibilityLabel={`Edit ${budget.name} budget`}
+            accessibilityRole="button"
+            style={[
+              styles.categoryIconAction,
+              { backgroundColor: themeColors.background },
+            ]}
+            onPress={() =>
               router.push({
                 pathname: "/budget/edit-budget",
                 params: {
@@ -322,36 +310,50 @@ function CategoryBudgetCard({ budget }: { budget: CategoryBudget }) {
                   spent: String(budget.spent),
                   type: budget.type,
                 },
-              });
+              })
             }
-          }}
-        >
-          <Text
-            style={[
-              styles.categoryAction,
-              { color: isAlert ? themeColors.primary : cardText },
-            ]}
           >
-            {budget.action}
-          </Text>
-        </Pressable>
+            <MaterialCommunityIcons
+              color={themeColors.text}
+              name="pencil-outline"
+              size={20}
+            />
+          </Pressable>
+          <Pressable
+            accessibilityLabel={`Delete ${budget.name} category`}
+            accessibilityRole="button"
+            style={[
+              styles.categoryIconAction,
+              { backgroundColor: themeColors.background },
+            ]}
+            onPress={() => {
+              console.log("Delete category:", budget.id);
+            }}
+          >
+            <MaterialCommunityIcons
+              color={themeColors.primary}
+              name="trash-can-outline"
+              size={20}
+            />
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.categoryAmounts}>
-        <Text style={[styles.categorySpent, { color: cardMutedText }]}>
+        <Text style={[styles.categorySpent, { color: themeColors.text }]}>
           ${budget.spent.toLocaleString()} of ${budget.limit.toLocaleString()}
         </Text>
         <Text
           style={[
             styles.categoryRemaining,
-            { color: isAlert ? themeColors.primary : cardText },
+            { color: isAlert ? themeColors.primary : themeColors.text },
           ]}
         >
           ${remaining.toLocaleString()} remaining
         </Text>
       </View>
       <ProgressBar
-        fillColor={isAlert ? themeColors.primary : cardText}
+        fillColor={isAlert ? themeColors.primary : themeColors.text}
         progress={progress}
         trackColor={themeColors.mutedText}
       />
@@ -540,9 +542,17 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     fontWeight: "600",
   },
-  categoryAction: {
-    fontSize: fontSize.sm,
-    fontWeight: "700",
+  categoryActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  categoryIconAction: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.sm,
   },
   categoryAmounts: {
     flexDirection: "row",
@@ -568,5 +578,19 @@ const styles = StyleSheet.create({
   warningText: {
     fontSize: fontSize.sm,
     fontWeight: "700",
+  },
+  emptyCategoryCard: {
+    gap: spacing.xs,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+  },
+  emptyTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: "800",
+  },
+  emptyCopy: {
+    fontSize: fontSize.md,
+    fontWeight: "500",
+    lineHeight: 20,
   },
 });

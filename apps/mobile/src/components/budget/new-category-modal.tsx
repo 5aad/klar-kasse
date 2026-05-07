@@ -1,9 +1,11 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { BaseModal } from "@repo/ui";
+import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
+import { usePostCategoryMutation } from "@/queries/categories";
 
 const visualIdentifiers = [
   "airplane",
@@ -22,6 +24,30 @@ type Props = {
 export function NewCategoryModal({ onClose, visible }: Props) {
   const themeColors = useThemeColors();
   const resolvedTheme = useResolvedTheme();
+  const postCategoryMutation = usePostCategoryMutation();
+  const [categoryName, setCategoryName] = useState("");
+  const [monthlyLimit, setMonthlyLimit] = useState("");
+  const [selectedIcon, setSelectedIcon] =
+    useState<(typeof visualIdentifiers)[number]>("airplane");
+
+  const addCategory = () => {
+    if (!categoryName.trim()) return;
+
+    postCategoryMutation.mutate(
+      {
+        name: categoryName,
+        icon: selectedIcon,
+      },
+      {
+        onSuccess: () => {
+          setCategoryName("");
+          setMonthlyLimit("");
+          setSelectedIcon("airplane");
+          onClose();
+        },
+      },
+    );
+  };
 
   return (
     <BaseModal
@@ -47,6 +73,8 @@ export function NewCategoryModal({ onClose, visible }: Props) {
           CATEGORY NAME
         </Text>
         <TextInput
+          value={categoryName}
+          onChangeText={setCategoryName}
           placeholder="e.g. Travel & Leisure"
           placeholderTextColor={themeColors.mutedText}
           style={[
@@ -71,14 +99,19 @@ export function NewCategoryModal({ onClose, visible }: Props) {
               style={[
                 styles.iconButton,
                 { backgroundColor: themeColors.surface },
-                index === 0 && {
+                selectedIcon === icon && {
                   backgroundColor: themeColors.primary,
                   borderColor: themeColors.primary,
                 },
               ]}
+              onPress={() => setSelectedIcon(icon)}
             >
               <MaterialCommunityIcons
-                color={index === 0 ? themeColors.primaryText : themeColors.text}
+                color={
+                  selectedIcon === icon
+                    ? themeColors.primaryText
+                    : themeColors.text
+                }
                 name={icon}
                 size={24}
               />
@@ -92,6 +125,8 @@ export function NewCategoryModal({ onClose, visible }: Props) {
           MONTHLY LIMIT
         </Text>
         <TextInput
+          value={monthlyLimit}
+          onChangeText={setMonthlyLimit}
           keyboardType="decimal-pad"
           placeholder="$ 0.00"
           placeholderTextColor={themeColors.mutedText}
@@ -114,11 +149,16 @@ export function NewCategoryModal({ onClose, visible }: Props) {
           </Text>
         </Pressable>
         <Pressable
-          style={[styles.addButton, { backgroundColor: themeColors.primary }]}
-          onPress={onClose}
+          style={[
+            styles.addButton,
+            { backgroundColor: themeColors.primary },
+            postCategoryMutation.isPending && styles.disabled,
+          ]}
+          disabled={postCategoryMutation.isPending}
+          onPress={addCategory}
         >
           <Text style={[styles.addText, { color: themeColors.primaryText }]}>
-            Add Category
+            {postCategoryMutation.isPending ? "Adding..." : "Add Category"}
           </Text>
         </Pressable>
       </View>
@@ -201,5 +241,8 @@ const styles = StyleSheet.create({
   addText: {
     fontSize: fontSize.md,
     fontWeight: "700",
+  },
+  disabled: {
+    opacity: 0.55,
   },
 });

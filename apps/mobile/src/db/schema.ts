@@ -47,7 +47,6 @@ export const categories = sqliteTable(
     name: text("name").notNull(),
     icon: text("icon"),
     color: text("color"),
-    type: text("type"),
     isDefault: integer("is_default", { mode: "boolean" })
       .notNull()
       .default(false),

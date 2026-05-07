@@ -1,5 +1,6 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
+import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import {
   Pressable,
@@ -13,6 +14,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
 import { ScreenHeader } from "@/components/shared/screen-header";
 import { useThemeColors } from "@/hooks/use-theme-colors";
+import { usePostReceiptMutation } from "@/queries/receipts";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 type ManualItem = {
@@ -47,6 +49,7 @@ function parseAmount(value: string) {
 export default function AddReceiptScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
+  const postReceiptMutation = usePostReceiptMutation();
   const [store, setStore] = useState("");
   const [date, setDate] = useState(() => new Date().toLocaleDateString("de-DE"));
   const [time, setTime] = useState("");
@@ -83,14 +86,15 @@ export default function AddReceiptScreen() {
   };
 
   const saveManualReceipt = () => {
+    const receiptItems = items
+      .filter((item) => item.name.trim() || item.price.trim())
+      .map((item) => ({
+        name: item.name.trim(),
+        price: parseAmount(item.price),
+        vatCode: "A",
+      }));
     const receiptJson = {
-      items: items
-        .filter((item) => item.name.trim() || item.price.trim())
-        .map((item) => ({
-          name: item.name.trim(),
-          price: parseAmount(item.price),
-          vatCode: "A",
-        })),
+      items: receiptItems,
       rawText: "",
       store: store.trim(),
       address: [],
@@ -100,11 +104,13 @@ export default function AddReceiptScreen() {
       paymentMethod,
       cardLast4: "",
       vat: [],
-      itemCount: items.length,
+      itemCount: receiptItems.length,
       category,
     };
 
-    console.log("Manual receipt:", receiptJson);
+    postReceiptMutation.mutate(receiptJson, {
+      onSuccess: () => router.replace("/(tabs)/scan"),
+    });
   };
 
   return (
@@ -239,15 +245,16 @@ export default function AddReceiptScreen() {
 
         <Pressable
           style={[styles.saveButton, { backgroundColor: themeColors.primary }]}
+          disabled={postReceiptMutation.isPending}
           onPress={saveManualReceipt}
         >
           <MaterialCommunityIcons
             color={themeColors.primaryText}
-            name="check-circle"
+            name={postReceiptMutation.isPending ? "timer-sand" : "check-circle"}
             size={20}
           />
           <Text style={[styles.saveText, { color: themeColors.primaryText }]}>
-            Save Receipt
+            {postReceiptMutation.isPending ? "Saving..." : "Save Receipt"}
           </Text>
         </Pressable>
       </ScrollView>

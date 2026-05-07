@@ -10,6 +10,7 @@ export type TransactionListItem = {
   category: string;
   date: string;
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  id?: string;
   title: string;
 };
 
@@ -72,7 +73,10 @@ export function TransactionList({
 
       <View style={styles.list}>
         {items.map((transaction) => (
-          <View key={transaction.title} style={styles.row}>
+          <View
+            key={transaction.id ?? `${transaction.title}-${transaction.date}`}
+            style={styles.row}
+          >
             <View style={[styles.iconBox, { backgroundColor: iconBackground }]}>
               <MaterialCommunityIcons
                 color={iconColor}

@@ -19,13 +19,18 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
 import { useThemeColors } from "@/hooks/use-theme-colors";
+import { usePostReceiptMutation } from "@/queries/receipts";
 import { useReceiptScanStore } from "@/stores/receipt-scan-store";
-import { parseNormaReceipt } from "@/utils/receipt-parser";
+import {
+  parseNormaReceipt,
+  type ReceiptParseResult,
+} from "@/utils/receipt-parser";
 
 type ThemeColors = ReturnType<typeof useThemeColors>;
 
 export default function CapturedReceiptMlKitScreen() {
   const themeColors = useThemeColors();
+  const postReceiptMutation = usePostReceiptMutation();
   const croppedImage = useReceiptScanStore((state) => state.croppedImage);
   const clearReceiptImages = useReceiptScanStore(
     (state) => state.clearReceiptImages,
@@ -37,6 +42,9 @@ export default function CapturedReceiptMlKitScreen() {
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Food & Drinks");
   const [note, setNote] = useState("");
+  const [parsedReceipt, setParsedReceipt] = useState<ReceiptParseResult | null>(
+    null,
+  );
 
   const fileName = useMemo(() => {
     const uri = croppedImage?.uri ?? "";
@@ -69,6 +77,7 @@ export default function CapturedReceiptMlKitScreen() {
         setMerchantName(parsedReceipt.store || "");
         setDate(parsedReceipt.date || "");
         setAmount(parsedReceipt.total ? parsedReceipt.total.toFixed(2) : "");
+        setParsedReceipt(parsedReceipt);
       } catch (error) {
         console.error("Receipt processing failed:", error);
 
@@ -102,13 +111,29 @@ export default function CapturedReceiptMlKitScreen() {
   };
 
   const confirmReceipt = () => {
-    console.log("Confirmed receipt:", {
-      merchantName,
-      date,
-      amount,
-      category,
-      note,
-    });
+    postReceiptMutation.mutate(
+      {
+        address: parsedReceipt?.address ?? [],
+        cardLast4: parsedReceipt?.cardLast4 ?? "",
+        category,
+        date,
+        imageUri: croppedImage?.uri,
+        items: parsedReceipt?.items ?? [],
+        note,
+        paymentMethod: parsedReceipt?.paymentMethod ?? "",
+        rawText: parsedReceipt?.rawText ?? "",
+        store: merchantName,
+        time: parsedReceipt?.time ?? "",
+        total: Number(amount.replace(",", ".")) || parsedReceipt?.total || 0,
+        vat: parsedReceipt?.vat ?? [],
+      },
+      {
+        onSuccess: () => {
+          clearReceiptImages();
+          router.replace("/(tabs)/scan");
+        },
+      },
+    );
   };
 
   if (!croppedImage?.uri) {
@@ -284,11 +309,13 @@ export default function CapturedReceiptMlKitScreen() {
           style={[
             styles.confirmButton,
             { backgroundColor: themeColors.primary },
+            postReceiptMutation.isPending && styles.disabled,
           ]}
+          disabled={postReceiptMutation.isPending}
           onPress={confirmReceipt}
         >
           <MaterialCommunityIcons
-            name="plus-circle"
+            name={postReceiptMutation.isPending ? "timer-sand" : "plus-circle"}
             size={18}
             color={themeColors.primaryText}
           />
@@ -298,7 +325,7 @@ export default function CapturedReceiptMlKitScreen() {
               { color: themeColors.primaryText },
             ]}
           >
-            Confirm & Add
+            {postReceiptMutation.isPending ? "Saving..." : "Confirm & Add"}
           </Text>
         </Pressable>
 
@@ -503,5 +530,8 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     fontSize: fontSize.lg,
     fontWeight: "700",
+  },
+  disabled: {
+    opacity: 0.55,
   },
 });
