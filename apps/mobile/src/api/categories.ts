@@ -1,17 +1,31 @@
-import { asc, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 
 import { db, initializeDatabase } from "@/db";
-import { categories, syncOutbox } from "@/db/schema";
+import {
+  categories,
+  categoryBudgets,
+  monthlyBudgets,
+  syncOutbox,
+  type Category,
+} from "@/db/schema";
 
 export type PostCategoryInput = {
   color?: string;
   icon?: string;
   isDefault?: boolean;
+  limit?: number;
   name: string;
 };
 
 export type EditCategoryInput = Partial<PostCategoryInput> & {
   id: string;
+};
+
+export type CategoryWithBudget = Category & {
+  budgetId: string | null;
+  limitAmount: number;
+  monthKey: string;
+  spentAmount: number;
 };
 
 function createLocalId(prefix: string) {
@@ -23,11 +37,56 @@ function createLocalId(prefix: string) {
   return `${prefix}_${randomId}`;
 }
 
+function getCurrentMonthKey() {
+  const now = new Date();
+
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function withCurrentBudget(category: Category): CategoryWithBudget {
+  const monthKey = getCurrentMonthKey();
+  const monthlyBudget = db
+    .select()
+    .from(monthlyBudgets)
+    .where(eq(monthlyBudgets.monthKey, monthKey))
+    .get();
+
+  if (!monthlyBudget) {
+    return {
+      ...category,
+      budgetId: null,
+      limitAmount: 0,
+      monthKey,
+      spentAmount: 0,
+    };
+  }
+
+  const budget = db
+    .select()
+    .from(categoryBudgets)
+    .where(
+      and(
+        eq(categoryBudgets.monthlyBudgetId, monthlyBudget.id),
+        eq(categoryBudgets.categoryId, category.id),
+      ),
+    )
+    .get();
+
+  return {
+    ...category,
+    budgetId: budget?.id ?? null,
+    limitAmount: budget?.limitAmount ?? 0,
+    monthKey,
+    spentAmount: budget?.spentAmount ?? 0,
+  };
+}
+
 export async function postCategory(input: PostCategoryInput) {
   initializeDatabase();
 
   const now = new Date().toISOString();
   const categoryId = createLocalId("category");
+  const limitAmount = Math.max(Number(input.limit ?? 0) || 0, 0);
 
   db.transaction((tx) => {
     tx.insert(categories)
@@ -43,6 +102,63 @@ export async function postCategory(input: PostCategoryInput) {
         updatedAt: now,
       })
       .run();
+
+    if (limitAmount > 0) {
+      const monthKey = getCurrentMonthKey();
+      const existingMonthlyBudget = tx
+        .select()
+        .from(monthlyBudgets)
+        .where(eq(monthlyBudgets.monthKey, monthKey))
+        .get();
+      const monthlyBudgetId = existingMonthlyBudget?.id ?? createLocalId("monthly_budget");
+      const categoryBudgetId = createLocalId("category_budget");
+
+      if (!existingMonthlyBudget) {
+        tx.insert(monthlyBudgets)
+          .values({
+            id: monthlyBudgetId,
+            monthKey,
+            limitAmount: 0,
+            spentAmount: 0,
+            syncStatus: "pending",
+            syncAction: "create",
+            createdAt: now,
+            updatedAt: now,
+          })
+          .run();
+      }
+
+      tx.insert(categoryBudgets)
+        .values({
+          id: categoryBudgetId,
+          monthlyBudgetId,
+          categoryId,
+          limitAmount,
+          spentAmount: 0,
+          syncStatus: "pending",
+          syncAction: "create",
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
+
+      tx.insert(syncOutbox)
+        .values({
+          id: createLocalId("sync"),
+          entityType: "category_budget",
+          entityId: categoryBudgetId,
+          operation: "create",
+          payloadJson: JSON.stringify({
+            categoryId,
+            limitAmount,
+            monthKey,
+          }),
+          status: "pending",
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
+    }
 
     tx.insert(syncOutbox)
       .values({
@@ -104,6 +220,42 @@ export async function editCategory(input: EditCategoryInput) {
   return getCategory(input.id);
 }
 
+export async function deleteCategory(id: string) {
+  initializeDatabase();
+
+  const now = new Date().toISOString();
+  const existingCategory = await getCategory(id);
+
+  if (!existingCategory) return null;
+
+  db.transaction((tx) => {
+    tx.update(categories)
+      .set({
+        deletedAt: now,
+        syncStatus: "pending",
+        syncAction: existingCategory.syncAction === "create" ? "create" : "delete",
+        updatedAt: now,
+      })
+      .where(eq(categories.id, id))
+      .run();
+
+    tx.insert(syncOutbox)
+      .values({
+        id: createLocalId("sync"),
+        entityType: "category",
+        entityId: id,
+        operation: "delete",
+        payloadJson: JSON.stringify({ id }),
+        status: "pending",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
+  });
+
+  return { id };
+}
+
 export async function getCategory(id: string) {
   initializeDatabase();
 
@@ -115,7 +267,7 @@ export async function getCategory(id: string) {
 
   if (!category || category.deletedAt) return null;
 
-  return category;
+  return withCurrentBudget(category);
 }
 
 export async function getCategories() {
@@ -126,5 +278,6 @@ export async function getCategories() {
     .from(categories)
     .where(isNull(categories.deletedAt))
     .orderBy(asc(categories.name))
-    .all();
+    .all()
+    .map(withCurrentBudget);
 }

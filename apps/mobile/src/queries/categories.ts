@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  deleteCategory,
   editCategory,
   getCategories,
   getCategory,
@@ -60,6 +61,23 @@ export function useEditCategoryMutation() {
           categoryQueryKeys.detail(category.id),
           category,
         );
+      }
+    },
+  });
+}
+
+export function useDeleteCategoryMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteCategory(id),
+    onSuccess: (category) => {
+      queryClient.invalidateQueries({ queryKey: categoryQueryKeys.all });
+
+      if (category) {
+        queryClient.removeQueries({
+          queryKey: categoryQueryKeys.detail(category.id),
+        });
       }
     },
   });

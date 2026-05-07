@@ -33,10 +33,13 @@ export function NewCategoryModal({ onClose, visible }: Props) {
   const addCategory = () => {
     if (!categoryName.trim()) return;
 
+    const limit = Number(monthlyLimit.replace(",", ".").replace(/[^\d.]/g, ""));
+
     postCategoryMutation.mutate(
       {
         name: categoryName,
         icon: selectedIcon,
+        limit: Number.isFinite(limit) ? limit : 0,
       },
       {
         onSuccess: () => {

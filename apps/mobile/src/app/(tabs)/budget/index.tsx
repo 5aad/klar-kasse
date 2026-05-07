@@ -15,7 +15,10 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
 import { NewCategoryModal } from "@/components/budget/new-category-modal";
 import { useThemeColors } from "@/hooks/use-theme-colors";
-import { useCategoriesQuery } from "@/queries/categories";
+import {
+  useCategoriesQuery,
+  useDeleteCategoryMutation,
+} from "@/queries/categories";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 type CategoryBudget = {
@@ -38,6 +41,7 @@ export default function BudgetScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
   const categoriesQuery = useCategoriesQuery();
+  const deleteCategoryMutation = useDeleteCategoryMutation();
   const [isNewCategoryModalVisible, setIsNewCategoryModalVisible] =
     useState(false);
   const [monthlyBudget, setMonthlyBudget] = useState("5000");
@@ -58,8 +62,8 @@ export default function BudgetScreen() {
       icon: isValidIcon(category.icon) ? category.icon : "tag-outline",
       name: category.name,
       type: "CUSTOM",
-      spent: 0,
-      limit: 0,
+      spent: category.spentAmount,
+      limit: category.limitAmount,
     })) ?? [];
 
   return (
@@ -200,7 +204,11 @@ export default function BudgetScreen() {
         <View style={styles.categoryList}>
           {categoryBudgets.length ? (
             categoryBudgets.map((budget) => (
-              <CategoryBudgetCard key={budget.id} budget={budget} />
+              <CategoryBudgetCard
+                key={budget.id}
+                budget={budget}
+                onDelete={(id) => deleteCategoryMutation.mutate(id)}
+              />
             ))
           ) : (
             <View
@@ -250,7 +258,13 @@ function ProgressBar({
   );
 }
 
-function CategoryBudgetCard({ budget }: { budget: CategoryBudget }) {
+function CategoryBudgetCard({
+  budget,
+  onDelete,
+}: {
+  budget: CategoryBudget;
+  onDelete?: (id: string) => void;
+}) {
   const themeColors = useThemeColors();
   const remaining = budget.limit - budget.spent;
   const progress = budget.limit > 0 ? budget.spent / budget.limit : 0;
@@ -326,9 +340,7 @@ function CategoryBudgetCard({ budget }: { budget: CategoryBudget }) {
               styles.categoryIconAction,
               { backgroundColor: themeColors.background },
             ]}
-            onPress={() => {
-              console.log("Delete category:", budget.id);
-            }}
+            onPress={() => onDelete?.(budget.id)}
           >
             <MaterialCommunityIcons
               color={themeColors.primary}

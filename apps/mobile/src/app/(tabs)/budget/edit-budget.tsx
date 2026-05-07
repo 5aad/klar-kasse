@@ -37,7 +37,7 @@ export default function EditBudgetScreen() {
   const [proportion, setProportion] = useState(0.58);
   const sliderWidthRef = useRef(1);
   const dragStartProportionRef = useRef(0.58);
-  const proportionPercent = Math.round(proportion * 100);
+  // const proportionPercent = Math.round(proportion * 100);
 
   const clampProportion = (value: number) => Math.max(0, Math.min(1, value));
 
@@ -49,26 +49,26 @@ export default function EditBudgetScreen() {
     );
   };
 
-  const sliderPanResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: () => true,
-        onStartShouldSetPanResponder: () => true,
-        onPanResponderGrant: (event) => {
-          dragStartProportionRef.current = proportion;
-          updateProportionFromLocation(event);
-        },
-        onPanResponderMove: (_, gestureState) => {
-          setProportion(
-            clampProportion(
-              dragStartProportionRef.current +
-                gestureState.dx / Math.max(sliderWidthRef.current, 1),
-            ),
-          );
-        },
-      }),
-    [proportion],
-  );
+  // const sliderPanResponder = useMemo(
+  //   () =>
+  //     PanResponder.create({
+  //       onMoveShouldSetPanResponder: () => true,
+  //       onStartShouldSetPanResponder: () => true,
+  //       onPanResponderGrant: (event) => {
+  //         dragStartProportionRef.current = proportion;
+  //         updateProportionFromLocation(event);
+  //       },
+  //       onPanResponderMove: (_, gestureState) => {
+  //         setProportion(
+  //           clampProportion(
+  //             dragStartProportionRef.current +
+  //               gestureState.dx / Math.max(sliderWidthRef.current, 1),
+  //           ),
+  //         );
+  //       },
+  //     }),
+  //   [proportion],
+  // );
 
   return (
     <SafeAreaView
@@ -187,7 +187,7 @@ export default function EditBudgetScreen() {
           </View>
         </View>
 
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <View style={styles.proportionHeader}>
             <Text
               style={[styles.sectionLabel, { color: themeColors.mutedText }]}
@@ -243,7 +243,7 @@ export default function EditBudgetScreen() {
               $1,200
             </Text>
           </View>
-        </View>
+        </View> */}
 
         <Pressable
           style={[styles.saveButton, { backgroundColor: themeColors.primary }]}
