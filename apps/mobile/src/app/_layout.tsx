@@ -23,7 +23,7 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen
-          name="receipt-camera"
+          name="scan"
           options={{
             animation: "simple_push",
             headerShown: false,
