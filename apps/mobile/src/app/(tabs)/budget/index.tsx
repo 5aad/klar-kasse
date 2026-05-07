@@ -14,6 +14,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { NewCategoryModal } from "@/components/budget/new-category-modal";
+import { EmptyStateCard } from "@/components/shared/empty-state-card";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import {
   useCategoriesQuery,
@@ -235,21 +236,11 @@ export default function BudgetScreen() {
               />
             ))
           ) : (
-            <View
-              style={[
-                styles.emptyCategoryCard,
-                { backgroundColor: themeColors.surface },
-              ]}
-            >
-              <Text style={[styles.emptyTitle, { color: themeColors.text }]}>
-                No categories yet
-              </Text>
-              <Text
-                style={[styles.emptyCopy, { color: themeColors.mutedText }]}
-              >
-                Add your first category to start tracking budgets.
-              </Text>
-            </View>
+            <EmptyStateCard
+              body="Add your first category to start tracking budgets."
+              icon="tag-outline"
+              title="No categories yet"
+            />
           )}
         </View>
       </ScrollView>
@@ -615,19 +606,5 @@ const styles = StyleSheet.create({
   warningText: {
     fontSize: fontSize.sm,
     fontWeight: "700",
-  },
-  emptyCategoryCard: {
-    gap: spacing.xs,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-  },
-  emptyTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: "800",
-  },
-  emptyCopy: {
-    fontSize: fontSize.md,
-    fontWeight: "500",
-    lineHeight: 20,
   },
 });

@@ -1,12 +1,20 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { router } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BalanceGraph } from "@/components/dashboard/balance-graph";
 import { TransactionList } from "@/components/shared/transaction-list";
 import { useThemeColors } from "@/hooks/use-theme-colors";
+import { useMonthlyBudgetQuery } from "@/queries/budgets";
 import { useReceiptsQuery } from "@/queries/receipts";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
@@ -19,7 +27,7 @@ const categoryIcons = {
 } as const;
 
 function formatReceiptAmount(total: number) {
-  return `- €${total.toFixed(2)}`;
+  return `- EUR ${total.toFixed(2)}`;
 }
 
 function getReceiptIcon(category?: string | null) {
@@ -32,16 +40,29 @@ function getReceiptIcon(category?: string | null) {
 export default function DashboardScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
+  const monthlyBudgetQuery = useMonthlyBudgetQuery();
   const receiptsQuery = useReceiptsQuery();
+  const monthlyBudget = monthlyBudgetQuery.data;
+  const remainingBudget = Math.max(
+    (monthlyBudget?.limitAmount ?? 0) - (monthlyBudget?.spentAmount ?? 0),
+    0,
+  );
   const receiptTransactions =
-    receiptsQuery.data?.map((receipt) => ({
-      id: receipt.id,
-      icon: getReceiptIcon(receipt.categoryName),
-      title: receipt.store,
-      category: receipt.categoryName ?? "Receipt",
-      date: receipt.dateText ?? receipt.createdAt,
-      amount: formatReceiptAmount(receipt.total),
-    })) ?? [];
+    receiptsQuery.data
+      ?.slice(0, 5)
+      .map((receipt) => ({
+        id: receipt.id,
+        icon: getReceiptIcon(receipt.categoryName),
+        title: receipt.store,
+        category: receipt.categoryName ?? "Receipt",
+        date: receipt.dateText ?? receipt.createdAt,
+        amount: formatReceiptAmount(receipt.total),
+      })) ?? [];
+
+  const refreshDashboard = () => {
+    monthlyBudgetQuery.refetch();
+    receiptsQuery.refetch();
+  };
 
   return (
     <SafeAreaView
@@ -53,17 +74,31 @@ export default function DashboardScreen() {
           styles.content,
           { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
         ]}
+        refreshControl={
+          <RefreshControl
+            refreshing={
+              monthlyBudgetQuery.isRefetching || receiptsQuery.isRefetching
+            }
+            tintColor={themeColors.primary}
+            colors={[themeColors.primary]}
+            progressBackgroundColor={themeColors.surface}
+            onRefresh={refreshDashboard}
+          />
+        }
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
           <View style={styles.balanceRow}>
             <Text style={[styles.balance, { color: themeColors.text }]}>
-              $ 13,553.00
+              EUR{" "}
+              {remainingBudget.toLocaleString(undefined, {
+                maximumFractionDigits: 0,
+              })}
             </Text>
             <Text
               style={[styles.balanceLabel, { color: themeColors.mutedText }]}
             >
-              Balance
+              Remaining Budget
             </Text>
           </View>
           <Pressable
@@ -84,9 +119,7 @@ export default function DashboardScreen() {
         </View>
 
         <BalanceGraph />
-        <TransactionList
-          items={receiptTransactions.length ? receiptTransactions : undefined}
-        />
+        <TransactionList items={receiptTransactions} />
       </ScrollView>
     </SafeAreaView>
   );
