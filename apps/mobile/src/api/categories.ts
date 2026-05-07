@@ -81,6 +81,97 @@ function withCurrentBudget(category: Category): CategoryWithBudget {
   };
 }
 
+function upsertCurrentCategoryBudget(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  input: {
+    categoryId: string;
+    limitAmount: number;
+    now: string;
+  },
+) {
+  const monthKey = getCurrentMonthKey();
+  const existingMonthlyBudget = tx
+    .select()
+    .from(monthlyBudgets)
+    .where(eq(monthlyBudgets.monthKey, monthKey))
+    .get();
+  const monthlyBudgetId =
+    existingMonthlyBudget?.id ?? createLocalId("monthly_budget");
+
+  if (!existingMonthlyBudget) {
+    tx.insert(monthlyBudgets)
+      .values({
+        id: monthlyBudgetId,
+        monthKey,
+        limitAmount: 0,
+        spentAmount: 0,
+        syncStatus: "pending",
+        syncAction: "create",
+        createdAt: input.now,
+        updatedAt: input.now,
+      })
+      .run();
+  }
+
+  const existingCategoryBudget = tx
+    .select()
+    .from(categoryBudgets)
+    .where(
+      and(
+        eq(categoryBudgets.monthlyBudgetId, monthlyBudgetId),
+        eq(categoryBudgets.categoryId, input.categoryId),
+      ),
+    )
+    .get();
+
+  const categoryBudgetId =
+    existingCategoryBudget?.id ?? createLocalId("category_budget");
+
+  if (existingCategoryBudget) {
+    tx.update(categoryBudgets)
+      .set({
+        limitAmount: input.limitAmount,
+        syncStatus: "pending",
+        syncAction:
+          existingCategoryBudget.syncAction === "create" ? "create" : "update",
+        updatedAt: input.now,
+      })
+      .where(eq(categoryBudgets.id, existingCategoryBudget.id))
+      .run();
+  } else {
+    tx.insert(categoryBudgets)
+      .values({
+        id: categoryBudgetId,
+        monthlyBudgetId,
+        categoryId: input.categoryId,
+        limitAmount: input.limitAmount,
+        spentAmount: 0,
+        syncStatus: "pending",
+        syncAction: "create",
+        createdAt: input.now,
+        updatedAt: input.now,
+      })
+      .run();
+  }
+
+  tx.insert(syncOutbox)
+    .values({
+      id: createLocalId("sync"),
+      entityType: "category_budget",
+      entityId: categoryBudgetId,
+      operation: existingCategoryBudget ? "update" : "create",
+      payloadJson: JSON.stringify({
+        categoryId: input.categoryId,
+        limitAmount: input.limitAmount,
+        monthKey,
+      }),
+      status: "pending",
+      createdAt: input.now,
+      updatedAt: input.now,
+    })
+    .run();
+}
+
 export async function postCategory(input: PostCategoryInput) {
   initializeDatabase();
 
@@ -104,60 +195,11 @@ export async function postCategory(input: PostCategoryInput) {
       .run();
 
     if (limitAmount > 0) {
-      const monthKey = getCurrentMonthKey();
-      const existingMonthlyBudget = tx
-        .select()
-        .from(monthlyBudgets)
-        .where(eq(monthlyBudgets.monthKey, monthKey))
-        .get();
-      const monthlyBudgetId = existingMonthlyBudget?.id ?? createLocalId("monthly_budget");
-      const categoryBudgetId = createLocalId("category_budget");
-
-      if (!existingMonthlyBudget) {
-        tx.insert(monthlyBudgets)
-          .values({
-            id: monthlyBudgetId,
-            monthKey,
-            limitAmount: 0,
-            spentAmount: 0,
-            syncStatus: "pending",
-            syncAction: "create",
-            createdAt: now,
-            updatedAt: now,
-          })
-          .run();
-      }
-
-      tx.insert(categoryBudgets)
-        .values({
-          id: categoryBudgetId,
-          monthlyBudgetId,
-          categoryId,
-          limitAmount,
-          spentAmount: 0,
-          syncStatus: "pending",
-          syncAction: "create",
-          createdAt: now,
-          updatedAt: now,
-        })
-        .run();
-
-      tx.insert(syncOutbox)
-        .values({
-          id: createLocalId("sync"),
-          entityType: "category_budget",
-          entityId: categoryBudgetId,
-          operation: "create",
-          payloadJson: JSON.stringify({
-            categoryId,
-            limitAmount,
-            monthKey,
-          }),
-          status: "pending",
-          createdAt: now,
-          updatedAt: now,
-        })
-        .run();
+      upsertCurrentCategoryBudget(tx, {
+        categoryId,
+        limitAmount,
+        now,
+      });
     }
 
     tx.insert(syncOutbox)
@@ -202,6 +244,14 @@ export async function editCategory(input: EditCategoryInput) {
       .set(nextValues)
       .where(eq(categories.id, input.id))
       .run();
+
+    if (input.limit !== undefined) {
+      upsertCurrentCategoryBudget(tx, {
+        categoryId: input.id,
+        limitAmount: Math.max(Number(input.limit) || 0, 0),
+        now,
+      });
+    }
 
     tx.insert(syncOutbox)
       .values({

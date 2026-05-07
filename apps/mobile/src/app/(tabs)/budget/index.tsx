@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Pressable,
   RefreshControl,
@@ -19,6 +19,10 @@ import {
   useCategoriesQuery,
   useDeleteCategoryMutation,
 } from "@/queries/categories";
+import {
+  useMonthlyBudgetQuery,
+  useSaveMonthlyBudgetMutation,
+} from "@/queries/budgets";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 type CategoryBudget = {
@@ -40,17 +44,22 @@ function isValidIcon(
 export default function BudgetScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
+  const monthlyBudgetQuery = useMonthlyBudgetQuery();
+  const saveMonthlyBudgetMutation = useSaveMonthlyBudgetMutation();
   const categoriesQuery = useCategoriesQuery();
   const deleteCategoryMutation = useDeleteCategoryMutation();
   const [isNewCategoryModalVisible, setIsNewCategoryModalVisible] =
     useState(false);
-  const [monthlyBudget, setMonthlyBudget] = useState("5000");
+  const [monthlyBudget, setMonthlyBudget] = useState("");
   const budgetMonth = new Intl.DateTimeFormat("en", {
     month: "long",
     year: "numeric",
   }).format(new Date());
-  const totalBudget = Number(monthlyBudget.replace(/[^\d.]/g, "")) || 0;
-  const totalSpent = 3250;
+  const savedMonthlyBudget = monthlyBudgetQuery.data;
+  const displayedMonthlyBudget = monthlyBudget;
+  const totalBudget =
+    Number(displayedMonthlyBudget.replace(/[^\d.]/g, "")) || 0;
+  const totalSpent = savedMonthlyBudget?.spentAmount ?? 0;
   const totalLeft = Math.max(totalBudget - totalSpent, 0);
   const totalProgress =
     totalBudget > 0 ? Math.min(totalSpent / totalBudget, 1) : 0;
@@ -65,6 +74,20 @@ export default function BudgetScreen() {
       spent: category.spentAmount,
       limit: category.limitAmount,
     })) ?? [];
+
+  useEffect(() => {
+    if (savedMonthlyBudget) {
+      setMonthlyBudget(String(savedMonthlyBudget.limitAmount || ""));
+    } else if (monthlyBudgetQuery.isSuccess) {
+      setMonthlyBudget("");
+    }
+  }, [monthlyBudgetQuery.isSuccess, savedMonthlyBudget]);
+
+  const saveTotalBudget = () => {
+    saveMonthlyBudgetMutation.mutate({
+      limitAmount: totalBudget,
+    });
+  };
 
   return (
     <SafeAreaView
@@ -133,10 +156,11 @@ export default function BudgetScreen() {
               </Text>
               <TextInput
                 keyboardType="decimal-pad"
-                value={`$${monthlyBudget}`}
+                value={displayedMonthlyBudget ? `$${displayedMonthlyBudget}` : ""}
                 onChangeText={(value) =>
                   setMonthlyBudget(value.replace(/[^\d.]/g, ""))
                 }
+                onBlur={saveTotalBudget}
                 placeholder="$0"
                 placeholderTextColor={themeColors.mutedText}
                 style={[
@@ -165,7 +189,7 @@ export default function BudgetScreen() {
             <Text
               style={[styles.primaryAmount, { color: themeColors.primary }]}
             >
-              $3,250 spent
+              ${totalSpent.toLocaleString()} spent
             </Text>
             <Text
               style={[styles.secondaryAmount, { color: themeColors.mutedText }]}
@@ -318,6 +342,7 @@ function CategoryBudgetCard({
               router.push({
                 pathname: "/budget/edit-budget",
                 params: {
+                  id: budget.id,
                   icon: budget.icon,
                   limit: String(budget.limit),
                   name: budget.name,

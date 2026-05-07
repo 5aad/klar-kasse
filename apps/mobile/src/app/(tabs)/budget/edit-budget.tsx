@@ -16,12 +16,15 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
 import { ScreenHeader } from "@/components/shared/screen-header";
 import { useThemeColors } from "@/hooks/use-theme-colors";
+import { useEditCategoryMutation } from "@/queries/categories";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 export default function EditBudgetScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
+  const editCategoryMutation = useEditCategoryMutation();
   const params = useLocalSearchParams<{
+    id?: string;
     icon?: keyof typeof MaterialCommunityIcons.glyphMap;
     limit?: string;
     name?: string;
@@ -33,11 +36,30 @@ export default function EditBudgetScreen() {
   const icon = params.icon ?? "cart";
   const spent = Number(params.spent ?? 428.5);
   const limit = Number(params.limit ?? 600);
+  const [categoryName, setCategoryName] = useState(name);
   const [limitValue, setLimitValue] = useState(limit.toFixed(2));
   const [proportion, setProportion] = useState(0.58);
   const sliderWidthRef = useRef(1);
   const dragStartProportionRef = useRef(0.58);
   // const proportionPercent = Math.round(proportion * 100);
+
+  const saveChanges = () => {
+    if (!params.id) {
+      router.back();
+      return;
+    }
+
+    editCategoryMutation.mutate(
+      {
+        id: params.id,
+        name: categoryName,
+        limit: Number(limitValue.replace(",", ".").replace(/[^\d.]/g, "")) || 0,
+      },
+      {
+        onSuccess: () => router.back(),
+      },
+    );
+  };
 
   const clampProportion = (value: number) => Math.max(0, Math.min(1, value));
 
@@ -101,9 +123,13 @@ export default function EditBudgetScreen() {
               <Text style={[styles.eyebrow, { color: themeColors.primary }]}>
                 CURRENT ALLOCATION
               </Text>
-              <Text style={[styles.title, { color: themeColors.text }]}>
-                {name}
-              </Text>
+              <TextInput
+                value={categoryName}
+                onChangeText={setCategoryName}
+                placeholder="Category name"
+                placeholderTextColor={themeColors.mutedText}
+                style={[styles.titleInput, { color: themeColors.text }]}
+              />
               <Text style={[styles.subtitle, { color: themeColors.mutedText }]}>
                 {formatType(type)}
               </Text>
@@ -246,8 +272,13 @@ export default function EditBudgetScreen() {
         </View> */}
 
         <Pressable
-          style={[styles.saveButton, { backgroundColor: themeColors.primary }]}
-          onPress={() => router.back()}
+          style={[
+            styles.saveButton,
+            { backgroundColor: themeColors.primary },
+            editCategoryMutation.isPending && styles.disabled,
+          ]}
+          disabled={editCategoryMutation.isPending}
+          onPress={saveChanges}
         >
           <MaterialCommunityIcons
             color={themeColors.primaryText}
@@ -255,7 +286,7 @@ export default function EditBudgetScreen() {
             size={20}
           />
           <Text style={[styles.saveText, { color: themeColors.primaryText }]}>
-            Save Changes
+            {editCategoryMutation.isPending ? "Saving..." : "Save Changes"}
           </Text>
         </Pressable>
 
@@ -311,6 +342,12 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
   },
   title: {
+    fontSize: 31,
+    fontWeight: "700",
+  },
+  titleInput: {
+    margin: 0,
+    padding: 0,
     fontSize: 31,
     fontWeight: "700",
   },
@@ -424,5 +461,8 @@ const styles = StyleSheet.create({
   discardText: {
     fontSize: fontSize.md,
     fontWeight: "700",
+  },
+  disabled: {
+    opacity: 0.55,
   },
 });
