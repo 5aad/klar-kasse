@@ -1,0 +1,42 @@
+# Dependencies installed locally. EAS installs dependencies during the build.
+node_modules/
+apps/*/node_modules/
+packages/*/node_modules/
+
+# Expo and Metro local state.
+.expo/
+apps/*/.expo/
+.cache/
+apps/*/.cache/
+.metro-health-check*
+*.tsbuildinfo
+
+# Generated build output.
+dist/
+apps/*/dist/
+apps/*/web-build/
+build/
+apps/*/build/
+
+# Generated native folders. EAS can generate these from app config during managed builds.
+apps/*/android/
+apps/*/ios/
+
+# Local secrets and credentials should not be uploaded.
+.env
+.env.*
+apps/*/.env
+apps/*/.env.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+
+# Logs and OS files.
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.DS_Store

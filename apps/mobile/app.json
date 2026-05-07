@@ -5,20 +5,36 @@
     "scheme": "KlarKasse",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon-light.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/icon-light.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#ffffff",
+      "dark": {
+        "image": "./assets/icon-dark.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#101010"
+      }
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "de.klasrkasse.app",
+      "icon": {
+        "light": "./assets/icon-light.png",
+        "dark": "./assets/icon-dark.png",
+        "tinted": "./assets/icon-dark.png"
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Klar Kasse uses your camera to scan receipts and extract purchase details. For example, point your camera at a supermarket receipt to review items, totals, and spending categories.",
+        "NSPhotoLibraryUsageDescription": "Klar Kasse accesses your photo library so you can import an existing receipt image. For example, choose a saved receipt photo to review and add it to your spending records."
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon-light.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -29,7 +45,7 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.cognita.klarkasse"
+      "package": "de.klasrkasse.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -47,6 +63,20 @@
           "cameraPermission": "Allow Klar Kasse to scan receipts."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {
+        "root": "./src/app"
+      },
+      "eas": {
+        "projectId": "9e01ae7e-6ae7-4cbd-b730-95e9fd76fd18"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/9e01ae7e-6ae7-4cbd-b730-95e9fd76fd18"
+    }
   }
 }
