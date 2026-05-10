@@ -20,11 +20,16 @@ import { useReceiptsQuery } from "@/queries/receipts";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 type ThemeColors = ReturnType<typeof useThemeColors>;
+type CategorySpendingItem = {
+  name: string;
+  value: number;
+};
 type CategoryBreakdownItem = {
   amount: string;
   name: string;
   percent: string;
   progress: number;
+  value: number;
 };
 
 const monthNames = [
@@ -119,7 +124,7 @@ export default function InsightScreen() {
         .slice(0, 5) ?? [],
     [receiptsQuery.data],
   );
-  const categoryBreakdown = useMemo<CategoryBreakdownItem[]>(() => {
+  const categorySpending = useMemo<CategorySpendingItem[]>(() => {
     const totals = new Map<string, number>();
 
     for (const category of categoriesQuery.data ?? []) {
@@ -134,25 +139,32 @@ export default function InsightScreen() {
       totals.set(categoryName, (totals.get(categoryName) ?? 0) + receipt.total);
     }
 
-    const totalSpent = [...totals.values()].reduce(
-      (sum, amount) => sum + amount,
+    return [...totals.entries()]
+      .map(([name, value]) => ({ name, value }))
+      .sort((left, right) => right.value - left.value);
+  }, [categoriesQuery.data, receiptsQuery.data, selectedMonth]);
+
+  const categoryBreakdown = useMemo<CategoryBreakdownItem[]>(() => {
+    const totalSpent = categorySpending.reduce(
+      (sum, category) => sum + category.value,
       0,
     );
 
-    return [...totals.entries()]
-      .map(([name, amount]) => {
-        const progress = totalSpent > 0 ? amount / totalSpent : 0;
+    return categorySpending
+      .map((category) => {
+        const progress = totalSpent > 0 ? category.value / totalSpent : 0;
 
         return {
-          name,
-          amount: formatCategoryAmount(amount),
+          name: category.name,
+          amount: formatCategoryAmount(category.value),
           percent: `${Math.round(progress * 100)}%`,
           progress,
+          value: category.value,
         };
       })
       .sort((left, right) => right.progress - left.progress)
       .slice(0, 5);
-  }, [categoriesQuery.data, receiptsQuery.data, selectedMonth]);
+  }, [categorySpending]);
   const refreshInsights = () => {
     categoriesQuery.refetch();
     receiptsQuery.refetch();
@@ -220,7 +232,13 @@ export default function InsightScreen() {
           </Pressable>
         </View>
 
-        <ExpenseDistributionChart />
+        <ExpenseDistributionChart
+          data={categorySpending.map((category) => ({
+            label: category.name,
+            value: category.value,
+          }))}
+          periodLabel={selectedMonthLabel}
+        />
         <CategoryBreakdown
           categories={categoryBreakdown}
           themeColors={themeColors}
