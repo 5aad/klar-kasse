@@ -18,6 +18,7 @@ import { ScreenHeader } from "@/components/shared/screen-header";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useEditCategoryMutation } from "@/queries/categories";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
+import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 
 export default function EditBudgetScreen() {
   const themeColors = useThemeColors();
@@ -97,7 +98,7 @@ export default function EditBudgetScreen() {
       style={[styles.screen, { backgroundColor: themeColors.background }]}
       edges={["top"]}
     >
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.content,
           { paddingBottom: getTabScreenBottomPadding(bottom, 42) },
@@ -295,7 +296,7 @@ export default function EditBudgetScreen() {
             Discard Edits
           </Text>
         </Pressable>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }

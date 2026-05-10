@@ -18,6 +18,7 @@ import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useCategoriesQuery } from "@/queries/categories";
 import { usePostReceiptMutation } from "@/queries/receipts";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
+import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 
 type ManualItem = {
   id: string;
@@ -120,12 +121,11 @@ export default function AddReceiptScreen() {
       style={[styles.screen, { backgroundColor: themeColors.background }]}
       edges={["top"]}
     >
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.content,
           { paddingBottom: getTabScreenBottomPadding(bottom, 42) },
         ]}
-        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
             refreshing={categoriesQuery.isRefetching}
@@ -269,7 +269,7 @@ export default function AddReceiptScreen() {
             {postReceiptMutation.isPending ? "Saving..." : "Save Receipt"}
           </Text>
         </Pressable>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }

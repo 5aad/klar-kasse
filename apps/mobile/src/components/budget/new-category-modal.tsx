@@ -61,6 +61,7 @@ export function NewCategoryModal({ onClose, visible }: Props) {
         styles.modalContent,
         { backgroundColor: themeColors.background },
       ]}
+      keyboardAware
       visible={visible}
       onRequestClose={onClose}
     >
