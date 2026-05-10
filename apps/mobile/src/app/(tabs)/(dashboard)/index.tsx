@@ -1,6 +1,7 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { router } from "expo-router";
+import { useMemo } from "react";
 import {
   Pressable,
   RefreshControl,
@@ -37,6 +38,64 @@ function getReceiptIcon(category?: string | null) {
   );
 }
 
+function parseReceiptDate(dateText?: string | null) {
+  if (!dateText) return null;
+
+  const germanDate = dateText.match(/^(\d{2})\.(\d{2})\.(\d{2}|\d{4})$/);
+  if (germanDate) {
+    const year =
+      germanDate[3].length === 2
+        ? Number(`20${germanDate[3]}`)
+        : Number(germanDate[3]);
+
+    return new Date(year, Number(germanDate[2]) - 1, Number(germanDate[1]));
+  }
+
+  const date = new Date(dateText);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function isCurrentMonth(date: Date) {
+  const today = new Date();
+
+  return (
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth()
+  );
+}
+
+function getCurrentMonthSpendingPoints(
+  receipts: NonNullable<ReturnType<typeof useReceiptsQuery>["data"]>,
+) {
+  const today = new Date();
+  const spendingByDay = new Map<number, number>();
+
+  for (const receipt of receipts) {
+    const receiptDate =
+      parseReceiptDate(receipt.dateText) ?? parseReceiptDate(receipt.createdAt);
+
+    if (!receiptDate || !isCurrentMonth(receiptDate)) continue;
+
+    const day = receiptDate.getDate();
+
+    spendingByDay.set(day, (spendingByDay.get(day) ?? 0) + receipt.total);
+  }
+
+  let cumulativeSpent = 0;
+
+  return Array.from({ length: today.getDate() }, (_, index) => {
+    const day = index + 1;
+
+    cumulativeSpent += spendingByDay.get(day) ?? 0;
+
+    return {
+      label: String(day),
+      value: cumulativeSpent,
+    };
+  });
+}
+
 export default function DashboardScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
@@ -46,6 +105,10 @@ export default function DashboardScreen() {
   const remainingBudget = Math.max(
     (monthlyBudget?.limitAmount ?? 0) - (monthlyBudget?.spentAmount ?? 0),
     0,
+  );
+  const spendingPoints = useMemo(
+    () => getCurrentMonthSpendingPoints(receiptsQuery.data ?? []),
+    [receiptsQuery.data],
   );
   const receiptTransactions =
     receiptsQuery.data
@@ -118,7 +181,7 @@ export default function DashboardScreen() {
           </Pressable>
         </View>
 
-        <BalanceGraph />
+        <BalanceGraph points={spendingPoints} />
         <TransactionList items={receiptTransactions} />
       </ScrollView>
     </SafeAreaView>
