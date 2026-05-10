@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { router } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Pressable,
   RefreshControl,
@@ -67,6 +67,12 @@ export default function AddReceiptScreen() {
   const displayedTotal = total || (itemsTotal > 0 ? itemsTotal.toFixed(2) : "");
   const categoryOptions =
     categoriesQuery.data?.map((categoryItem) => categoryItem.name) ?? [];
+
+  useEffect(() => {
+    if (category || !categoryOptions.length) return;
+
+    setCategory(categoryOptions[0]);
+  }, [category, categoryOptions]);
 
   const updateItem = (
     id: string,
