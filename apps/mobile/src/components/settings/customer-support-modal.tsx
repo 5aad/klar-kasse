@@ -19,6 +19,7 @@ export function CustomerSupportModal({ onClose, visible }: Props) {
         resolvedTheme === "dark" ? styles.lightBackdrop : undefined
       }
       contentStyle={{ backgroundColor: themeColors.background }}
+      keyboardAware
       visible={visible}
       onRequestClose={onClose}
     >

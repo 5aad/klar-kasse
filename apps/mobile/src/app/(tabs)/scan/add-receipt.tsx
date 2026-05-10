@@ -1,8 +1,10 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
+import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import {
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,22 +15,16 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
 import { ScreenHeader } from "@/components/shared/screen-header";
 import { useThemeColors } from "@/hooks/use-theme-colors";
+import { useCategoriesQuery } from "@/queries/categories";
+import { usePostReceiptMutation } from "@/queries/receipts";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
+import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 
 type ManualItem = {
   id: string;
   name: string;
   price: string;
 };
-
-const categories = [
-  "Food & Drinks",
-  "Groceries",
-  "Housing",
-  "Travel",
-  "Shopping",
-  "Health",
-] as const;
 
 const paymentMethods = ["Cash", "Visa", "Mastercard", "Debit"] as const;
 
@@ -44,23 +40,33 @@ function parseAmount(value: string) {
   return Number(value.replace(",", ".").replace(/[^\d.]/g, "")) || 0;
 }
 
+function getCurrentTime() {
+  return new Intl.DateTimeFormat("de-DE", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date());
+}
+
 export default function AddReceiptScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
+  const categoriesQuery = useCategoriesQuery();
+  const postReceiptMutation = usePostReceiptMutation();
   const [store, setStore] = useState("");
   const [date, setDate] = useState(() => new Date().toLocaleDateString("de-DE"));
-  const [time, setTime] = useState("");
+  const [time, setTime] = useState(getCurrentTime);
   const [total, setTotal] = useState("");
   const [paymentMethod, setPaymentMethod] =
     useState<(typeof paymentMethods)[number]>("Visa");
-  const [category, setCategory] =
-    useState<(typeof categories)[number]>("Food & Drinks");
+  const [category, setCategory] = useState("");
   const [items, setItems] = useState<ManualItem[]>([createItem()]);
   const itemsTotal = useMemo(
     () => items.reduce((sum, item) => sum + parseAmount(item.price), 0),
     [items],
   );
-  const displayedTotal = total || itemsTotal.toFixed(2);
+  const displayedTotal = total || (itemsTotal > 0 ? itemsTotal.toFixed(2) : "");
+  const categoryOptions =
+    categoriesQuery.data?.map((categoryItem) => categoryItem.name) ?? [];
 
   const updateItem = (
     id: string,
@@ -83,14 +89,15 @@ export default function AddReceiptScreen() {
   };
 
   const saveManualReceipt = () => {
+    const receiptItems = items
+      .filter((item) => item.name.trim() || item.price.trim())
+      .map((item) => ({
+        name: item.name.trim(),
+        price: parseAmount(item.price),
+        vatCode: "A",
+      }));
     const receiptJson = {
-      items: items
-        .filter((item) => item.name.trim() || item.price.trim())
-        .map((item) => ({
-          name: item.name.trim(),
-          price: parseAmount(item.price),
-          vatCode: "A",
-        })),
+      items: receiptItems,
       rawText: "",
       store: store.trim(),
       address: [],
@@ -100,11 +107,13 @@ export default function AddReceiptScreen() {
       paymentMethod,
       cardLast4: "",
       vat: [],
-      itemCount: items.length,
+      itemCount: receiptItems.length,
       category,
     };
 
-    console.log("Manual receipt:", receiptJson);
+    postReceiptMutation.mutate(receiptJson, {
+      onSuccess: () => router.replace("/(tabs)/scan"),
+    });
   };
 
   return (
@@ -112,12 +121,20 @@ export default function AddReceiptScreen() {
       style={[styles.screen, { backgroundColor: themeColors.background }]}
       edges={["top"]}
     >
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.content,
           { paddingBottom: getTabScreenBottomPadding(bottom, 42) },
         ]}
-        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={categoriesQuery.isRefetching}
+            tintColor={themeColors.primary}
+            colors={[themeColors.primary]}
+            progressBackgroundColor={themeColors.surface}
+            onRefresh={categoriesQuery.refetch}
+          />
+        }
         showsVerticalScrollIndicator={false}
       >
         <ScreenHeader
@@ -159,7 +176,8 @@ export default function AddReceiptScreen() {
 
         <ChoiceGroup
           label="CATEGORY"
-          options={categories}
+          emptyText="Add categories from the Budget screen first."
+          options={categoryOptions}
           value={category}
           onChange={setCategory}
         />
@@ -239,18 +257,19 @@ export default function AddReceiptScreen() {
 
         <Pressable
           style={[styles.saveButton, { backgroundColor: themeColors.primary }]}
+          disabled={postReceiptMutation.isPending}
           onPress={saveManualReceipt}
         >
           <MaterialCommunityIcons
             color={themeColors.primaryText}
-            name="check-circle"
+            name={postReceiptMutation.isPending ? "timer-sand" : "check-circle"}
             size={20}
           />
           <Text style={[styles.saveText, { color: themeColors.primaryText }]}>
-            Save Receipt
+            {postReceiptMutation.isPending ? "Saving..." : "Save Receipt"}
           </Text>
         </Pressable>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
@@ -296,11 +315,13 @@ function ManualField({
 }
 
 function ChoiceGroup<TValue extends string>({
+  emptyText,
   label,
   onChange,
   options,
   value,
 }: {
+  emptyText?: string;
   label: string;
   onChange: (value: TValue) => void;
   options: readonly TValue[];
@@ -314,7 +335,8 @@ function ChoiceGroup<TValue extends string>({
         {label}
       </Text>
       <View style={styles.choiceList}>
-        {options.map((option) => {
+        {options.length ? (
+          options.map((option) => {
           const isSelected = option === value;
 
           return (
@@ -344,7 +366,12 @@ function ChoiceGroup<TValue extends string>({
               </Text>
             </Pressable>
           );
-        })}
+          })
+        ) : (
+          <Text style={[styles.choiceEmptyText, { color: themeColors.mutedText }]}>
+            {emptyText ?? "No options available."}
+          </Text>
+        )}
       </View>
     </View>
   );
@@ -409,6 +436,10 @@ const styles = StyleSheet.create({
   choiceText: {
     fontSize: fontSize.sm,
     fontWeight: "800",
+  },
+  choiceEmptyText: {
+    fontSize: fontSize.md,
+    fontWeight: "600",
   },
   sectionHeader: {
     flexDirection: "row",

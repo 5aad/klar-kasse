@@ -1,53 +1,36 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ExpenseDistributionChart } from "@/components/insight/expense-distribution-chart";
+import { EmptyStateCard } from "@/components/shared/empty-state-card";
 import { TransactionList } from "@/components/shared/transaction-list";
 import { useThemeColors } from "@/hooks/use-theme-colors";
+import { useCategoriesQuery } from "@/queries/categories";
+import { useReceiptsQuery } from "@/queries/receipts";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 type ThemeColors = ReturnType<typeof useThemeColors>;
-
-const categoryBreakdown = [
-  { name: "Dining", amount: "$450.00", percent: "35%", progress: 0.75 },
-  { name: "Housing", amount: "$1,200.00", percent: "45%", progress: 0.55 },
-  { name: "Travel", amount: "$280.00", percent: "15%", progress: 0.28 },
-  { name: "Entertainment", amount: "$120.00", percent: "5%", progress: 0.18 },
-];
-
-const significantSpending = [
-  {
-    icon: "silverware-fork-knife",
-    title: "Blue Ginger Bistro",
-    category: "Dining",
-    date: "Oct 14",
-    amount: "-$84.20",
-  },
-  {
-    icon: "airplane",
-    title: "Skyways Airline",
-    category: "Travel",
-    date: "Oct 08",
-    amount: "-$250.00",
-  },
-  {
-    icon: "shopping",
-    title: "Modern Threads",
-    category: "Clothing",
-    date: "Oct 02",
-    amount: "-$112.50",
-  },
-  {
-    icon: "movie-open",
-    title: "CineVerse Plex",
-    category: "Ent.",
-    date: "Oct 21",
-    amount: "-$24.00",
-  },
-] as const;
+type CategorySpendingItem = {
+  name: string;
+  value: number;
+};
+type CategoryBreakdownItem = {
+  amount: string;
+  name: string;
+  percent: string;
+  progress: number;
+  value: number;
+};
 
 const monthNames = [
   "January",
@@ -81,9 +64,40 @@ function isSameMonth(left: Date, right: Date) {
   );
 }
 
+function formatReceiptItemAmount(amount: number) {
+  return `- EUR ${amount.toFixed(2)}`;
+}
+
+function formatCategoryAmount(amount: number) {
+  return `EUR ${amount.toFixed(2)}`;
+}
+
+function isReceiptInMonth(dateText: string | null, selectedMonth: Date) {
+  if (!dateText) return true;
+
+  const parsedDate = parseReceiptDate(dateText);
+
+  if (!parsedDate) return true;
+
+  return isSameMonth(parsedDate, selectedMonth);
+}
+
+function parseReceiptDate(dateText: string) {
+  const match = dateText.match(/^(\d{2})\.(\d{2})\.(\d{2}|\d{4})$/);
+
+  if (!match) return null;
+
+  const year =
+    match[3].length === 2 ? Number(`20${match[3]}`) : Number(match[3]);
+
+  return new Date(year, Number(match[2]) - 1, Number(match[1]));
+}
+
 export default function InsightScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
+  const categoriesQuery = useCategoriesQuery();
+  const receiptsQuery = useReceiptsQuery();
   const [selectedMonth, setSelectedMonth] = useState(getInitialMonth);
   const currentMonth = useMemo(getInitialMonth, []);
   const isCurrentMonth = isSameMonth(selectedMonth, currentMonth);
@@ -92,6 +106,69 @@ export default function InsightScreen() {
       `${monthNames[selectedMonth.getMonth()]} ${selectedMonth.getFullYear()}`,
     [selectedMonth],
   );
+  const significantSpending = useMemo(
+    () =>
+      receiptsQuery.data
+        ?.flatMap((receipt) =>
+          receipt.items.map((item) => ({
+            id: item.id,
+            icon: "receipt-text-outline" as const,
+            title: item.name,
+            category: receipt.categoryName ?? receipt.store,
+            date: receipt.dateText ?? receipt.createdAt,
+            amount: formatReceiptItemAmount(item.price),
+            value: item.price,
+          })),
+        )
+        .sort((left, right) => right.value - left.value)
+        .slice(0, 5) ?? [],
+    [receiptsQuery.data],
+  );
+  const categorySpending = useMemo<CategorySpendingItem[]>(() => {
+    const totals = new Map<string, number>();
+
+    for (const category of categoriesQuery.data ?? []) {
+      totals.set(category.name, 0);
+    }
+
+    for (const receipt of receiptsQuery.data ?? []) {
+      if (!isReceiptInMonth(receipt.dateText, selectedMonth)) continue;
+
+      const categoryName = receipt.categoryName ?? "Receipt";
+
+      totals.set(categoryName, (totals.get(categoryName) ?? 0) + receipt.total);
+    }
+
+    return [...totals.entries()]
+      .map(([name, value]) => ({ name, value }))
+      .sort((left, right) => right.value - left.value);
+  }, [categoriesQuery.data, receiptsQuery.data, selectedMonth]);
+
+  const categoryBreakdown = useMemo<CategoryBreakdownItem[]>(() => {
+    const totalSpent = categorySpending.reduce(
+      (sum, category) => sum + category.value,
+      0,
+    );
+
+    return categorySpending
+      .map((category) => {
+        const progress = totalSpent > 0 ? category.value / totalSpent : 0;
+
+        return {
+          name: category.name,
+          amount: formatCategoryAmount(category.value),
+          percent: `${Math.round(progress * 100)}%`,
+          progress,
+          value: category.value,
+        };
+      })
+      .sort((left, right) => right.progress - left.progress)
+      .slice(0, 5);
+  }, [categorySpending]);
+  const refreshInsights = () => {
+    categoriesQuery.refetch();
+    receiptsQuery.refetch();
+  };
 
   return (
     <SafeAreaView
@@ -103,6 +180,15 @@ export default function InsightScreen() {
           styles.content,
           { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
         ]}
+        refreshControl={
+          <RefreshControl
+            refreshing={categoriesQuery.isRefetching || receiptsQuery.isRefetching}
+            tintColor={themeColors.primary}
+            colors={[themeColors.primary]}
+            progressBackgroundColor={themeColors.surface}
+            onRefresh={refreshInsights}
+          />
+        }
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
@@ -146,8 +232,17 @@ export default function InsightScreen() {
           </Pressable>
         </View>
 
-        <ExpenseDistributionChart />
-        <CategoryBreakdown themeColors={themeColors} />
+        <ExpenseDistributionChart
+          data={categorySpending.map((category) => ({
+            label: category.name,
+            value: category.value,
+          }))}
+          periodLabel={selectedMonthLabel}
+        />
+        <CategoryBreakdown
+          categories={categoryBreakdown}
+          themeColors={themeColors}
+        />
         <TransactionList
           actionLabel="View all"
           items={significantSpending}
@@ -158,7 +253,13 @@ export default function InsightScreen() {
   );
 }
 
-function CategoryBreakdown({ themeColors }: { themeColors: ThemeColors }) {
+function CategoryBreakdown({
+  categories,
+  themeColors,
+}: {
+  categories: CategoryBreakdownItem[];
+  themeColors: ThemeColors;
+}) {
   return (
     <View
       style={[styles.breakdownCard, { backgroundColor: themeColors.surface }]}
@@ -167,53 +268,64 @@ function CategoryBreakdown({ themeColors }: { themeColors: ThemeColors }) {
         Category Breakdown
       </Text>
       <View style={styles.breakdownList}>
-        {categoryBreakdown.map((category) => (
-          <View key={category.name} style={styles.breakdownRow}>
-            <View style={styles.breakdownTop}>
-              <View style={styles.categoryNameWrap}>
-                <View
-                  style={[styles.dot, { backgroundColor: themeColors.primary }]}
-                />
+        {categories.length ? (
+          categories.map((category) => (
+            <View key={category.name} style={styles.breakdownRow}>
+              <View style={styles.breakdownTop}>
+                <View style={styles.categoryNameWrap}>
+                  <View
+                    style={[
+                      styles.dot,
+                      { backgroundColor: themeColors.primary },
+                    ]}
+                  />
+                  <Text
+                    style={[styles.categoryName, { color: themeColors.text }]}
+                  >
+                    {category.name}
+                  </Text>
+                </View>
                 <Text
-                  style={[styles.categoryName, { color: themeColors.text }]}
+                  style={[styles.categoryAmount, { color: themeColors.text }]}
                 >
-                  {category.name}
+                  {category.amount}
                 </Text>
               </View>
-              <Text
-                style={[styles.categoryAmount, { color: themeColors.text }]}
-              >
-                {category.amount}
-              </Text>
-            </View>
-            <View style={styles.breakdownBottom}>
-              <View
-                style={[
-                  styles.breakdownTrack,
-                  { backgroundColor: themeColors.background },
-                ]}
-              >
+              <View style={styles.breakdownBottom}>
                 <View
                   style={[
-                    styles.breakdownFill,
-                    {
-                      backgroundColor: themeColors.primary,
-                      width: `${category.progress * 100}%`,
-                    },
+                    styles.breakdownTrack,
+                    { backgroundColor: themeColors.background },
                   ]}
-                />
+                >
+                  <View
+                    style={[
+                      styles.breakdownFill,
+                      {
+                        backgroundColor: themeColors.primary,
+                        width: `${category.progress * 100}%`,
+                      },
+                    ]}
+                  />
+                </View>
+                <Text
+                  style={[
+                    styles.categoryPercent,
+                    { color: themeColors.mutedText },
+                  ]}
+                >
+                  {category.percent}
+                </Text>
               </View>
-              <Text
-                style={[
-                  styles.categoryPercent,
-                  { color: themeColors.mutedText },
-                ]}
-              >
-                {category.percent}
-              </Text>
             </View>
-          </View>
-        ))}
+          ))
+        ) : (
+          <EmptyStateCard
+            body="Scan receipts to see where your spending goes."
+            icon="chart-donut"
+            title="No category spending yet"
+          />
+        )}
       </View>
     </View>
   );

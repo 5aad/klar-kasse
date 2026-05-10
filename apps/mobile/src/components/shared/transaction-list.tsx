@@ -3,6 +3,7 @@ import { fontSize, radius, spacing } from "@repo/theme";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { EmptyStateCard } from "@/components/shared/empty-state-card";
 import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
 
 export type TransactionListItem = {
@@ -10,32 +11,9 @@ export type TransactionListItem = {
   category: string;
   date: string;
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  id?: string;
   title: string;
 };
-
-const transactions: TransactionListItem[] = [
-  {
-    icon: "sack-outline",
-    title: "AI-Bank",
-    category: "Deposit",
-    date: "Apr 29, 2026",
-    amount: "+ $460.00",
-  },
-  {
-    icon: "glass-wine",
-    title: "Wine Shop",
-    category: "Payment",
-    date: "Apr 28, 2026",
-    amount: "- $34.10",
-  },
-  {
-    icon: "sack-outline",
-    title: "Recipient",
-    category: "Deposit",
-    date: "Apr 27, 2026",
-    amount: "+ $320.19",
-  },
-] as const;
 
 type Props = {
   actionLabel?: string | null;
@@ -45,8 +23,8 @@ type Props = {
 
 export function TransactionList({
   actionLabel = "View all",
-  items = transactions,
-  title = "Transaction List",
+  items = [],
+  title = "Receipt List",
 }: Props) {
   const themeColors = useThemeColors();
   const resolvedTheme = useResolvedTheme();
@@ -71,44 +49,57 @@ export function TransactionList({
       </View>
 
       <View style={styles.list}>
-        {items.map((transaction) => (
-          <View key={transaction.title} style={styles.row}>
-            <View style={[styles.iconBox, { backgroundColor: iconBackground }]}>
-              <MaterialCommunityIcons
-                color={iconColor}
-                name={transaction.icon}
-                size={26}
-              />
-            </View>
-            <View style={styles.copy}>
-              <Text
-                style={[styles.transactionTitle, { color: themeColors.text }]}
+        {items.length ? (
+          items.map((transaction) => (
+            <View
+              key={transaction.id ?? `${transaction.title}-${transaction.date}`}
+              style={styles.row}
+            >
+              <View
+                style={[styles.iconBox, { backgroundColor: iconBackground }]}
               >
-                {transaction.title}
-              </Text>
+                <MaterialCommunityIcons
+                  color={iconColor}
+                  name={transaction.icon}
+                  size={26}
+                />
+              </View>
+              <View style={styles.copy}>
+                <Text
+                  style={[styles.transactionTitle, { color: themeColors.text }]}
+                >
+                  {transaction.title}
+                </Text>
+                <Text
+                  style={[
+                    styles.transactionSubtitle,
+                    { color: themeColors.mutedText },
+                  ]}
+                >
+                  {transaction.category} | {transaction.date}
+                </Text>
+              </View>
               <Text
                 style={[
-                  styles.transactionSubtitle,
-                  { color: themeColors.mutedText },
+                  styles.amount,
+                  {
+                    color: transaction.amount.startsWith("-")
+                      ? themeColors.mutedText
+                      : themeColors.text,
+                  },
                 ]}
               >
-                {transaction.category} | {transaction.date}
+                {transaction.amount}
               </Text>
             </View>
-            <Text
-              style={[
-                styles.amount,
-                {
-                  color: transaction.amount.startsWith("-")
-                    ? themeColors.mutedText
-                    : themeColors.text,
-                },
-              ]}
-            >
-              {transaction.amount}
-            </Text>
-          </View>
-        ))}
+          ))
+        ) : (
+          <EmptyStateCard
+            body="Scan a receipt or add one manually to see it here."
+            icon="receipt-text-outline"
+            title="No receipts yet"
+          />
+        )}
       </View>
     </View>
   );

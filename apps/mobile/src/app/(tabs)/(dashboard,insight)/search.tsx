@@ -3,7 +3,6 @@ import { fontSize, radius, spacing } from "@repo/theme";
 import { useMemo, useState } from "react";
 import {
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -11,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 import { ScreenHeader } from "@/components/shared/screen-header";
 import {
   TransactionList,
@@ -117,7 +117,7 @@ export default function SearchScreen() {
       style={[styles.screen, { backgroundColor: themeColors.background }]}
       edges={["top"]}
     >
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.content,
           { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
@@ -214,7 +214,7 @@ export default function SearchScreen() {
             size={18}
           />
         </Pressable>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }

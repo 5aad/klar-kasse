@@ -3,6 +3,7 @@ import { fontSize, radius, spacing } from "@repo/theme";
 import {
   FlatList,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
   View,
@@ -11,20 +12,55 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
+import { EmptyStateCard } from "@/components/shared/empty-state-card";
 import { useThemeColors } from "@/hooks/use-theme-colors";
+import {
+  useDeleteMonthlyBudgetMutation,
+  useMonthlyBudgetsQuery,
+} from "@/queries/budgets";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
-const dataArchives = [
-  { id: "2026-04", month: "April", year: "2026", items: 42 },
-  { id: "2026-03", month: "March", year: "2026", items: 38 },
-  { id: "2026-02", month: "February", year: "2026", items: 31 },
-  { id: "2026-01", month: "January", year: "2026", items: 29 },
-  { id: "2025-12", month: "December", year: "2025", items: 45 },
-];
+type DataArchive = {
+  categoryBudgetCount: number;
+  id: string;
+  limitAmount: number;
+  month: string;
+  monthKey: string;
+  receiptCount: number;
+  spentAmount: number;
+  year: string;
+};
+
+function formatMonthLabel(monthKey: string) {
+  const [year, month] = monthKey.split("-");
+  const date = new Date(Number(year), Number(month) - 1, 1);
+
+  return {
+    month: new Intl.DateTimeFormat("en", { month: "long" }).format(date),
+    year,
+  };
+}
 
 export default function YourDataScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
+  const monthlyBudgetsQuery = useMonthlyBudgetsQuery();
+  const deleteMonthlyBudgetMutation = useDeleteMonthlyBudgetMutation();
+  const archives: DataArchive[] =
+    monthlyBudgetsQuery.data?.map((budget) => {
+      const label = formatMonthLabel(budget.monthKey);
+
+      return {
+        id: budget.id,
+        monthKey: budget.monthKey,
+        month: label.month,
+        year: label.year,
+        limitAmount: budget.limitAmount,
+        spentAmount: budget.spentAmount,
+        receiptCount: budget.receiptCount,
+        categoryBudgetCount: budget.categoryBudgetCount,
+      };
+    }) ?? [];
 
   const renderArchiveItem: ListRenderItem<DataArchive> = ({ item }) => (
     <View
@@ -49,7 +85,8 @@ export default function YourDataScreen() {
           {item.month} {item.year}
         </Text>
         <Text style={[styles.archiveMeta, { color: themeColors.mutedText }]}>
-          {item.items} receipts and transactions
+          EUR {item.limitAmount.toLocaleString()} budget,{" "}
+          {item.categoryBudgetCount} categories, {item.receiptCount} receipts
         </Text>
       </View>
 
@@ -65,6 +102,8 @@ export default function YourDataScreen() {
         </Pressable>
         <Pressable
           style={[styles.iconButton, { backgroundColor: themeColors.surface }]}
+          disabled={deleteMonthlyBudgetMutation.isPending}
+          onPress={() => deleteMonthlyBudgetMutation.mutate(item.monthKey)}
         >
           <MaterialCommunityIcons
             color={themeColors.primary}
@@ -86,8 +125,26 @@ export default function YourDataScreen() {
           styles.content,
           { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
         ]}
-        data={dataArchives}
+        data={archives}
         keyExtractor={(item) => item.id}
+        refreshControl={
+          <RefreshControl
+            refreshing={monthlyBudgetsQuery.isRefetching}
+            tintColor={themeColors.primary}
+            colors={[themeColors.primary]}
+            progressBackgroundColor={themeColors.surface}
+            onRefresh={monthlyBudgetsQuery.refetch}
+          />
+        }
+        ListEmptyComponent={
+          monthlyBudgetsQuery.isLoading ? null : (
+            <EmptyStateCard
+              body="Set a monthly budget to see export and delete options here."
+              icon="database-outline"
+              title="No monthly data yet"
+            />
+          )
+        }
         ListHeaderComponent={
           <View style={styles.headerWrap}>
             <ScreenHeader
@@ -102,8 +159,6 @@ export default function YourDataScreen() {
     </SafeAreaView>
   );
 }
-
-type DataArchive = (typeof dataArchives)[number];
 
 const styles = StyleSheet.create({
   screen: {

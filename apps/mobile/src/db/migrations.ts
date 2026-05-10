@@ -25,7 +25,6 @@ export function initializeDatabase() {
       name TEXT NOT NULL,
       icon TEXT,
       color TEXT,
-      type TEXT,
       is_default INTEGER NOT NULL DEFAULT 0,
       sync_status TEXT NOT NULL DEFAULT 'pending',
       sync_action TEXT NOT NULL DEFAULT 'create',
