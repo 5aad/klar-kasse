@@ -1,0 +1,22 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "submit": "Submit"
+  },
+  "dashboard": {
+    "remainingBudget": "Remaining Budget",
+    "searchTransactions": "Search transactions"
+  },
+  "settings": {
+    "language": {
+      "body": "Choose your preferred app language.",
+      "title": "Language"
+    }
+  },
+  "scan": {
+    "addManually": "Add Manually",
+    "addReceiptSubtitle": "Enter the main receipt details first, then add items.",
+    "saveReceipt": "Save Receipt"
+  }
+}

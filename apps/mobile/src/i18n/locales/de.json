@@ -1,0 +1,22 @@
+{
+  "common": {
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "submit": "Senden"
+  },
+  "dashboard": {
+    "remainingBudget": "Verbleibendes Budget",
+    "searchTransactions": "Transaktionen suchen"
+  },
+  "settings": {
+    "language": {
+      "body": "Waehle deine bevorzugte App-Sprache.",
+      "title": "Sprache"
+    }
+  },
+  "scan": {
+    "addManually": "Manuell hinzufuegen",
+    "addReceiptSubtitle": "Gib zuerst die wichtigsten Belegdaten ein und fuege dann Artikel hinzu.",
+    "saveReceipt": "Beleg speichern"
+  }
+}

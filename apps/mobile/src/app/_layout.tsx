@@ -1,3 +1,4 @@
+import "@/i18n";
 import { useReceiptScanStore } from "@/stores/receipt-scan-store";
 import { useThemeStore } from "@/stores/theme-store";
 import { QueryClientProvider } from "@tanstack/react-query";

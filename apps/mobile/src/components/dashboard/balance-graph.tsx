@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import Svg, {
   Circle,
+  G,
   Line,
   Path,
   Rect,
@@ -158,12 +159,11 @@ export function BalanceGraph({ points }: Props) {
             const axisValue = maxValue * (1 - section);
 
             return (
-              <>
+              <G key={`section-${section}`}>
                 <SvgText
                   fill={chartMuted}
                   fontSize={10}
                   fontWeight="700"
-                  key={`label-${section}`}
                   textAnchor="end"
                   x={chartPadding.left - 8}
                   y={y + 3}
@@ -171,7 +171,6 @@ export function BalanceGraph({ points }: Props) {
                   {formatAxisAmount(axisValue)}
                 </SvgText>
                 <Line
-                  key={`line-${section}`}
                   opacity={0.28}
                   stroke={chartMuted}
                   strokeWidth={1}
@@ -180,7 +179,7 @@ export function BalanceGraph({ points }: Props) {
                   y1={y}
                   y2={y}
                 />
-              </>
+              </G>
             );
           })}
           <Path
