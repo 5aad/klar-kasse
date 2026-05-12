@@ -9,9 +9,46 @@
     "searchTransactions": "Transaktionen suchen"
   },
   "settings": {
+    "customerSupport": {
+      "body": "Sende uns eine Nachricht und wir melden uns bei dir.",
+      "email": "E-MAIL",
+      "message": "NACHRICHT",
+      "messagePlaceholder": "Wie koennen wir helfen?",
+      "name": "NAME",
+      "namePlaceholder": "Dein Name",
+      "title": "Kundensupport"
+    },
     "language": {
       "body": "Waehle deine bevorzugte App-Sprache.",
+      "english": "Englisch",
+      "german": "Deutsch",
       "title": "Sprache"
+    },
+    "menu": {
+      "customerSupport": "Kundensupport",
+      "language": "Sprache",
+      "preferences": "Einstellungen",
+      "yourData": "Deine Daten"
+    },
+    "preferences": {
+      "appTheme": "APP-DESIGN",
+      "displayName": "ANZEIGENAME",
+      "namePlaceholder": "Dein Name",
+      "profileDoodle": "PROFIL-DOODLE",
+      "subtitle": "Aktualisiere dein Profil und deine Anzeigeeinstellungen.",
+      "theme": {
+        "dark": "Dunkel",
+        "light": "Hell",
+        "system": "System"
+      },
+      "title": "Einstellungen"
+    },
+    "yourData": {
+      "archiveMeta": "EUR {{budget}} Budget, {{categories}} Kategorien, {{receipts}} Belege",
+      "emptyBody": "Lege ein Monatsbudget fest, um Export- und Loeschoptionen hier zu sehen.",
+      "emptyTitle": "Noch keine Monatsdaten",
+      "subtitle": "Exportiere oder loesche monatliche Ausgabenaufzeichnungen.",
+      "title": "Deine Daten"
     }
   },
   "scan": {

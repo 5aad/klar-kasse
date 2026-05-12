@@ -1,6 +1,7 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { colors, fontSize, radius, spacing } from "@repo/theme";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Pressable,
   ScrollView,
@@ -27,15 +28,28 @@ const doodles = [
 ] as const;
 
 const themeOptions = [
-  { key: "light", label: "Light", icon: "white-balance-sunny" },
-  { key: "dark", label: "Dark", icon: "moon-waning-crescent" },
-  { key: "system", label: "System", icon: "cellphone-cog" },
+  {
+    key: "light",
+    labelKey: "settings.preferences.theme.light",
+    icon: "white-balance-sunny",
+  },
+  {
+    key: "dark",
+    labelKey: "settings.preferences.theme.dark",
+    icon: "moon-waning-crescent",
+  },
+  {
+    key: "system",
+    labelKey: "settings.preferences.theme.system",
+    icon: "cellphone-cog",
+  },
 ] as const;
 
 export default function PreferencesScreen() {
   const { width } = useWindowDimensions();
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
+  const { t } = useTranslation();
   const [name, setName] = useState("Tom Hillson");
   const [selectedDoodle, setSelectedDoodle] = useState(0);
   const selectedTheme = useThemeStore((state) => state.themePreference);
@@ -55,18 +69,18 @@ export default function PreferencesScreen() {
         showsVerticalScrollIndicator={false}
       >
         <ScreenHeader
-          title="Preferences"
-          subtitle="Update your profile and display settings."
+          title={t("settings.preferences.title")}
+          subtitle={t("settings.preferences.subtitle")}
         />
 
         <View style={styles.section}>
           <Text style={[styles.label, { color: themeColors.text }]}>
-            DISPLAY NAME
+            {t("settings.preferences.displayName")}
           </Text>
           <TextInput
             value={name}
             onChangeText={setName}
-            placeholder="Your name"
+            placeholder={t("settings.preferences.namePlaceholder")}
             placeholderTextColor={themeColors.mutedText}
             style={[
               styles.input,
@@ -81,7 +95,7 @@ export default function PreferencesScreen() {
 
         <View style={styles.section}>
           <Text style={[styles.label, { color: themeColors.text }]}>
-            PROFILE DOODLE
+            {t("settings.preferences.profileDoodle")}
           </Text>
           <View style={styles.doodleGrid}>
             {doodles.map((doodle, index) => (
@@ -116,7 +130,7 @@ export default function PreferencesScreen() {
 
         <View style={styles.section}>
           <Text style={[styles.label, { color: themeColors.text }]}>
-            APP THEME
+            {t("settings.preferences.appTheme")}
           </Text>
           <View style={styles.themeList}>
             {themeOptions.map((option) => {
@@ -149,7 +163,7 @@ export default function PreferencesScreen() {
                       isSelected && styles.themeTextSelected,
                     ]}
                   >
-                    {option.label}
+                    {t(option.labelKey)}
                   </Text>
                   <MaterialCommunityIcons
                     color={isSelected ? colors.primary : themeColors.mutedText}

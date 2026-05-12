@@ -52,13 +52,13 @@ export function LanguageModal({ onClose, visible }: Props) {
 
       <View style={styles.languageOptions}>
         <LanguageOption
-          label="English"
+          label={t("settings.language.english")}
           selected={selectedLanguage === "en"}
           themeColors={themeColors}
           onPress={() => setSelectedLanguage("en")}
         />
         <LanguageOption
-          label="Deutsch"
+          label={t("settings.language.german")}
           selected={selectedLanguage === "de"}
           themeColors={themeColors}
           onPress={() => setSelectedLanguage("de")}

@@ -3,6 +3,7 @@ import { colors, fontSize, spacing } from "@repo/theme";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -19,6 +20,7 @@ const PROFILE_IMAGE =
 export default function SettingsScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
+  const { t } = useTranslation();
   const [isLanguageModalVisible, setIsLanguageModalVisible] = useState(false);
   const [isSupportModalVisible, setIsSupportModalVisible] = useState(false);
 
@@ -45,25 +47,25 @@ export default function SettingsScreen() {
       <View style={styles.menu}>
         <SettingsRow
           icon="cog-outline"
-          label="Preferences"
+          label={t("settings.menu.preferences")}
           themeColors={themeColors}
           onPress={() => router.push("/settings/preferences")}
         />
         <SettingsRow
           icon="database-outline"
-          label="Your Data"
+          label={t("settings.menu.yourData")}
           themeColors={themeColors}
           onPress={() => router.push("/settings/your-data")}
         />
         <SettingsRow
           icon="translate"
-          label="Language"
+          label={t("settings.menu.language")}
           themeColors={themeColors}
           onPress={() => setIsLanguageModalVisible(true)}
         />
         <SettingsRow
           icon="help-circle-outline"
-          label="Customer Support"
+          label={t("settings.menu.customerSupport")}
           themeColors={themeColors}
           onPress={() => setIsSupportModalVisible(true)}
         />
