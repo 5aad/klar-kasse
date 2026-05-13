@@ -32,7 +32,6 @@ export type PostReceiptInput = {
   paymentMethod?: string;
   rawText?: string;
   store: string;
-  time?: string;
   total: number;
   vat?: {
     net: number;
@@ -134,7 +133,6 @@ export async function postReceipt(input: PostReceiptInput) {
       categoryName: input.category,
       addressJson: JSON.stringify(input.address ?? []),
       dateText: input.date,
-      timeText: input.time,
       total: input.total,
       paymentMethod: input.paymentMethod,
       cardLast4: input.cardLast4,

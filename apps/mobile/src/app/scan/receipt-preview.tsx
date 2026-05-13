@@ -127,7 +127,6 @@ export default function CapturedReceiptMlKitScreen() {
         paymentMethod: parsedReceipt?.paymentMethod ?? "",
         rawText: parsedReceipt?.rawText ?? "",
         store: merchantName,
-        time: parsedReceipt?.time ?? "",
         total: Number(amount.replace(",", ".")) || parsedReceipt?.total || 0,
         vat: parsedReceipt?.vat ?? [],
       },

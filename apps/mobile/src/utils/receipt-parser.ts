@@ -11,7 +11,6 @@ export type ReceiptParseResult = {
   store: string;
   address?: string[];
   date: string;
-  time: string;
   total: number;
   paymentMethod: string;
   cardLast4: string;
@@ -192,12 +191,6 @@ function parseLidlReceipt(
   const dateMatch = normalizedText.match(/\b(\d{2}\.\d{2}\.\d{4})\b/);
   if (dateMatch) result.date = dateMatch[1];
 
-  const dateTimeLineMatch = lines
-    .map((line) => line.match(/\b\d{2}\.\d{2}\.\d{2,4}\s+(\d{1,2}:\d{2})\b/))
-    .find((match): match is RegExpMatchArray => match !== null);
-  const standaloneTime = lines.find((line) => /^\d{1,2}:\d{2}$/.test(line));
-  result.time = dateTimeLineMatch?.[1] ?? standaloneTime ?? result.time;
-
   const paymentTotal = findAmountAfterLabel(lines, /zahlung\s+erfolgt/i);
   const sumTotal = findAmountAfterLabel(lines, /^summe\b/i);
   const betragTotal = findAmountAfterLabel(lines, /^betrag\b/i);
@@ -260,7 +253,6 @@ export function parseNormaReceipt(rawText: string): ReceiptParseResult {
     paymentMethod: "",
     cardLast4: "",
     date: "",
-    time: "",
     store: "",
   };
 
@@ -283,12 +275,9 @@ export function parseNormaReceipt(rawText: string): ReceiptParseResult {
     }
   }
 
-  const dateMatch = normalizedText.match(
-    /Datum\s+(\d{2}\.\d{2}\.\d{2})\s+(\d{1,2})\s*[;:]\s*(\d{2})/i,
-  );
+  const dateMatch = normalizedText.match(/\bDatum\s+(\d{2}\.\d{2}\.\d{2})/i);
   if (dateMatch) {
     result.date = dateMatch[1];
-    result.time = `${dateMatch[2]}:${dateMatch[3]}`;
   }
 
   const eurTotalMatch = normalizedText.match(

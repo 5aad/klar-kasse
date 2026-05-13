@@ -67,7 +67,6 @@ export const receipts = sqliteTable(
     categoryName: text("category_name"),
     addressJson: text("address_json"),
     dateText: text("date_text"),
-    timeText: text("time_text"),
     total: real("total").notNull().default(0),
     paymentMethod: text("payment_method"),
     cardLast4: text("card_last4"),

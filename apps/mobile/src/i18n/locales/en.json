@@ -108,8 +108,8 @@
         "category": "CATEGORY",
         "date": "DATE",
         "merchant": "MERCHANT",
+        "note": "NOTE",
         "payment": "PAYMENT",
-        "time": "TIME",
         "total": "TOTAL"
       },
       "items": {
@@ -128,7 +128,7 @@
         "date": "07.05.2026",
         "itemName": "Item name",
         "merchant": "e.g. LIDL",
-        "time": "18:31"
+        "note": "Optional note"
       },
       "saveReceipt": "Save Receipt",
       "saving": "Saving...",

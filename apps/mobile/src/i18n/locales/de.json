@@ -108,8 +108,8 @@
         "category": "KATEGORIE",
         "date": "DATUM",
         "merchant": "HAENDLER",
+        "note": "NOTIZ",
         "payment": "ZAHLUNG",
-        "time": "ZEIT",
         "total": "GESAMT"
       },
       "items": {
@@ -128,7 +128,7 @@
         "date": "07.05.2026",
         "itemName": "Artikelname",
         "merchant": "z. B. LIDL",
-        "time": "18:31"
+        "note": "Optionale Notiz"
       },
       "saveReceipt": "Beleg speichern",
       "saving": "Speichern...",
