@@ -12,34 +12,33 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
+import {
+  getInitialMonth,
+  MonthSelector,
+} from "@/components/shared/month-selector";
 import { ScreenHeader } from "@/components/shared/screen-header";
 import {
   TransactionList,
   type TransactionListItem,
 } from "@/components/shared/transaction-list";
 import { useThemeColors } from "@/hooks/use-theme-colors";
+import { useCategoriesQuery } from "@/queries/categories";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
-type FilterKey = "all" | "food" | "housing" | "travel" | "significant";
+type FilterKey = "all" | "significant" | `category:${string}`;
 
 type SearchTransaction = TransactionListItem & {
   categoryKey: string;
-  filter: Exclude<FilterKey, "all" | "significant">;
   group: "today" | "yesterday";
   groupKey: string;
   value: number;
 };
 
-const filters: { key: FilterKey; labelKey: string }[] = [
-  { key: "all", labelKey: "dashboard.search.filters.all" },
-  { key: "food", labelKey: "dashboard.search.filters.food" },
-  { key: "housing", labelKey: "dashboard.search.filters.housing" },
-  { key: "travel", labelKey: "dashboard.search.filters.travel" },
-  {
-    key: "significant",
-    labelKey: "dashboard.search.filters.significant",
-  },
-];
+type SearchFilter = {
+  categoryName?: string;
+  key: FilterKey;
+  label: string;
+};
 
 const transactions: SearchTransaction[] = [
   {
@@ -50,7 +49,6 @@ const transactions: SearchTransaction[] = [
     date: "10:45 AM",
     amount: "- $14.50",
     value: -14.5,
-    filter: "food",
     group: "today",
     groupKey: "dashboard.search.groups.today",
   },
@@ -62,7 +60,6 @@ const transactions: SearchTransaction[] = [
     date: "08:00 AM",
     amount: "- $2,100.00",
     value: -2100,
-    filter: "housing",
     group: "today",
     groupKey: "dashboard.search.groups.today",
   },
@@ -74,7 +71,6 @@ const transactions: SearchTransaction[] = [
     date: "Oct 23",
     amount: "+ $4,250.00",
     value: 4250,
-    filter: "housing",
     group: "yesterday",
     groupKey: "dashboard.search.groups.yesterday",
   },
@@ -86,7 +82,6 @@ const transactions: SearchTransaction[] = [
     date: "Oct 23",
     amount: "- $23.40",
     value: -23.4,
-    filter: "travel",
     group: "yesterday",
     groupKey: "dashboard.search.groups.yesterday",
   },
@@ -98,7 +93,6 @@ const transactions: SearchTransaction[] = [
     date: "Oct 23",
     amount: "- $129.00",
     value: -129,
-    filter: "food",
     group: "yesterday",
     groupKey: "dashboard.search.groups.yesterday",
   },
@@ -108,33 +102,52 @@ export default function SearchScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
+  const categoriesQuery = useCategoriesQuery();
   const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
+  const [selectedMonth, setSelectedMonth] = useState(getInitialMonth);
+  const filters = useMemo<SearchFilter[]>(
+    () => [
+      { key: "all", label: t("dashboard.search.filters.all") },
+      ...(categoriesQuery.data?.map((category) => ({
+        categoryName: category.name,
+        key: `category:${category.id}` as const,
+        label: category.name,
+      })) ?? []),
+      {
+        key: "significant",
+        label: t("dashboard.search.filters.significant"),
+      },
+    ],
+    [categoriesQuery.data, t],
+  );
+  const activeCategoryName = filters.find(
+    (filter) => filter.key === activeFilter,
+  )?.categoryName;
 
   const filteredTransactions = useMemo(
-    () =>
-      transactions.filter((transaction) => {
+    () => {
+      const translatedCategories = transactions.map((transaction) => ({
+        ...transaction,
+        category: t(transaction.categoryKey),
+      }));
+
+      return translatedCategories.filter((transaction) => {
         if (activeFilter === "all") return true;
         if (activeFilter === "significant")
           return Math.abs(transaction.value) >= 100;
 
-        return transaction.filter === activeFilter;
-      }),
-    [activeFilter],
+        return activeCategoryName
+          ? transaction.category === activeCategoryName
+          : true;
+      });
+    },
+    [activeCategoryName, activeFilter, t],
   );
 
-  const translatedTransactions = useMemo(
-    () =>
-      filteredTransactions.map((transaction) => ({
-        ...transaction,
-        category: t(transaction.categoryKey),
-      })),
-    [filteredTransactions, t],
-  );
-
-  const todayItems = translatedTransactions.filter(
+  const todayItems = filteredTransactions.filter(
     (transaction) => transaction.group === "today",
   );
-  const yesterdayItems = translatedTransactions.filter(
+  const yesterdayItems = filteredTransactions.filter(
     (transaction) => transaction.group === "yesterday",
   );
 
@@ -153,6 +166,11 @@ export default function SearchScreen() {
         <ScreenHeader
           title={t("dashboard.search.title")}
           subtitle={t("dashboard.search.subtitle")}
+        />
+
+        <MonthSelector
+          selectedMonth={selectedMonth}
+          onChange={setSelectedMonth}
         />
 
         <View style={[styles.panel, { backgroundColor: themeColors.surface }]}>
@@ -204,7 +222,7 @@ export default function SearchScreen() {
                       },
                     ]}
                   >
-                    {t(filter.labelKey)}
+                    {filter.label}
                   </Text>
                 </Pressable>
               );

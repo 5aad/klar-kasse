@@ -158,19 +158,23 @@ export default function AddReceiptScreen() {
             value={store}
             onChangeText={setStore}
           />
-          <ManualField
-            label={t("scan.add.fields.date")}
-            placeholder={t("scan.add.placeholders.date")}
-            value={date}
-            onChangeText={setDate}
-          />
-          <ManualField
-            label={t("scan.add.fields.total")}
-            keyboardType="decimal-pad"
-            placeholder={t("scan.add.placeholders.amount")}
-            value={displayedTotal}
-            onChangeText={setTotal}
-          />
+          <View style={styles.twoColumnRow}>
+            <ManualField
+              compact
+              label={t("scan.add.fields.date")}
+              placeholder={t("scan.add.placeholders.date")}
+              value={date}
+              onChangeText={setDate}
+            />
+            <ManualField
+              compact
+              label={t("scan.add.fields.total")}
+              keyboardType="decimal-pad"
+              placeholder={t("scan.add.placeholders.amount")}
+              value={displayedTotal}
+              onChangeText={setTotal}
+            />
+          </View>
           <ManualField
             label={t("scan.add.fields.note")}
             multiline
