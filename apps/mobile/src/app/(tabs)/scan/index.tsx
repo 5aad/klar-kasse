@@ -1,6 +1,7 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -9,14 +10,14 @@ import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 const actions = [
   {
-    title: "Scan receipt",
-    subtitle: "Use the camera or choose a receipt photo.",
+    titleKey: "scan.home.actions.scan.title",
+    subtitleKey: "scan.home.actions.scan.subtitle",
     icon: "line-scan",
     route: "/scan/scan-receipt",
   },
   {
-    title: "Add manually",
-    subtitle: "Enter merchant, total, category, and items.",
+    titleKey: "scan.home.actions.manual.title",
+    subtitleKey: "scan.home.actions.manual.subtitle",
     icon: "pencil-plus-outline",
     route: "/scan/add-receipt",
   },
@@ -25,6 +26,7 @@ const actions = [
 export default function ScanHomeScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   return (
     <SafeAreaView
@@ -40,20 +42,20 @@ export default function ScanHomeScreen() {
       >
         <View style={styles.header}>
           <Text style={[styles.eyebrow, { color: themeColors.primary }]}>
-            NEW RECORD
+            {t("scan.home.eyebrow")}
           </Text>
           <Text style={[styles.title, { color: themeColors.text }]}>
-            Add Spending
+            {t("scan.home.title")}
           </Text>
           <Text style={[styles.subtitle, { color: themeColors.mutedText }]}>
-            Capture a receipt automatically or add the details yourself.
+            {t("scan.home.subtitle")}
           </Text>
         </View>
 
         <View style={styles.actionList}>
           {actions.map((action) => (
             <Pressable
-              key={action.title}
+              key={action.route}
               style={[
                 styles.actionCard,
                 { backgroundColor: themeColors.surface },
@@ -74,7 +76,7 @@ export default function ScanHomeScreen() {
               </View>
               <View style={styles.actionCopy}>
                 <Text style={[styles.actionTitle, { color: themeColors.text }]}>
-                  {action.title}
+                  {t(action.titleKey)}
                 </Text>
                 <Text
                   style={[
@@ -82,7 +84,7 @@ export default function ScanHomeScreen() {
                     { color: themeColors.mutedText },
                   ]}
                 >
-                  {action.subtitle}
+                  {t(action.subtitleKey)}
                 </Text>
               </View>
               <MaterialCommunityIcons

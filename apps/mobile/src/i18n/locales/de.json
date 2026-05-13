@@ -93,6 +93,104 @@
     "subtitle": "Verfolge Ausgaben ueber alle Kategorien hinweg.",
     "title": "Budget"
   },
+  "scan": {
+    "add": {
+      "emptyCategories": "Fuege zuerst Kategorien im Budget-Bildschirm hinzu.",
+      "emptyPaymentMethods": "Keine Zahlungsmethoden verfuegbar.",
+      "fields": {
+        "category": "KATEGORIE",
+        "date": "DATUM",
+        "merchant": "HAENDLER",
+        "payment": "ZAHLUNG",
+        "time": "ZEIT",
+        "total": "GESAMT"
+      },
+      "items": {
+        "add": "Artikel hinzufuegen",
+        "itemNumber": "ARTIKEL {{number}}",
+        "title": "Artikel"
+      },
+      "paymentMethods": {
+        "cash": "Bar",
+        "debit": "Debitkarte",
+        "mastercard": "Mastercard",
+        "visa": "Visa"
+      },
+      "placeholders": {
+        "amount": "0.00",
+        "date": "07.05.2026",
+        "itemName": "Artikelname",
+        "merchant": "z. B. LIDL",
+        "time": "18:31"
+      },
+      "saveReceipt": "Beleg speichern",
+      "saving": "Speichern...",
+      "subtitle": "Gib zuerst die wichtigsten Belegdaten ein und fuege dann Artikel hinzu.",
+      "title": "Manuell hinzufuegen"
+    },
+    "camera": {
+      "errors": {
+        "capture": "Der Beleg konnte nicht aufgenommen werden. {{message}}",
+        "galleryPermission": "Erlaube den Zugriff auf die Fotomediathek, um einen Beleg auszuwaehlen.",
+        "open": "Der Beleg konnte nicht geoeffnet werden. {{message}}",
+        "tryAgain": "Versuche es erneut."
+      },
+      "galleryAccessibility": "Beleg aus Galerie auswaehlen",
+      "instruction": "Platziere den Beleg im Rahmen",
+      "permission": {
+        "action": "Kamera erlauben",
+        "body": "Erlaube den Kamerazugriff, um Belege zu scannen.",
+        "title": "Kamerazugriff"
+      },
+      "subtitle": "Platziere den Beleg im Rahmen.",
+      "title": "Beleg scannen"
+    },
+    "home": {
+      "actions": {
+        "manual": {
+          "subtitle": "Gib Haendler, Gesamtbetrag, Kategorie und Artikel ein.",
+          "title": "Manuell hinzufuegen"
+        },
+        "scan": {
+          "subtitle": "Nutze die Kamera oder waehle ein Belegfoto aus.",
+          "title": "Beleg scannen"
+        }
+      },
+      "eyebrow": "NEUER EINTRAG",
+      "subtitle": "Erfasse einen Beleg automatisch oder gib die Details selbst ein.",
+      "title": "Ausgabe hinzufuegen"
+    },
+    "preview": {
+      "confirm": "Bestaetigen & hinzufuegen",
+      "defaultCategory": "Essen & Trinken",
+      "discard": "SCAN VERWERFEN",
+      "emptyTitle": "Kein Belegbild gefunden",
+      "fallbackFileName": "beleg.jpg",
+      "fields": {
+        "amount": "BETRAG ($)",
+        "category": "KATEGORIE",
+        "date": "DATUM",
+        "merchant": "HAENDLERNAME",
+        "note": "PERSOENLICHE NOTIZ (OPTIONAL)"
+      },
+      "goBack": "Zurueck",
+      "placeholders": {
+        "amount": "0.00",
+        "category": "Kategorie",
+        "date": "Datum",
+        "merchant": "Haendlername",
+        "note": "Kaffee mit dem Designteam..."
+      },
+      "retake": "Scan wiederholen",
+      "saving": "Speichern...",
+      "status": {
+        "analyzing": "SCAN WIRD ANALYSIERT",
+        "complete": "ANALYSE ABGESCHLOSSEN"
+      },
+      "subtitle": "Pruefe die erkannten Belegdaten, bevor du sie hinzufuegst.",
+      "title": "Scan pruefen"
+    }
+  },
   "insight": {
     "categoryBreakdown": {
       "emptyBody": "Scanne Belege, um zu sehen, wohin deine Ausgaben gehen.",
@@ -152,10 +250,5 @@
       "subtitle": "Exportiere oder loesche monatliche Ausgabenaufzeichnungen.",
       "title": "Deine Daten"
     }
-  },
-  "scan": {
-    "addManually": "Manuell hinzufuegen",
-    "addReceiptSubtitle": "Gib zuerst die wichtigsten Belegdaten ein und fuege dann Artikel hinzu.",
-    "saveReceipt": "Beleg speichern"
   }
 }

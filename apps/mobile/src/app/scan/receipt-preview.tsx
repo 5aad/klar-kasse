@@ -6,6 +6,7 @@ import { fontSize, radius, spacing } from "@repo/theme";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Pressable,
@@ -30,6 +31,7 @@ type ThemeColors = ReturnType<typeof useThemeColors>;
 
 export default function CapturedReceiptMlKitScreen() {
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
   const postReceiptMutation = usePostReceiptMutation();
   const croppedImage = useReceiptScanStore((state) => state.croppedImage);
   const clearReceiptImages = useReceiptScanStore(
@@ -40,7 +42,9 @@ export default function CapturedReceiptMlKitScreen() {
   const [merchantName, setMerchantName] = useState("");
   const [date, setDate] = useState("");
   const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("Food & Drinks");
+  const [category, setCategory] = useState(() =>
+    t("scan.preview.defaultCategory"),
+  );
   const [note, setNote] = useState("");
   const [parsedReceipt, setParsedReceipt] = useState<ReceiptParseResult | null>(
     null,
@@ -50,8 +54,8 @@ export default function CapturedReceiptMlKitScreen() {
     const uri = croppedImage?.uri ?? "";
     const name = uri.split("/").at(-1);
 
-    return name || "receipt.jpg";
-  }, [croppedImage?.uri]);
+    return name || t("scan.preview.fallbackFileName");
+  }, [croppedImage?.uri, t]);
 
   useEffect(() => {
     if (!croppedImage?.uri) return;
@@ -145,7 +149,7 @@ export default function CapturedReceiptMlKitScreen() {
         ]}
       >
         <Text style={[styles.emptyTitle, { color: themeColors.text }]}>
-          No receipt image found
+          {t("scan.preview.emptyTitle")}
         </Text>
 
         <Pressable
@@ -161,7 +165,7 @@ export default function CapturedReceiptMlKitScreen() {
               { color: themeColors.primaryText },
             ]}
           >
-            Go back
+            {t("scan.preview.goBack")}
           </Text>
         </Pressable>
       </SafeAreaView>
@@ -178,8 +182,8 @@ export default function CapturedReceiptMlKitScreen() {
         showsVerticalScrollIndicator={false}
       >
         <ScreenHeader
-          title="Review Scan"
-          subtitle="Verify the extracted receipt details before adding them."
+          title={t("scan.preview.title")}
+          subtitle={t("scan.preview.subtitle")}
         />
 
         <View
@@ -204,7 +208,9 @@ export default function CapturedReceiptMlKitScreen() {
               />
             )}
             <Text style={[styles.statusText, { color: themeColors.mutedText }]}>
-              {isAnalyzing ? "ANALYZING SCAN" : "ANALYSIS COMPLETE"}
+              {isAnalyzing
+                ? t("scan.preview.status.analyzing")
+                : t("scan.preview.status.complete")}
             </Text>
           </View>
 
@@ -226,7 +232,7 @@ export default function CapturedReceiptMlKitScreen() {
             </Text>
             <Pressable onPress={retakeReceipt}>
               <Text style={[styles.retakeText, { color: themeColors.primary }]}>
-                Retake Scan
+                {t("scan.preview.retake")}
               </Text>
             </Pressable>
           </View>
@@ -247,28 +253,28 @@ export default function CapturedReceiptMlKitScreen() {
         ) : null}
 
         <ReviewField
-          label="MERCHANT NAME"
+          label={t("scan.preview.fields.merchant")}
           value={merchantName}
           onChangeText={setMerchantName}
-          placeholder="Merchant name"
+          placeholder={t("scan.preview.placeholders.merchant")}
           themeColors={themeColors}
         />
 
         <View style={styles.fieldRow}>
           <ReviewField
             compact
-            label="DATE"
+            label={t("scan.preview.fields.date")}
             value={date}
             onChangeText={setDate}
-            placeholder="Date"
+            placeholder={t("scan.preview.placeholders.date")}
             themeColors={themeColors}
           />
           <ReviewField
             compact
-            label="AMOUNT ($)"
+            label={t("scan.preview.fields.amount")}
             value={amount}
             onChangeText={setAmount}
-            placeholder="0.00"
+            placeholder={t("scan.preview.placeholders.amount")}
             keyboardType="decimal-pad"
             themeColors={themeColors}
           />
@@ -279,13 +285,13 @@ export default function CapturedReceiptMlKitScreen() {
         >
           <View>
             <Text style={[styles.fieldLabel, { color: themeColors.mutedText }]}>
-              CATEGORY
+              {t("scan.preview.fields.category")}
             </Text>
             <TextInput
               style={[styles.fieldInput, { color: themeColors.text }]}
               value={category}
               onChangeText={setCategory}
-              placeholder="Category"
+              placeholder={t("scan.preview.placeholders.category")}
               placeholderTextColor={themeColors.mutedText}
             />
           </View>
@@ -297,10 +303,10 @@ export default function CapturedReceiptMlKitScreen() {
         </View>
 
         <ReviewField
-          label="PERSONAL NOTE (OPTIONAL)"
+          label={t("scan.preview.fields.note")}
           value={note}
           onChangeText={setNote}
-          placeholder="Coffee with the design team..."
+          placeholder={t("scan.preview.placeholders.note")}
           multiline
           themeColors={themeColors}
         />
@@ -325,13 +331,15 @@ export default function CapturedReceiptMlKitScreen() {
               { color: themeColors.primaryText },
             ]}
           >
-            {postReceiptMutation.isPending ? "Saving..." : "Confirm & Add"}
+            {postReceiptMutation.isPending
+              ? t("scan.preview.saving")
+              : t("scan.preview.confirm")}
           </Text>
         </Pressable>
 
         <Pressable style={styles.discardButton} onPress={discardScan}>
           <Text style={[styles.discardButtonText, { color: themeColors.text }]}>
-            DISCARD SCAN
+            {t("scan.preview.discard")}
           </Text>
         </Pressable>
       </ScrollView>
