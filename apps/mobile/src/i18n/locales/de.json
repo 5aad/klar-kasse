@@ -42,6 +42,74 @@
       "viewAll": "Alle anzeigen"
     }
   },
+  "budget": {
+    "category": {
+      "add": "Hinzufuegen",
+      "deleteAccessibility": "Kategorie {{name}} loeschen",
+      "editAccessibility": "Budget {{name}} bearbeiten",
+      "emptyBody": "Fuege deine erste Kategorie hinzu, um Budgets zu verfolgen.",
+      "emptyTitle": "Noch keine Kategorien",
+      "remaining": "${{amount}} verbleibend",
+      "spentOf": "${{spent}} von ${{limit}}",
+      "title": "Kategorie-Budgets",
+      "typeCustom": "BENUTZERDEFINIERT"
+    },
+    "edit": {
+      "categoryNamePlaceholder": "Kategoriename",
+      "currentAllocation": "AKTUELLE ZUTEILUNG",
+      "currentLimit": "AKTUELLES LIMIT",
+      "defaultCategoryName": "Lebensmittel",
+      "defaultCategoryType": "Monatlicher Haushaltsbedarf",
+      "discardEdits": "Aenderungen verwerfen",
+      "limitInfo": "Dieses Limit gilt fuer den aktuellen Abrechnungszeitraum.",
+      "newMonthlyLimit": "NEUES MONATSLIMIT",
+      "saveChanges": "Aenderungen speichern",
+      "saving": "Speichern...",
+      "subtitle": "Passe monatliche Limits und Zuteilungen an.",
+      "title": "Budget bearbeiten",
+      "used": "GENUTZT"
+    },
+    "newCategory": {
+      "addCategory": "Kategorie hinzufuegen",
+      "adding": "Wird hinzugefuegt...",
+      "categoryName": "KATEGORIENAME",
+      "categoryNamePlaceholder": "z. B. Reisen & Freizeit",
+      "monthlyLimit": "MONATSLIMIT",
+      "monthlyLimitPlaceholder": "$ 0.00",
+      "subtitle": "Organisiere deine Ausgaben mit eigenen Budgetlimits.",
+      "title": "Neue Kategorie",
+      "visualIdentifier": "VISUELLES MERKMAL"
+    },
+    "status": {
+      "budget": "BUDGET",
+      "budgetPlaceholder": "$0",
+      "eyebrow": "GESAMTSTATUS DES BUDGETS",
+      "left": "${{amount}} uebrig",
+      "month": "MONAT",
+      "spent": "${{amount}} ausgegeben",
+      "usedPrefix": "von deinem",
+      "usedSuffix": "Monatsbudget genutzt"
+    },
+    "subtitle": "Verfolge Ausgaben ueber alle Kategorien hinweg.",
+    "title": "Budget"
+  },
+  "insight": {
+    "categoryBreakdown": {
+      "emptyBody": "Scanne Belege, um zu sehen, wohin deine Ausgaben gehen.",
+      "emptyTitle": "Noch keine Kategorieausgaben",
+      "title": "Kategorieaufschluesselung"
+    },
+    "expenseDistribution": {
+      "emptyBody": "Scanne Belege, um die Verteilung dieses Monats aufzubauen.",
+      "emptyTitle": "Noch keine Ausgaben",
+      "subtitle": "Deine Ausgabenmuster fuer {{period}}",
+      "title": "Ausgabenverteilung",
+      "totalSpent": "GESAMT AUSGEGEBEN"
+    },
+    "monthlyOverview": "MONATSUEBERSICHT",
+    "significantSpending": "Groessere Ausgaben",
+    "title": "Ausgaben-Einblicke"
+  },
   "settings": {
     "customerSupport": {
       "body": "Sende uns eine Nachricht und wir melden uns bei dir.",
