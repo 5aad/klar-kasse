@@ -1,12 +1,46 @@
 {
   "common": {
     "cancel": "Cancel",
+    "currencyAmount": "EUR {{amount}}",
     "save": "Save",
     "submit": "Submit"
   },
   "dashboard": {
+    "receiptFallback": "Receipt",
+    "search": {
+      "activity": "SEARCH ACTIVITY",
+      "categories": {
+        "foodDining": "Food & Dining",
+        "housing": "Housing",
+        "payroll": "Payroll",
+        "shopping": "Shopping",
+        "travel": "Travel"
+      },
+      "categoryFilter": "CATEGORY FILTER",
+      "exploreOlder": "Explore Older Records",
+      "filters": {
+        "all": "All",
+        "food": "Food",
+        "housing": "Housing",
+        "significant": "Significant Spending",
+        "travel": "Travel"
+      },
+      "groups": {
+        "today": "Today, Oct 24",
+        "yesterday": "Yesterday, Oct 23"
+      },
+      "placeholder": "Merchant, category, or keyword...",
+      "subtitle": "Find transactions by merchant, category, or amount.",
+      "title": "Search"
+    },
     "remainingBudget": "Remaining Budget",
-    "searchTransactions": "Search transactions"
+    "searchTransactions": "Search transactions",
+    "transactionList": {
+      "emptyBody": "Scan a receipt or add one manually to see it here.",
+      "emptyTitle": "No receipts yet",
+      "title": "Receipt List",
+      "viewAll": "View all"
+    }
   },
   "settings": {
     "customerSupport": {

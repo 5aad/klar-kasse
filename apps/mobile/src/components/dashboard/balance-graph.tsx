@@ -1,5 +1,6 @@
 import { spacing } from "@repo/theme";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   PanResponder,
   StyleSheet,
@@ -28,10 +29,6 @@ type Props = {
 
 const axisLabels = ["1", "6", "11", "16", "21", "26", "31"];
 
-function formatAmount(value: number) {
-  return `EUR ${value.toFixed(2)}`;
-}
-
 function formatAxisAmount(value: number) {
   if (value >= 1000) return `${Math.round(value / 100) / 10}k`;
 
@@ -50,6 +47,7 @@ export function BalanceGraph({ points }: Props) {
   const { width } = useWindowDimensions();
   const themeColors = useThemeColors();
   const resolvedTheme = useResolvedTheme();
+  const { t } = useTranslation();
   const chartWidth = Math.min(width - spacing.lg * 4, 340);
   const chartHeight = 168;
   const today = new Date();
@@ -214,7 +212,9 @@ export function BalanceGraph({ points }: Props) {
                 x={activeLabelX}
                 y={activeLabelY + 13}
               >
-                {formatAmount(activePoint.value)}
+                {t("common.currencyAmount", {
+                  amount: activePoint.value.toFixed(2),
+                })}
               </SvgText>
             </>
           ) : null}

@@ -1,12 +1,46 @@
 {
   "common": {
     "cancel": "Abbrechen",
+    "currencyAmount": "EUR {{amount}}",
     "save": "Speichern",
     "submit": "Senden"
   },
   "dashboard": {
+    "receiptFallback": "Beleg",
+    "search": {
+      "activity": "AKTIVITAET SUCHEN",
+      "categories": {
+        "foodDining": "Essen & Trinken",
+        "housing": "Wohnen",
+        "payroll": "Gehalt",
+        "shopping": "Einkaufen",
+        "travel": "Reisen"
+      },
+      "categoryFilter": "KATEGORIE-FILTER",
+      "exploreOlder": "Aeltere Eintraege ansehen",
+      "filters": {
+        "all": "Alle",
+        "food": "Essen",
+        "housing": "Wohnen",
+        "significant": "Groessere Ausgaben",
+        "travel": "Reisen"
+      },
+      "groups": {
+        "today": "Heute, 24. Okt.",
+        "yesterday": "Gestern, 23. Okt."
+      },
+      "placeholder": "Haendler, Kategorie oder Stichwort...",
+      "subtitle": "Finde Transaktionen nach Haendler, Kategorie oder Betrag.",
+      "title": "Suche"
+    },
     "remainingBudget": "Verbleibendes Budget",
-    "searchTransactions": "Transaktionen suchen"
+    "searchTransactions": "Transaktionen suchen",
+    "transactionList": {
+      "emptyBody": "Scanne einen Beleg oder fuege ihn manuell hinzu, um ihn hier zu sehen.",
+      "emptyTitle": "Noch keine Belege",
+      "title": "Belegliste",
+      "viewAll": "Alle anzeigen"
+    }
   },
   "settings": {
     "customerSupport": {

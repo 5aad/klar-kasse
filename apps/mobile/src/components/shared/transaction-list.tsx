@@ -1,6 +1,7 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { EmptyStateCard } from "@/components/shared/empty-state-card";
@@ -22,12 +23,16 @@ type Props = {
 };
 
 export function TransactionList({
-  actionLabel = "View all",
+  actionLabel,
   items = [],
-  title = "Receipt List",
+  title,
 }: Props) {
   const themeColors = useThemeColors();
   const resolvedTheme = useResolvedTheme();
+  const { t } = useTranslation();
+  const resolvedActionLabel =
+    actionLabel === undefined ? t("dashboard.transactionList.viewAll") : actionLabel;
+  const resolvedTitle = title ?? t("dashboard.transactionList.title");
   const iconBackground =
     resolvedTheme === "dark" ? themeColors.text : themeColors.text;
   const iconColor =
@@ -36,13 +41,15 @@ export function TransactionList({
   return (
     <View style={styles.section}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: themeColors.text }]}>{title}</Text>
-        {actionLabel ? (
+        <Text style={[styles.title, { color: themeColors.text }]}>
+          {resolvedTitle}
+        </Text>
+        {resolvedActionLabel ? (
           <Pressable
             onPress={() => router.push("/(dashboard)/search")}
           >
             <Text style={[styles.viewAll, { color: themeColors.primary }]}>
-              {actionLabel}
+              {resolvedActionLabel}
             </Text>
           </Pressable>
         ) : null}
@@ -95,9 +102,9 @@ export function TransactionList({
           ))
         ) : (
           <EmptyStateCard
-            body="Scan a receipt or add one manually to see it here."
+            body={t("dashboard.transactionList.emptyBody")}
             icon="receipt-text-outline"
-            title="No receipts yet"
+            title={t("dashboard.transactionList.emptyTitle")}
           />
         )}
       </View>

@@ -2,6 +2,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { router } from "expo-router";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Pressable,
   RefreshControl,
@@ -99,6 +100,7 @@ function getCurrentMonthSpendingPoints(
 export default function DashboardScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
+  const { t } = useTranslation();
   const monthlyBudgetQuery = useMonthlyBudgetQuery();
   const receiptsQuery = useReceiptsQuery();
   const monthlyBudget = monthlyBudgetQuery.data;
@@ -117,7 +119,7 @@ export default function DashboardScreen() {
         id: receipt.id,
         icon: getReceiptIcon(receipt.categoryName),
         title: receipt.store,
-        category: receipt.categoryName ?? "Receipt",
+        category: receipt.categoryName ?? t("dashboard.receiptFallback"),
         date: receipt.dateText ?? receipt.createdAt,
         amount: formatReceiptAmount(receipt.total),
       })) ?? [];
@@ -161,11 +163,11 @@ export default function DashboardScreen() {
             <Text
               style={[styles.balanceLabel, { color: themeColors.mutedText }]}
             >
-              Remaining Budget
+              {t("dashboard.remainingBudget")}
             </Text>
           </View>
           <Pressable
-            accessibilityLabel="Search transactions"
+            accessibilityLabel={t("dashboard.searchTransactions")}
             accessibilityRole="button"
             style={[
               styles.searchButton,

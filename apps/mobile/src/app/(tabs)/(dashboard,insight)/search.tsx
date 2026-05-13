@@ -1,6 +1,7 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Pressable,
   StyleSheet,
@@ -22,75 +23,91 @@ import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 type FilterKey = "all" | "food" | "housing" | "travel" | "significant";
 
 type SearchTransaction = TransactionListItem & {
+  categoryKey: string;
   filter: Exclude<FilterKey, "all" | "significant">;
-  group: "Today, Oct 24" | "Yesterday, Oct 23";
+  group: "today" | "yesterday";
+  groupKey: string;
   value: number;
 };
 
-const filters: { key: FilterKey; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "food", label: "Food" },
-  { key: "housing", label: "Housing" },
-  { key: "travel", label: "Travel" },
-  { key: "significant", label: "Significant Spending" },
+const filters: { key: FilterKey; labelKey: string }[] = [
+  { key: "all", labelKey: "dashboard.search.filters.all" },
+  { key: "food", labelKey: "dashboard.search.filters.food" },
+  { key: "housing", labelKey: "dashboard.search.filters.housing" },
+  { key: "travel", labelKey: "dashboard.search.filters.travel" },
+  {
+    key: "significant",
+    labelKey: "dashboard.search.filters.significant",
+  },
 ];
 
 const transactions: SearchTransaction[] = [
   {
     icon: "silverware-fork-knife",
     title: "Artisan Boulangerie",
-    category: "Food & Dining",
+    category: "",
+    categoryKey: "dashboard.search.categories.foodDining",
     date: "10:45 AM",
     amount: "- $14.50",
     value: -14.5,
     filter: "food",
-    group: "Today, Oct 24",
+    group: "today",
+    groupKey: "dashboard.search.groups.today",
   },
   {
     icon: "home",
     title: "Skyline Management",
-    category: "Housing",
+    category: "",
+    categoryKey: "dashboard.search.categories.housing",
     date: "08:00 AM",
     amount: "- $2,100.00",
     value: -2100,
     filter: "housing",
-    group: "Today, Oct 24",
+    group: "today",
+    groupKey: "dashboard.search.groups.today",
   },
   {
     icon: "cash-multiple",
     title: "Creative Studio Inc.",
-    category: "Payroll",
+    category: "",
+    categoryKey: "dashboard.search.categories.payroll",
     date: "Oct 23",
     amount: "+ $4,250.00",
     value: 4250,
     filter: "housing",
-    group: "Yesterday, Oct 23",
+    group: "yesterday",
+    groupKey: "dashboard.search.groups.yesterday",
   },
   {
     icon: "car",
     title: "Uber Technologies",
-    category: "Travel",
+    category: "",
+    categoryKey: "dashboard.search.categories.travel",
     date: "Oct 23",
     amount: "- $23.40",
     value: -23.4,
     filter: "travel",
-    group: "Yesterday, Oct 23",
+    group: "yesterday",
+    groupKey: "dashboard.search.groups.yesterday",
   },
   {
     icon: "shopping",
     title: "Apple Store",
-    category: "Shopping",
+    category: "",
+    categoryKey: "dashboard.search.categories.shopping",
     date: "Oct 23",
     amount: "- $129.00",
     value: -129,
     filter: "food",
-    group: "Yesterday, Oct 23",
+    group: "yesterday",
+    groupKey: "dashboard.search.groups.yesterday",
   },
 ];
 
 export default function SearchScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
+  const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
 
   const filteredTransactions = useMemo(
@@ -105,11 +122,20 @@ export default function SearchScreen() {
     [activeFilter],
   );
 
-  const todayItems = filteredTransactions.filter(
-    (transaction) => transaction.group === "Today, Oct 24",
+  const translatedTransactions = useMemo(
+    () =>
+      filteredTransactions.map((transaction) => ({
+        ...transaction,
+        category: t(transaction.categoryKey),
+      })),
+    [filteredTransactions, t],
   );
-  const yesterdayItems = filteredTransactions.filter(
-    (transaction) => transaction.group === "Yesterday, Oct 23",
+
+  const todayItems = translatedTransactions.filter(
+    (transaction) => transaction.group === "today",
+  );
+  const yesterdayItems = translatedTransactions.filter(
+    (transaction) => transaction.group === "yesterday",
   );
 
   return (
@@ -125,13 +151,13 @@ export default function SearchScreen() {
         showsVerticalScrollIndicator={false}
       >
         <ScreenHeader
-          title="Search"
-          subtitle="Find transactions by merchant, category, or amount."
+          title={t("dashboard.search.title")}
+          subtitle={t("dashboard.search.subtitle")}
         />
 
         <View style={[styles.panel, { backgroundColor: themeColors.surface }]}>
           <Text style={[styles.panelLabel, { color: themeColors.text }]}>
-            SEARCH ACTIVITY
+            {t("dashboard.search.activity")}
           </Text>
           <View style={styles.searchRow}>
             <MaterialCommunityIcons
@@ -140,7 +166,7 @@ export default function SearchScreen() {
               size={22}
             />
             <TextInput
-              placeholder="Merchant, category, or keyword..."
+              placeholder={t("dashboard.search.placeholder")}
               placeholderTextColor={themeColors.mutedText}
               style={[styles.searchInput, { color: themeColors.text }]}
             />
@@ -149,7 +175,7 @@ export default function SearchScreen() {
 
         <View style={[styles.panel, { backgroundColor: themeColors.surface }]}>
           <Text style={[styles.panelLabel, { color: themeColors.text }]}>
-            CATEGORY FILTER
+            {t("dashboard.search.categoryFilter")}
           </Text>
           <View style={styles.filterRow}>
             {filters.map((filter) => {
@@ -178,7 +204,7 @@ export default function SearchScreen() {
                       },
                     ]}
                   >
-                    {filter.label}
+                    {t(filter.labelKey)}
                   </Text>
                 </Pressable>
               );
@@ -190,7 +216,7 @@ export default function SearchScreen() {
           <TransactionList
             actionLabel={null}
             items={todayItems}
-            title="Today, Oct 24"
+            title={t("dashboard.search.groups.today")}
           />
         ) : null}
 
@@ -198,7 +224,7 @@ export default function SearchScreen() {
           <TransactionList
             actionLabel={null}
             items={yesterdayItems}
-            title="Yesterday, Oct 23"
+            title={t("dashboard.search.groups.yesterday")}
           />
         ) : null}
 
@@ -206,7 +232,7 @@ export default function SearchScreen() {
           style={[styles.olderButton, { backgroundColor: themeColors.surface }]}
         >
           <Text style={[styles.olderText, { color: themeColors.text }]}>
-            Explore Older Records
+            {t("dashboard.search.exploreOlder")}
           </Text>
           <MaterialCommunityIcons
             color={themeColors.text}
