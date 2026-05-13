@@ -129,7 +129,6 @@ CREATE TABLE `receipts` (
 	`category_name` text,
 	`address_json` text,
 	`date_text` text,
-	`time_text` text,
 	`total` real DEFAULT 0 NOT NULL,
 	`payment_method` text,
 	`card_last4` text,

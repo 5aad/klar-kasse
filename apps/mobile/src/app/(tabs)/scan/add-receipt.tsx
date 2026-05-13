@@ -47,13 +47,6 @@ function parseAmount(value: string) {
   return Number(value.replace(",", ".").replace(/[^\d.]/g, "")) || 0;
 }
 
-function getCurrentTime(locale: string) {
-  return new Intl.DateTimeFormat(locale, {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date());
-}
-
 export default function AddReceiptScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
@@ -64,8 +57,8 @@ export default function AddReceiptScreen() {
   const [date, setDate] = useState(() =>
     new Date().toLocaleDateString(i18n.language),
   );
-  const [time, setTime] = useState(() => getCurrentTime(i18n.language));
   const [total, setTotal] = useState("");
+  const [note, setNote] = useState("");
   const [paymentMethod, setPaymentMethod] =
     useState<(typeof paymentMethods)[number]>("Visa");
   const [category, setCategory] = useState("");
@@ -118,10 +111,10 @@ export default function AddReceiptScreen() {
       store: store.trim(),
       address: [],
       date,
-      time,
       total: parseAmount(displayedTotal),
       paymentMethod,
       cardLast4: "",
+      note: note.trim(),
       vat: [],
       itemCount: receiptItems.length,
       category,
@@ -175,18 +168,19 @@ export default function AddReceiptScreen() {
             />
             <ManualField
               compact
-              label={t("scan.add.fields.time")}
-              placeholder={t("scan.add.placeholders.time")}
-              value={time}
-              onChangeText={setTime}
+              label={t("scan.add.fields.total")}
+              keyboardType="decimal-pad"
+              placeholder={t("scan.add.placeholders.amount")}
+              value={displayedTotal}
+              onChangeText={setTotal}
             />
           </View>
           <ManualField
-            label={t("scan.add.fields.total")}
-            keyboardType="decimal-pad"
-            placeholder={t("scan.add.placeholders.amount")}
-            value={displayedTotal}
-            onChangeText={setTotal}
+            label={t("scan.add.fields.note")}
+            multiline
+            placeholder={t("scan.add.placeholders.note")}
+            value={note}
+            onChangeText={setNote}
           />
         </View>
 
@@ -298,6 +292,7 @@ function ManualField({
   compact,
   keyboardType,
   label,
+  multiline,
   onChangeText,
   placeholder,
   value,
@@ -305,6 +300,7 @@ function ManualField({
   compact?: boolean;
   keyboardType?: "default" | "decimal-pad";
   label: string;
+  multiline?: boolean;
   onChangeText: (value: string) => void;
   placeholder: string;
   value: string;
@@ -328,7 +324,12 @@ function ManualField({
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={themeColors.mutedText}
-        style={[styles.fieldInput, { color: themeColors.text }]}
+        style={[
+          styles.fieldInput,
+          { color: themeColors.text },
+          multiline && styles.multilineInput,
+        ]}
+        multiline={multiline}
       />
     </View>
   );
@@ -434,6 +435,13 @@ const styles = StyleSheet.create({
     padding: 0,
     fontSize: fontSize.lg,
     fontWeight: "700",
+  },
+  multilineInput: {
+    minHeight: 48,
+    fontSize: fontSize.md,
+    fontWeight: "600",
+    lineHeight: 20,
+    textAlignVertical: "top",
   },
   choiceSection: {
     gap: spacing.sm,

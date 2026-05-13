@@ -45,6 +45,24 @@ const themeOptions = [
   },
 ] as const;
 
+const currencyOptions = [
+  {
+    key: "EUR",
+    labelKey: "settings.preferences.currencyOptions.eur",
+    icon: "currency-eur",
+  },
+  {
+    key: "USD",
+    labelKey: "settings.preferences.currencyOptions.usd",
+    icon: "currency-usd",
+  },
+  {
+    key: "GBP",
+    labelKey: "settings.preferences.currencyOptions.gbp",
+    icon: "currency-gbp",
+  },
+] as const;
+
 export default function PreferencesScreen() {
   const { width } = useWindowDimensions();
   const themeColors = useThemeColors();
@@ -52,9 +70,14 @@ export default function PreferencesScreen() {
   const { t } = useTranslation();
   const [name, setName] = useState("Tom Hillson");
   const [selectedDoodle, setSelectedDoodle] = useState(0);
+  const [selectedCurrency, setSelectedCurrency] = useState("EUR");
+  const [vatRate, setVatRate] = useState("19");
   const selectedTheme = useThemeStore((state) => state.themePreference);
   const setSelectedTheme = useThemeStore((state) => state.setThemePreference);
   const doodleTileSize = (width - spacing.lg * 2 - spacing.md * 2) / 3;
+  const updateVatRate = (value: string) => {
+    setVatRate(value.replace(",", ".").replace(/[^\d.]/g, ""));
+  };
 
   return (
     <SafeAreaView
@@ -175,6 +198,101 @@ export default function PreferencesScreen() {
             })}
           </View>
         </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.label, { color: themeColors.text }]}>
+            {t("settings.preferences.currency")}
+          </Text>
+          <View style={styles.themeList}>
+            {currencyOptions.map((option) => {
+              const isSelected = selectedCurrency === option.key;
+
+              return (
+                <Pressable
+                  key={option.key}
+                  style={[
+                    styles.themeOption,
+                    {
+                      backgroundColor: themeColors.surface,
+                      borderColor: themeColors.text,
+                    },
+                    isSelected && styles.themeOptionSelected,
+                  ]}
+                  onPress={() => setSelectedCurrency(option.key)}
+                >
+                  <MaterialCommunityIcons
+                    color={isSelected ? colors.primary : themeColors.text}
+                    name={option.icon}
+                    size={25}
+                  />
+                  <Text
+                    style={[
+                      styles.themeText,
+                      { color: themeColors.text },
+                      isSelected && styles.themeTextSelected,
+                    ]}
+                  >
+                    {t(option.labelKey)}
+                  </Text>
+                  <MaterialCommunityIcons
+                    color={isSelected ? colors.primary : themeColors.mutedText}
+                    name={isSelected ? "radiobox-marked" : "radiobox-blank"}
+                    size={24}
+                  />
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.label, { color: themeColors.text }]}>
+            {t("settings.preferences.vat")}
+          </Text>
+          <View
+            style={[
+              styles.vatRateField,
+              {
+                backgroundColor: themeColors.surface,
+                borderColor: themeColors.text,
+              },
+            ]}
+          >
+            <View style={styles.vatRateCopy}>
+              <Text style={[styles.vatRateLabel, { color: themeColors.text }]}>
+                {t("settings.preferences.vatRate")}
+              </Text>
+              <Text
+                style={[
+                  styles.vatRateDescription,
+                  { color: themeColors.mutedText },
+                ]}
+              >
+                {t("settings.preferences.vatRateDescription")}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.vatRateInputWrap,
+                { borderColor: themeColors.mutedText },
+              ]}
+            >
+              <TextInput
+                keyboardType="decimal-pad"
+                value={vatRate}
+                onChangeText={updateVatRate}
+                placeholder={t("settings.preferences.vatRatePlaceholder")}
+                placeholderTextColor={themeColors.mutedText}
+                style={[styles.vatRateInput, { color: themeColors.text }]}
+              />
+              <Text
+                style={[styles.vatRateSuffix, { color: themeColors.mutedText }]}
+              >
+                %
+              </Text>
+            </View>
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -252,5 +370,49 @@ const styles = StyleSheet.create({
   },
   themeTextSelected: {
     color: colors.primary,
+  },
+  vatRateField: {
+    minHeight: 76,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  vatRateCopy: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  vatRateLabel: {
+    fontSize: fontSize.md,
+    fontWeight: "800",
+  },
+  vatRateDescription: {
+    fontSize: fontSize.sm,
+    fontWeight: "500",
+    lineHeight: 18,
+  },
+  vatRateInputWrap: {
+    minWidth: 88,
+    minHeight: 44,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.sm,
+  },
+  vatRateInput: {
+    minWidth: 42,
+    padding: 0,
+    fontSize: fontSize.lg,
+    fontWeight: "800",
+    textAlign: "right",
+  },
+  vatRateSuffix: {
+    marginLeft: 2,
+    fontSize: fontSize.md,
+    fontWeight: "800",
   },
 });

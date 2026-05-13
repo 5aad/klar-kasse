@@ -44,7 +44,6 @@ export function initializeDatabase() {
       category_name TEXT,
       address_json TEXT,
       date_text TEXT,
-      time_text TEXT,
       total REAL NOT NULL DEFAULT 0,
       payment_method TEXT,
       card_last4 TEXT,
@@ -175,6 +174,13 @@ export function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS sync_outbox_status_idx ON sync_outbox(status, next_attempt_at);
     CREATE INDEX IF NOT EXISTS sync_outbox_entity_idx ON sync_outbox(entity_type, entity_id);
   `);
+
+  const receiptColumns = sqlite.getAllSync<{ name: string }>(
+    "PRAGMA table_info(receipts)",
+  );
+  if (receiptColumns.some((column) => column.name === "time_text")) {
+    sqlite.execSync("ALTER TABLE receipts DROP COLUMN time_text;");
+  }
 
   hasInitialized = true;
 }

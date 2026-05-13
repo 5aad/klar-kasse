@@ -5,6 +5,13 @@
     "save": "Save",
     "submit": "Submit"
   },
+  "tabs": {
+    "budget": "Budget",
+    "dashboard": "Dashboard",
+    "insight": "Insight",
+    "scan": "Scan",
+    "settings": "Settings"
+  },
   "dashboard": {
     "receiptFallback": "Receipt",
     "search": {
@@ -101,8 +108,8 @@
         "category": "CATEGORY",
         "date": "DATE",
         "merchant": "MERCHANT",
+        "note": "NOTE",
         "payment": "PAYMENT",
-        "time": "TIME",
         "total": "TOTAL"
       },
       "items": {
@@ -121,7 +128,7 @@
         "date": "07.05.2026",
         "itemName": "Item name",
         "merchant": "e.g. LIDL",
-        "time": "18:31"
+        "note": "Optional note"
       },
       "saveReceipt": "Save Receipt",
       "saving": "Saving...",
@@ -232,6 +239,12 @@
     },
     "preferences": {
       "appTheme": "APP THEME",
+      "currency": "CURRENCY",
+      "currencyOptions": {
+        "eur": "Euro (EUR)",
+        "gbp": "British Pound (GBP)",
+        "usd": "US Dollar (USD)"
+      },
       "displayName": "DISPLAY NAME",
       "namePlaceholder": "Your name",
       "profileDoodle": "PROFILE DOODLE",
@@ -241,7 +254,11 @@
         "light": "Light",
         "system": "System"
       },
-      "title": "Preferences"
+      "title": "Preferences",
+      "vat": "VAT",
+      "vatRate": "VAT tax percentage",
+      "vatRateDescription": "Used when calculating tax on receipt totals.",
+      "vatRatePlaceholder": "19"
     },
     "yourData": {
       "archiveMeta": "EUR {{budget}} budget, {{categories}} categories, {{receipts}} receipts",

@@ -1,9 +1,7 @@
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -14,6 +12,11 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
 import { ExpenseDistributionChart } from "@/components/insight/expense-distribution-chart";
 import { EmptyStateCard } from "@/components/shared/empty-state-card";
+import {
+  getInitialMonth,
+  isSameMonth,
+  MonthSelector,
+} from "@/components/shared/month-selector";
 import { TransactionList } from "@/components/shared/transaction-list";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useCategoriesQuery } from "@/queries/categories";
@@ -32,23 +35,6 @@ type CategoryBreakdownItem = {
   progress: number;
   value: number;
 };
-
-function getInitialMonth() {
-  const today = new Date();
-
-  return new Date(today.getFullYear(), today.getMonth(), 1);
-}
-
-function shiftMonth(month: Date, offset: number) {
-  return new Date(month.getFullYear(), month.getMonth() + offset, 1);
-}
-
-function isSameMonth(left: Date, right: Date) {
-  return (
-    left.getFullYear() === right.getFullYear() &&
-    left.getMonth() === right.getMonth()
-  );
-}
 
 function formatReceiptItemAmount(amount: number, currencyAmount: string) {
   return `- ${currencyAmount}`;
@@ -86,8 +72,6 @@ export default function InsightScreen() {
   const categoriesQuery = useCategoriesQuery();
   const receiptsQuery = useReceiptsQuery();
   const [selectedMonth, setSelectedMonth] = useState(getInitialMonth);
-  const currentMonth = useMemo(getInitialMonth, []);
-  const isCurrentMonth = isSameMonth(selectedMonth, currentMonth);
   const selectedMonthLabel = useMemo(
     () =>
       new Intl.DateTimeFormat(i18n.language, {
@@ -197,37 +181,10 @@ export default function InsightScreen() {
           </Text>
         </View>
 
-        <View
-          style={[
-            styles.monthSelector,
-            { backgroundColor: themeColors.surface },
-          ]}
-        >
-          <Pressable
-            style={styles.monthButton}
-            onPress={() => setSelectedMonth((month) => shiftMonth(month, -1))}
-          >
-            <MaterialCommunityIcons
-              color={themeColors.text}
-              name="chevron-left"
-              size={20}
-            />
-          </Pressable>
-          <Text style={[styles.monthText, { color: themeColors.text }]}>
-            {selectedMonthLabel}
-          </Text>
-          <Pressable
-            disabled={isCurrentMonth}
-            style={[styles.monthButton, isCurrentMonth && styles.disabledMonthButton]}
-            onPress={() => setSelectedMonth((month) => shiftMonth(month, 1))}
-          >
-            <MaterialCommunityIcons
-              color={isCurrentMonth ? themeColors.mutedText : themeColors.text}
-              name="chevron-right"
-              size={20}
-            />
-          </Pressable>
-        </View>
+        <MonthSelector
+          selectedMonth={selectedMonth}
+          onChange={setSelectedMonth}
+        />
 
         <ExpenseDistributionChart
           data={categorySpending.map((category) => ({
@@ -349,28 +306,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fontSize.xxl,
-    fontWeight: "700",
-  },
-  monthSelector: {
-    alignSelf: "flex-start",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
-  },
-  monthButton: {
-    width: 26,
-    height: 26,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  disabledMonthButton: {
-    opacity: 0.45,
-  },
-  monthText: {
-    fontSize: fontSize.sm,
     fontWeight: "700",
   },
   breakdownCard: {

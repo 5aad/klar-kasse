@@ -6,11 +6,13 @@ import {
   NativeTabs,
   VectorIcon,
 } from "expo-router/unstable-native-tabs";
+import { useTranslation } from "react-i18next";
 
 import { useThemeColors } from "@/hooks/use-theme-colors";
 
 export default function TabLayout() {
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
 
   return (
     <NativeTabs
@@ -43,19 +45,19 @@ export default function TabLayout() {
             />
           }
         />
-        <Label>Dashboard</Label>
+        <Label>{t("tabs.dashboard")}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="(insight)">
         <Icon
           src={<VectorIcon family={MaterialCommunityIcons} name="chart-line" />}
         />
-        <Label>Insight</Label>
+        <Label>{t("tabs.insight")}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="scan" role="search">
         <Icon
           src={<VectorIcon family={MaterialCommunityIcons} name="line-scan" />}
         />
-        <Label>Scan</Label>
+        <Label>{t("tabs.scan")}</Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="budget">
@@ -64,7 +66,7 @@ export default function TabLayout() {
             <VectorIcon family={MaterialCommunityIcons} name="wallet-outline" />
           }
         />
-        <Label>Budget</Label>
+        <Label>{t("tabs.budget")}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="settings">
         <Icon
@@ -72,7 +74,7 @@ export default function TabLayout() {
             <VectorIcon family={MaterialCommunityIcons} name="cog-outline" />
           }
         />
-        <Label>Settings</Label>
+        <Label>{t("tabs.settings")}</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );

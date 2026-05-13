@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { router } from "expo-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Pressable,
@@ -14,6 +14,11 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BalanceGraph } from "@/components/dashboard/balance-graph";
+import {
+  getInitialMonth,
+  isSameMonth,
+  MonthSelector,
+} from "@/components/shared/month-selector";
 import { TransactionList } from "@/components/shared/transaction-list";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useMonthlyBudgetQuery } from "@/queries/budgets";
@@ -57,26 +62,25 @@ function parseReceiptDate(dateText?: string | null) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function isCurrentMonth(date: Date) {
-  const today = new Date();
-
-  return (
-    date.getFullYear() === today.getFullYear() &&
-    date.getMonth() === today.getMonth()
-  );
-}
-
 function getCurrentMonthSpendingPoints(
   receipts: NonNullable<ReturnType<typeof useReceiptsQuery>["data"]>,
+  selectedMonth: Date,
 ) {
   const today = new Date();
+  const isSelectedCurrentMonth = isSameMonth(selectedMonth, today);
+  const daysInMonth = new Date(
+    selectedMonth.getFullYear(),
+    selectedMonth.getMonth() + 1,
+    0,
+  ).getDate();
+  const pointCount = isSelectedCurrentMonth ? today.getDate() : daysInMonth;
   const spendingByDay = new Map<number, number>();
 
   for (const receipt of receipts) {
     const receiptDate =
       parseReceiptDate(receipt.dateText) ?? parseReceiptDate(receipt.createdAt);
 
-    if (!receiptDate || !isCurrentMonth(receiptDate)) continue;
+    if (!receiptDate || !isSameMonth(receiptDate, selectedMonth)) continue;
 
     const day = receiptDate.getDate();
 
@@ -85,7 +89,7 @@ function getCurrentMonthSpendingPoints(
 
   let cumulativeSpent = 0;
 
-  return Array.from({ length: today.getDate() }, (_, index) => {
+  return Array.from({ length: pointCount }, (_, index) => {
     const day = index + 1;
 
     cumulativeSpent += spendingByDay.get(day) ?? 0;
@@ -103,14 +107,15 @@ export default function DashboardScreen() {
   const { t } = useTranslation();
   const monthlyBudgetQuery = useMonthlyBudgetQuery();
   const receiptsQuery = useReceiptsQuery();
+  const [selectedMonth, setSelectedMonth] = useState(getInitialMonth);
   const monthlyBudget = monthlyBudgetQuery.data;
   const remainingBudget = Math.max(
     (monthlyBudget?.limitAmount ?? 0) - (monthlyBudget?.spentAmount ?? 0),
     0,
   );
   const spendingPoints = useMemo(
-    () => getCurrentMonthSpendingPoints(receiptsQuery.data ?? []),
-    [receiptsQuery.data],
+    () => getCurrentMonthSpendingPoints(receiptsQuery.data ?? [], selectedMonth),
+    [receiptsQuery.data, selectedMonth],
   );
   const receiptTransactions =
     receiptsQuery.data
@@ -183,6 +188,10 @@ export default function DashboardScreen() {
           </Pressable>
         </View>
 
+        <MonthSelector
+          selectedMonth={selectedMonth}
+          onChange={setSelectedMonth}
+        />
         <BalanceGraph points={spendingPoints} />
         <TransactionList items={receiptTransactions} />
       </ScrollView>

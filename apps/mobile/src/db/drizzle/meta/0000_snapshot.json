@@ -926,13 +926,6 @@
           "notNull": false,
           "autoincrement": false
         },
-        "time_text": {
-          "name": "time_text",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "total": {
           "name": "total",
           "type": "real",

@@ -12,7 +12,6 @@ export const ReceiptSchema = z.object({
   store: z.string().optional(),
   address: z.array(z.string()).default([]).optional(),
   date: z.string().optional(),
-  time: z.string().optional(),
   paymentMethod: z.string().optional(),
   cardLast4: z.string().optional(),
   itemCount: z.number(),
