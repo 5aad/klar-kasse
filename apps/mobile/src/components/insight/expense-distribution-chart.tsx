@@ -1,5 +1,6 @@
 import { fontSize, radius, spacing } from "@repo/theme";
 import { BarChart } from "react-native-gifted-charts";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
@@ -13,10 +14,6 @@ type Props = {
   data: ExpenseDistributionItem[];
   periodLabel: string;
 };
-
-function formatTotal(value: number) {
-  return `EUR ${value.toFixed(2)}`;
-}
 
 function formatChartLabel(label: string) {
   const words = label
@@ -39,6 +36,7 @@ export function ExpenseDistributionChart({ data, periodLabel }: Props) {
   const { width } = useWindowDimensions();
   const themeColors = useThemeColors();
   const resolvedTheme = useResolvedTheme();
+  const { t } = useTranslation();
   const chartWidth = Math.min(width - spacing.lg * 4, 320);
   const spendingData = data
     .filter((item) => item.value > 0)
@@ -57,18 +55,18 @@ export function ExpenseDistributionChart({ data, periodLabel }: Props) {
       <View style={styles.header}>
         <View style={styles.titleBlock}>
           <Text style={[styles.title, { color: chartForeground }]}>
-            Expense Distribution
+            {t("insight.expenseDistribution.title")}
           </Text>
           <Text style={[styles.subtitle, { color: chartMuted }]}>
-            Your spending patterns for {periodLabel}
+            {t("insight.expenseDistribution.subtitle", { period: periodLabel })}
           </Text>
         </View>
         <View>
           <Text style={[styles.totalLabel, { color: chartMuted }]}>
-            TOTAL SPENT
+            {t("insight.expenseDistribution.totalSpent")}
           </Text>
           <Text style={[styles.totalValue, { color: chartForeground }]}>
-            {formatTotal(totalSpent)}
+            {t("common.currencyAmount", { amount: totalSpent.toFixed(2) })}
           </Text>
         </View>
       </View>
@@ -100,10 +98,10 @@ export function ExpenseDistributionChart({ data, periodLabel }: Props) {
       ) : (
         <View style={styles.emptyChart}>
           <Text style={[styles.emptyTitle, { color: chartForeground }]}>
-            No spending yet
+            {t("insight.expenseDistribution.emptyTitle")}
           </Text>
           <Text style={[styles.emptyBody, { color: chartMuted }]}>
-            Scan receipts to build this month's distribution.
+            {t("insight.expenseDistribution.emptyBody")}
           </Text>
         </View>
       )}

@@ -1,5 +1,6 @@
 import { fontSize, spacing } from "@repo/theme";
 import { BaseModal } from "@repo/ui";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
@@ -12,6 +13,7 @@ type Props = {
 export function CustomerSupportModal({ onClose, visible }: Props) {
   const themeColors = useThemeColors();
   const resolvedTheme = useResolvedTheme();
+  const { t } = useTranslation();
 
   return (
     <BaseModal
@@ -24,19 +26,19 @@ export function CustomerSupportModal({ onClose, visible }: Props) {
       onRequestClose={onClose}
     >
       <Text style={[styles.modalTitle, { color: themeColors.text }]}>
-        Customer Support
+        {t("settings.customerSupport.title")}
       </Text>
       <Text style={[styles.modalBody, { color: themeColors.mutedText }]}>
-        Send us a message and we will get back to you.
+        {t("settings.customerSupport.body")}
       </Text>
 
       <View style={styles.form}>
         <View style={styles.fieldGroup}>
           <Text style={[styles.fieldLabel, { color: themeColors.text }]}>
-            NAME
+            {t("settings.customerSupport.name")}
           </Text>
           <TextInput
-            placeholder="Your name"
+            placeholder={t("settings.customerSupport.namePlaceholder")}
             placeholderTextColor={themeColors.mutedText}
             style={[
               styles.input,
@@ -51,7 +53,7 @@ export function CustomerSupportModal({ onClose, visible }: Props) {
 
         <View style={styles.fieldGroup}>
           <Text style={[styles.fieldLabel, { color: themeColors.text }]}>
-            EMAIL
+            {t("settings.customerSupport.email")}
           </Text>
           <TextInput
             autoCapitalize="none"
@@ -71,11 +73,11 @@ export function CustomerSupportModal({ onClose, visible }: Props) {
 
         <View style={styles.fieldGroup}>
           <Text style={[styles.fieldLabel, { color: themeColors.text }]}>
-            MESSAGE
+            {t("settings.customerSupport.message")}
           </Text>
           <TextInput
             multiline
-            placeholder="How can we help?"
+            placeholder={t("settings.customerSupport.messagePlaceholder")}
             placeholderTextColor={themeColors.mutedText}
             style={[
               styles.input,
@@ -94,7 +96,7 @@ export function CustomerSupportModal({ onClose, visible }: Props) {
       <View style={styles.modalActions}>
         <Pressable style={styles.cancelButton} onPress={onClose}>
           <Text style={[styles.cancelText, { color: themeColors.primary }]}>
-            Cancel
+            {t("common.cancel")}
           </Text>
         </Pressable>
         <Pressable
@@ -105,7 +107,7 @@ export function CustomerSupportModal({ onClose, visible }: Props) {
           onPress={onClose}
         >
           <Text style={[styles.submitText, { color: themeColors.primaryText }]}>
-            Submit
+            {t("common.submit")}
           </Text>
         </Pressable>
       </View>

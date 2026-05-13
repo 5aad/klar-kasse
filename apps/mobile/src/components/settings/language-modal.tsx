@@ -1,10 +1,16 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, spacing } from "@repo/theme";
 import { BaseModal } from "@repo/ui";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
+import {
+  getCurrentLanguage,
+  setAppLanguage,
+  type SupportedLanguage,
+} from "@/i18n";
 
 type Props = {
   onClose: () => void;
@@ -14,7 +20,19 @@ type Props = {
 export function LanguageModal({ onClose, visible }: Props) {
   const themeColors = useThemeColors();
   const resolvedTheme = useResolvedTheme();
-  const [selectedLanguage, setSelectedLanguage] = useState<"en" | "de">("en");
+  const { t } = useTranslation();
+  const [selectedLanguage, setSelectedLanguage] =
+    useState<SupportedLanguage>(getCurrentLanguage);
+
+  useEffect(() => {
+    if (visible) {
+      setSelectedLanguage(getCurrentLanguage());
+    }
+  }, [visible]);
+
+  const saveLanguage = () => {
+    void setAppLanguage(selectedLanguage).then(onClose);
+  };
 
   return (
     <BaseModal
@@ -26,21 +44,21 @@ export function LanguageModal({ onClose, visible }: Props) {
       onRequestClose={onClose}
     >
       <Text style={[styles.modalTitle, { color: themeColors.text }]}>
-        Language
+        {t("settings.language.title")}
       </Text>
       <Text style={[styles.modalBody, { color: themeColors.mutedText }]}>
-        Choose your preferred app language.
+        {t("settings.language.body")}
       </Text>
 
       <View style={styles.languageOptions}>
         <LanguageOption
-          label="English"
+          label={t("settings.language.english")}
           selected={selectedLanguage === "en"}
           themeColors={themeColors}
           onPress={() => setSelectedLanguage("en")}
         />
         <LanguageOption
-          label="Deutsch"
+          label={t("settings.language.german")}
           selected={selectedLanguage === "de"}
           themeColors={themeColors}
           onPress={() => setSelectedLanguage("de")}
@@ -50,7 +68,7 @@ export function LanguageModal({ onClose, visible }: Props) {
       <View style={styles.modalActions}>
         <Pressable style={styles.cancelButton} onPress={onClose}>
           <Text style={[styles.cancelText, { color: themeColors.primary }]}>
-            Cancel
+            {t("common.cancel")}
           </Text>
         </Pressable>
         <Pressable
@@ -58,10 +76,10 @@ export function LanguageModal({ onClose, visible }: Props) {
             styles.submitButton,
             { backgroundColor: themeColors.primary },
           ]}
-          onPress={onClose}
+          onPress={saveLanguage}
         >
           <Text style={[styles.submitText, { color: themeColors.primaryText }]}>
-            Save
+            {t("common.save")}
           </Text>
         </Pressable>
       </View>

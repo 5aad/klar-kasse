@@ -1,6 +1,7 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Pressable,
   RefreshControl,
@@ -32,21 +33,6 @@ type CategoryBreakdownItem = {
   value: number;
 };
 
-const monthNames = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-] as const;
-
 function getInitialMonth() {
   const today = new Date();
 
@@ -64,12 +50,12 @@ function isSameMonth(left: Date, right: Date) {
   );
 }
 
-function formatReceiptItemAmount(amount: number) {
-  return `- EUR ${amount.toFixed(2)}`;
+function formatReceiptItemAmount(amount: number, currencyAmount: string) {
+  return `- ${currencyAmount}`;
 }
 
-function formatCategoryAmount(amount: number) {
-  return `EUR ${amount.toFixed(2)}`;
+function formatCategoryAmount(currencyAmount: string) {
+  return currencyAmount;
 }
 
 function isReceiptInMonth(dateText: string | null, selectedMonth: Date) {
@@ -96,6 +82,7 @@ function parseReceiptDate(dateText: string) {
 export default function InsightScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
+  const { i18n, t } = useTranslation();
   const categoriesQuery = useCategoriesQuery();
   const receiptsQuery = useReceiptsQuery();
   const [selectedMonth, setSelectedMonth] = useState(getInitialMonth);
@@ -103,8 +90,11 @@ export default function InsightScreen() {
   const isCurrentMonth = isSameMonth(selectedMonth, currentMonth);
   const selectedMonthLabel = useMemo(
     () =>
-      `${monthNames[selectedMonth.getMonth()]} ${selectedMonth.getFullYear()}`,
-    [selectedMonth],
+      new Intl.DateTimeFormat(i18n.language, {
+        month: "long",
+        year: "numeric",
+      }).format(selectedMonth),
+    [i18n.language, selectedMonth],
   );
   const significantSpending = useMemo(
     () =>
@@ -116,13 +106,16 @@ export default function InsightScreen() {
             title: item.name,
             category: receipt.categoryName ?? receipt.store,
             date: receipt.dateText ?? receipt.createdAt,
-            amount: formatReceiptItemAmount(item.price),
+            amount: formatReceiptItemAmount(
+              item.price,
+              t("common.currencyAmount", { amount: item.price.toFixed(2) }),
+            ),
             value: item.price,
           })),
         )
         .sort((left, right) => right.value - left.value)
         .slice(0, 5) ?? [],
-    [receiptsQuery.data],
+    [receiptsQuery.data, t],
   );
   const categorySpending = useMemo<CategorySpendingItem[]>(() => {
     const totals = new Map<string, number>();
@@ -156,7 +149,11 @@ export default function InsightScreen() {
 
         return {
           name: category.name,
-          amount: formatCategoryAmount(category.value),
+          amount: formatCategoryAmount(
+            t("common.currencyAmount", {
+              amount: category.value.toFixed(2),
+            }),
+          ),
           percent: `${Math.round(progress * 100)}%`,
           progress,
           value: category.value,
@@ -164,7 +161,7 @@ export default function InsightScreen() {
       })
       .sort((left, right) => right.progress - left.progress)
       .slice(0, 5);
-  }, [categorySpending]);
+  }, [categorySpending, t]);
   const refreshInsights = () => {
     categoriesQuery.refetch();
     receiptsQuery.refetch();
@@ -193,10 +190,10 @@ export default function InsightScreen() {
       >
         <View style={styles.header}>
           <Text style={[styles.eyebrow, { color: themeColors.primary }]}>
-            MONTHLY OVERVIEW
+            {t("insight.monthlyOverview")}
           </Text>
           <Text style={[styles.title, { color: themeColors.text }]}>
-            Spending Insights
+            {t("insight.title")}
           </Text>
         </View>
 
@@ -244,9 +241,9 @@ export default function InsightScreen() {
           themeColors={themeColors}
         />
         <TransactionList
-          actionLabel="View all"
+          actionLabel={t("dashboard.transactionList.viewAll")}
           items={significantSpending}
-          title="Significant Spending"
+          title={t("insight.significantSpending")}
         />
       </ScrollView>
     </SafeAreaView>
@@ -260,12 +257,14 @@ function CategoryBreakdown({
   categories: CategoryBreakdownItem[];
   themeColors: ThemeColors;
 }) {
+  const { t } = useTranslation();
+
   return (
     <View
       style={[styles.breakdownCard, { backgroundColor: themeColors.surface }]}
     >
       <Text style={[styles.breakdownTitle, { color: themeColors.text }]}>
-        Category Breakdown
+        {t("insight.categoryBreakdown.title")}
       </Text>
       <View style={styles.breakdownList}>
         {categories.length ? (
@@ -321,9 +320,9 @@ function CategoryBreakdown({
           ))
         ) : (
           <EmptyStateCard
-            body="Scan receipts to see where your spending goes."
+            body={t("insight.categoryBreakdown.emptyBody")}
             icon="chart-donut"
-            title="No category spending yet"
+            title={t("insight.categoryBreakdown.emptyTitle")}
           />
         )}
       </View>

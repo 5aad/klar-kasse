@@ -1,7 +1,8 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { router } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Pressable,
   RefreshControl,
@@ -27,6 +28,12 @@ type ManualItem = {
 };
 
 const paymentMethods = ["Cash", "Visa", "Mastercard", "Debit"] as const;
+const paymentMethodLabels: Record<(typeof paymentMethods)[number], string> = {
+  Cash: "scan.add.paymentMethods.cash",
+  Visa: "scan.add.paymentMethods.visa",
+  Mastercard: "scan.add.paymentMethods.mastercard",
+  Debit: "scan.add.paymentMethods.debit",
+};
 
 function createItem(): ManualItem {
   return {
@@ -40,8 +47,8 @@ function parseAmount(value: string) {
   return Number(value.replace(",", ".").replace(/[^\d.]/g, "")) || 0;
 }
 
-function getCurrentTime() {
-  return new Intl.DateTimeFormat("de-DE", {
+function getCurrentTime(locale: string) {
+  return new Intl.DateTimeFormat(locale, {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date());
@@ -50,11 +57,14 @@ function getCurrentTime() {
 export default function AddReceiptScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
+  const { i18n, t } = useTranslation();
   const categoriesQuery = useCategoriesQuery();
   const postReceiptMutation = usePostReceiptMutation();
   const [store, setStore] = useState("");
-  const [date, setDate] = useState(() => new Date().toLocaleDateString("de-DE"));
-  const [time, setTime] = useState(getCurrentTime);
+  const [date, setDate] = useState(() =>
+    new Date().toLocaleDateString(i18n.language),
+  );
+  const [time, setTime] = useState(() => getCurrentTime(i18n.language));
   const [total, setTotal] = useState("");
   const [paymentMethod, setPaymentMethod] =
     useState<(typeof paymentMethods)[number]>("Visa");
@@ -67,6 +77,12 @@ export default function AddReceiptScreen() {
   const displayedTotal = total || (itemsTotal > 0 ? itemsTotal.toFixed(2) : "");
   const categoryOptions =
     categoriesQuery.data?.map((categoryItem) => categoryItem.name) ?? [];
+
+  useEffect(() => {
+    if (category || !categoryOptions.length) return;
+
+    setCategory(categoryOptions[0]);
+  }, [category, categoryOptions]);
 
   const updateItem = (
     id: string,
@@ -138,60 +154,62 @@ export default function AddReceiptScreen() {
         showsVerticalScrollIndicator={false}
       >
         <ScreenHeader
-          title="Add Manually"
-          subtitle="Enter the main receipt details first, then add items."
+          title={t("scan.add.title")}
+          subtitle={t("scan.add.subtitle")}
         />
 
         <View style={styles.quickGrid}>
           <ManualField
-            label="MERCHANT"
-            placeholder="e.g. LIDL"
+            label={t("scan.add.fields.merchant")}
+            placeholder={t("scan.add.placeholders.merchant")}
             value={store}
             onChangeText={setStore}
           />
           <View style={styles.twoColumnRow}>
             <ManualField
               compact
-              label="DATE"
-              placeholder="07.05.2026"
+              label={t("scan.add.fields.date")}
+              placeholder={t("scan.add.placeholders.date")}
               value={date}
               onChangeText={setDate}
             />
             <ManualField
               compact
-              label="TIME"
-              placeholder="18:31"
+              label={t("scan.add.fields.time")}
+              placeholder={t("scan.add.placeholders.time")}
               value={time}
               onChangeText={setTime}
             />
           </View>
           <ManualField
-            label="TOTAL"
+            label={t("scan.add.fields.total")}
             keyboardType="decimal-pad"
-            placeholder="0.00"
+            placeholder={t("scan.add.placeholders.amount")}
             value={displayedTotal}
             onChangeText={setTotal}
           />
         </View>
 
         <ChoiceGroup
-          label="CATEGORY"
-          emptyText="Add categories from the Budget screen first."
+          label={t("scan.add.fields.category")}
+          emptyText={t("scan.add.emptyCategories")}
           options={categoryOptions}
           value={category}
           onChange={setCategory}
         />
 
         <ChoiceGroup
-          label="PAYMENT"
+          label={t("scan.add.fields.payment")}
+          emptyText={t("scan.add.emptyPaymentMethods")}
           options={paymentMethods}
           value={paymentMethod}
           onChange={setPaymentMethod}
+          getOptionLabel={(option) => t(paymentMethodLabels[option])}
         />
 
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: themeColors.text }]}>
-            Items
+            {t("scan.add.items.title")}
           </Text>
           <Pressable
             style={[styles.smallAction, { backgroundColor: themeColors.text }]}
@@ -205,7 +223,7 @@ export default function AddReceiptScreen() {
             <Text
               style={[styles.smallActionText, { color: themeColors.background }]}
             >
-              Add item
+              {t("scan.add.items.add")}
             </Text>
           </Pressable>
         </View>
@@ -218,7 +236,7 @@ export default function AddReceiptScreen() {
             >
               <View style={styles.itemHeader}>
                 <Text style={[styles.itemNumber, { color: themeColors.primary }]}>
-                  ITEM {index + 1}
+                  {t("scan.add.items.itemNumber", { number: index + 1 })}
                 </Text>
                 <Pressable onPress={() => removeItem(item.id)}>
                   <MaterialCommunityIcons
@@ -232,7 +250,7 @@ export default function AddReceiptScreen() {
                 <TextInput
                   value={item.name}
                   onChangeText={(value) => updateItem(item.id, "name", value)}
-                  placeholder="Item name"
+                  placeholder={t("scan.add.placeholders.itemName")}
                   placeholderTextColor={themeColors.mutedText}
                   style={[styles.itemNameInput, { color: themeColors.text }]}
                 />
@@ -240,7 +258,7 @@ export default function AddReceiptScreen() {
                   value={item.price}
                   onChangeText={(value) => updateItem(item.id, "price", value)}
                   keyboardType="decimal-pad"
-                  placeholder="0.00"
+                  placeholder={t("scan.add.placeholders.amount")}
                   placeholderTextColor={themeColors.mutedText}
                   style={[
                     styles.itemPriceInput,
@@ -266,7 +284,9 @@ export default function AddReceiptScreen() {
             size={20}
           />
           <Text style={[styles.saveText, { color: themeColors.primaryText }]}>
-            {postReceiptMutation.isPending ? "Saving..." : "Save Receipt"}
+            {postReceiptMutation.isPending
+              ? t("scan.add.saving")
+              : t("scan.add.saveReceipt")}
           </Text>
         </Pressable>
       </KeyboardAwareScrollView>
@@ -320,8 +340,10 @@ function ChoiceGroup<TValue extends string>({
   onChange,
   options,
   value,
+  getOptionLabel,
 }: {
-  emptyText?: string;
+  emptyText: string;
+  getOptionLabel?: (value: TValue) => string;
   label: string;
   onChange: (value: TValue) => void;
   options: readonly TValue[];
@@ -362,14 +384,14 @@ function ChoiceGroup<TValue extends string>({
                   },
                 ]}
               >
-                {option}
+                {getOptionLabel ? getOptionLabel(option) : option}
               </Text>
             </Pressable>
           );
           })
         ) : (
           <Text style={[styles.choiceEmptyText, { color: themeColors.mutedText }]}>
-            {emptyText ?? "No options available."}
+            {emptyText}
           </Text>
         )}
       </View>

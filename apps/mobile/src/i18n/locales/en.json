@@ -1,0 +1,254 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "currencyAmount": "EUR {{amount}}",
+    "save": "Save",
+    "submit": "Submit"
+  },
+  "dashboard": {
+    "receiptFallback": "Receipt",
+    "search": {
+      "activity": "SEARCH ACTIVITY",
+      "categories": {
+        "foodDining": "Food & Dining",
+        "housing": "Housing",
+        "payroll": "Payroll",
+        "shopping": "Shopping",
+        "travel": "Travel"
+      },
+      "categoryFilter": "CATEGORY FILTER",
+      "exploreOlder": "Explore Older Records",
+      "filters": {
+        "all": "All",
+        "food": "Food",
+        "housing": "Housing",
+        "significant": "Significant Spending",
+        "travel": "Travel"
+      },
+      "groups": {
+        "today": "Today, Oct 24",
+        "yesterday": "Yesterday, Oct 23"
+      },
+      "placeholder": "Merchant, category, or keyword...",
+      "subtitle": "Find transactions by merchant, category, or amount.",
+      "title": "Search"
+    },
+    "remainingBudget": "Remaining Budget",
+    "searchTransactions": "Search transactions",
+    "transactionList": {
+      "emptyBody": "Scan a receipt or add one manually to see it here.",
+      "emptyTitle": "No receipts yet",
+      "title": "Receipt List",
+      "viewAll": "View all"
+    }
+  },
+  "budget": {
+    "category": {
+      "add": "Add",
+      "deleteAccessibility": "Delete {{name}} category",
+      "editAccessibility": "Edit {{name}} budget",
+      "emptyBody": "Add your first category to start tracking budgets.",
+      "emptyTitle": "No categories yet",
+      "remaining": "${{amount}} remaining",
+      "spentOf": "${{spent}} of ${{limit}}",
+      "title": "Category Budgets",
+      "typeCustom": "CUSTOM"
+    },
+    "edit": {
+      "categoryNamePlaceholder": "Category name",
+      "currentAllocation": "CURRENT ALLOCATION",
+      "currentLimit": "CURRENT LIMIT",
+      "defaultCategoryName": "Groceries",
+      "defaultCategoryType": "Monthly household supply",
+      "discardEdits": "Discard Edits",
+      "limitInfo": "This limit will apply to the current billing cycle.",
+      "newMonthlyLimit": "NEW MONTHLY LIMIT",
+      "saveChanges": "Save Changes",
+      "saving": "Saving...",
+      "subtitle": "Adjust monthly limits and allocation.",
+      "title": "Edit Budget",
+      "used": "USED"
+    },
+    "newCategory": {
+      "addCategory": "Add Category",
+      "adding": "Adding...",
+      "categoryName": "CATEGORY NAME",
+      "categoryNamePlaceholder": "e.g. Travel & Leisure",
+      "monthlyLimit": "MONTHLY LIMIT",
+      "monthlyLimitPlaceholder": "$ 0.00",
+      "subtitle": "Organize your spending with custom budget limits.",
+      "title": "New Category",
+      "visualIdentifier": "VISUAL IDENTIFIER"
+    },
+    "status": {
+      "budget": "BUDGET",
+      "budgetPlaceholder": "$0",
+      "eyebrow": "TOTAL BUDGET STATUS",
+      "left": "${{amount}} left",
+      "month": "MONTH",
+      "spent": "${{amount}} spent",
+      "usedPrefix": "of your",
+      "usedSuffix": "monthly budget used"
+    },
+    "subtitle": "Track spending across every category.",
+    "title": "Budget"
+  },
+  "scan": {
+    "add": {
+      "emptyCategories": "Add categories from the Budget screen first.",
+      "emptyPaymentMethods": "No payment methods available.",
+      "fields": {
+        "category": "CATEGORY",
+        "date": "DATE",
+        "merchant": "MERCHANT",
+        "payment": "PAYMENT",
+        "time": "TIME",
+        "total": "TOTAL"
+      },
+      "items": {
+        "add": "Add item",
+        "itemNumber": "ITEM {{number}}",
+        "title": "Items"
+      },
+      "paymentMethods": {
+        "cash": "Cash",
+        "debit": "Debit",
+        "mastercard": "Mastercard",
+        "visa": "Visa"
+      },
+      "placeholders": {
+        "amount": "0.00",
+        "date": "07.05.2026",
+        "itemName": "Item name",
+        "merchant": "e.g. LIDL",
+        "time": "18:31"
+      },
+      "saveReceipt": "Save Receipt",
+      "saving": "Saving...",
+      "subtitle": "Enter the main receipt details first, then add items.",
+      "title": "Add Manually"
+    },
+    "camera": {
+      "errors": {
+        "capture": "Could not capture the receipt. {{message}}",
+        "galleryPermission": "Allow photo library access to choose a receipt.",
+        "open": "Could not open the receipt. {{message}}",
+        "tryAgain": "Try again."
+      },
+      "galleryAccessibility": "Choose receipt from gallery",
+      "instruction": "Place the receipt inside the frame",
+      "permission": {
+        "action": "Allow camera",
+        "body": "Allow camera access to scan receipts.",
+        "title": "Camera access"
+      },
+      "subtitle": "Place the receipt inside the frame.",
+      "title": "Scan Receipt"
+    },
+    "home": {
+      "actions": {
+        "manual": {
+          "subtitle": "Enter merchant, total, category, and items.",
+          "title": "Add manually"
+        },
+        "scan": {
+          "subtitle": "Use the camera or choose a receipt photo.",
+          "title": "Scan receipt"
+        }
+      },
+      "eyebrow": "NEW RECORD",
+      "subtitle": "Capture a receipt automatically or add the details yourself.",
+      "title": "Add Spending"
+    },
+    "preview": {
+      "confirm": "Confirm & Add",
+      "defaultCategory": "Food & Drinks",
+      "discard": "DISCARD SCAN",
+      "emptyTitle": "No receipt image found",
+      "fallbackFileName": "receipt.jpg",
+      "fields": {
+        "amount": "AMOUNT ($)",
+        "category": "CATEGORY",
+        "date": "DATE",
+        "merchant": "MERCHANT NAME",
+        "note": "PERSONAL NOTE (OPTIONAL)"
+      },
+      "goBack": "Go back",
+      "placeholders": {
+        "amount": "0.00",
+        "category": "Category",
+        "date": "Date",
+        "merchant": "Merchant name",
+        "note": "Coffee with the design team..."
+      },
+      "retake": "Retake Scan",
+      "saving": "Saving...",
+      "status": {
+        "analyzing": "ANALYZING SCAN",
+        "complete": "ANALYSIS COMPLETE"
+      },
+      "subtitle": "Verify the extracted receipt details before adding them.",
+      "title": "Review Scan"
+    }
+  },
+  "insight": {
+    "categoryBreakdown": {
+      "emptyBody": "Scan receipts to see where your spending goes.",
+      "emptyTitle": "No category spending yet",
+      "title": "Category Breakdown"
+    },
+    "expenseDistribution": {
+      "emptyBody": "Scan receipts to build this month's distribution.",
+      "emptyTitle": "No spending yet",
+      "subtitle": "Your spending patterns for {{period}}",
+      "title": "Expense Distribution",
+      "totalSpent": "TOTAL SPENT"
+    },
+    "monthlyOverview": "MONTHLY OVERVIEW",
+    "significantSpending": "Significant Spending",
+    "title": "Spending Insights"
+  },
+  "settings": {
+    "customerSupport": {
+      "body": "Send us a message and we will get back to you.",
+      "email": "EMAIL",
+      "message": "MESSAGE",
+      "messagePlaceholder": "How can we help?",
+      "name": "NAME",
+      "namePlaceholder": "Your name",
+      "title": "Customer Support"
+    },
+    "language": {
+      "body": "Choose your preferred app language.",
+      "english": "English",
+      "german": "Deutsch",
+      "title": "Language"
+    },
+    "menu": {
+      "customerSupport": "Customer Support",
+      "language": "Language",
+      "preferences": "Preferences",
+      "yourData": "Your Data"
+    },
+    "preferences": {
+      "appTheme": "APP THEME",
+      "displayName": "DISPLAY NAME",
+      "namePlaceholder": "Your name",
+      "profileDoodle": "PROFILE DOODLE",
+      "subtitle": "Update your profile and display settings.",
+      "theme": {
+        "dark": "Dark",
+        "light": "Light",
+        "system": "System"
+      },
+      "title": "Preferences"
+    },
+    "yourData": {
+      "archiveMeta": "EUR {{budget}} budget, {{categories}} categories, {{receipts}} receipts",
+      "emptyBody": "Set a monthly budget to see export and delete options here.",
+      "emptyTitle": "No monthly data yet",
+      "subtitle": "Export or delete monthly spending records.",
+      "title": "Your Data"
+    }
+  }
+}

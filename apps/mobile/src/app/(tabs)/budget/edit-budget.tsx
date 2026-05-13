@@ -2,6 +2,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   type GestureResponderEvent,
   PanResponder,
@@ -23,6 +24,7 @@ import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 export default function EditBudgetScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
+  const { t } = useTranslation();
   const editCategoryMutation = useEditCategoryMutation();
   const params = useLocalSearchParams<{
     id?: string;
@@ -32,8 +34,8 @@ export default function EditBudgetScreen() {
     spent?: string;
     type?: string;
   }>();
-  const name = params.name ?? "Groceries";
-  const type = params.type ?? "Monthly household supply";
+  const name = params.name ?? t("budget.edit.defaultCategoryName");
+  const type = params.type ?? t("budget.edit.defaultCategoryType");
   const icon = params.icon ?? "cart";
   const spent = Number(params.spent ?? 428.5);
   const limit = Number(params.limit ?? 600);
@@ -106,8 +108,8 @@ export default function EditBudgetScreen() {
         showsVerticalScrollIndicator={false}
       >
         <ScreenHeader
-          title="Edit Budget"
-          subtitle="Adjust monthly limits and allocation."
+          title={t("budget.edit.title")}
+          subtitle={t("budget.edit.subtitle")}
         />
 
         <View
@@ -122,12 +124,12 @@ export default function EditBudgetScreen() {
           <View style={styles.currentHeader}>
             <View style={styles.currentCopy}>
               <Text style={[styles.eyebrow, { color: themeColors.primary }]}>
-                CURRENT ALLOCATION
+                {t("budget.edit.currentAllocation")}
               </Text>
               <TextInput
                 value={categoryName}
                 onChangeText={setCategoryName}
-                placeholder="Category name"
+                placeholder={t("budget.edit.categoryNamePlaceholder")}
                 placeholderTextColor={themeColors.mutedText}
                 style={[styles.titleInput, { color: themeColors.text }]}
               />
@@ -159,7 +161,7 @@ export default function EditBudgetScreen() {
               <Text
                 style={[styles.statLabel, { color: themeColors.mutedText }]}
               >
-                USED
+                {t("budget.edit.used")}
               </Text>
               <Text style={[styles.statValue, { color: themeColors.text }]}>
                 ${spent.toFixed(2)}
@@ -174,7 +176,7 @@ export default function EditBudgetScreen() {
               <Text
                 style={[styles.statLabel, { color: themeColors.mutedText }]}
               >
-                CURRENT LIMIT
+                {t("budget.edit.currentLimit")}
               </Text>
               <Text style={[styles.statValue, { color: themeColors.text }]}>
                 ${limit.toFixed(2)}
@@ -185,7 +187,7 @@ export default function EditBudgetScreen() {
 
         <View style={styles.section}>
           <Text style={[styles.sectionLabel, { color: themeColors.mutedText }]}>
-            NEW MONTHLY LIMIT
+            {t("budget.edit.newMonthlyLimit")}
           </Text>
           <TextInput
             keyboardType="decimal-pad"
@@ -209,7 +211,7 @@ export default function EditBudgetScreen() {
               size={16}
             />
             <Text style={[styles.infoText, { color: themeColors.mutedText }]}>
-              This limit will apply to the current billing cycle.
+              {t("budget.edit.limitInfo")}
             </Text>
           </View>
         </View>
@@ -287,13 +289,15 @@ export default function EditBudgetScreen() {
             size={20}
           />
           <Text style={[styles.saveText, { color: themeColors.primaryText }]}>
-            {editCategoryMutation.isPending ? "Saving..." : "Save Changes"}
+            {editCategoryMutation.isPending
+              ? t("budget.edit.saving")
+              : t("budget.edit.saveChanges")}
           </Text>
         </Pressable>
 
         <Pressable style={styles.discardButton} onPress={() => router.back()}>
           <Text style={[styles.discardText, { color: themeColors.mutedText }]}>
-            Discard Edits
+            {t("budget.edit.discardEdits")}
           </Text>
         </Pressable>
       </KeyboardAwareScrollView>

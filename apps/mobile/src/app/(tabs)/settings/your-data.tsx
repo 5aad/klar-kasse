@@ -9,6 +9,7 @@ import {
   View,
   type ListRenderItem,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
@@ -31,12 +32,12 @@ type DataArchive = {
   year: string;
 };
 
-function formatMonthLabel(monthKey: string) {
+function formatMonthLabel(monthKey: string, locale: string) {
   const [year, month] = monthKey.split("-");
   const date = new Date(Number(year), Number(month) - 1, 1);
 
   return {
-    month: new Intl.DateTimeFormat("en", { month: "long" }).format(date),
+    month: new Intl.DateTimeFormat(locale, { month: "long" }).format(date),
     year,
   };
 }
@@ -44,11 +45,12 @@ function formatMonthLabel(monthKey: string) {
 export default function YourDataScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
+  const { i18n, t } = useTranslation();
   const monthlyBudgetsQuery = useMonthlyBudgetsQuery();
   const deleteMonthlyBudgetMutation = useDeleteMonthlyBudgetMutation();
   const archives: DataArchive[] =
     monthlyBudgetsQuery.data?.map((budget) => {
-      const label = formatMonthLabel(budget.monthKey);
+      const label = formatMonthLabel(budget.monthKey, i18n.language);
 
       return {
         id: budget.id,
@@ -85,8 +87,11 @@ export default function YourDataScreen() {
           {item.month} {item.year}
         </Text>
         <Text style={[styles.archiveMeta, { color: themeColors.mutedText }]}>
-          EUR {item.limitAmount.toLocaleString()} budget,{" "}
-          {item.categoryBudgetCount} categories, {item.receiptCount} receipts
+          {t("settings.yourData.archiveMeta", {
+            budget: item.limitAmount.toLocaleString(),
+            categories: item.categoryBudgetCount,
+            receipts: item.receiptCount,
+          })}
         </Text>
       </View>
 
@@ -139,17 +144,17 @@ export default function YourDataScreen() {
         ListEmptyComponent={
           monthlyBudgetsQuery.isLoading ? null : (
             <EmptyStateCard
-              body="Set a monthly budget to see export and delete options here."
+              body={t("settings.yourData.emptyBody")}
               icon="database-outline"
-              title="No monthly data yet"
+              title={t("settings.yourData.emptyTitle")}
             />
           )
         }
         ListHeaderComponent={
           <View style={styles.headerWrap}>
             <ScreenHeader
-              title="Your Data"
-              subtitle="Export or delete monthly spending records."
+              title={t("settings.yourData.title")}
+              subtitle={t("settings.yourData.subtitle")}
             />
           </View>
         }

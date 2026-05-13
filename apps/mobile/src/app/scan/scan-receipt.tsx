@@ -10,6 +10,7 @@ import { SaveFormat, manipulateAsync } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Pressable,
@@ -43,6 +44,7 @@ type Size = {
 
 export default function ScanReceiptScreen() {
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
   const isFocused = useIsFocused();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
@@ -91,9 +93,10 @@ export default function ScanReceiptScreen() {
     } catch (error) {
       console.error("Receipt capture failed:", error);
       setErrorMessage(
-        `Could not capture the receipt. ${
-          error instanceof Error ? error.message : "Try again."
-        }`,
+        t("scan.camera.errors.capture", {
+          message:
+            error instanceof Error ? error.message : t("scan.camera.errors.tryAgain"),
+        }),
       );
     } finally {
       setIsCapturing(false);
@@ -113,7 +116,7 @@ export default function ScanReceiptScreen() {
         await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (!permissionResult.granted) {
-        setErrorMessage("Allow photo library access to choose a receipt.");
+        setErrorMessage(t("scan.camera.errors.galleryPermission"));
         return;
       }
 
@@ -146,9 +149,10 @@ export default function ScanReceiptScreen() {
     } catch (error) {
       console.error("Gallery receipt pick failed:", error);
       setErrorMessage(
-        `Could not open the receipt. ${
-          error instanceof Error ? error.message : "Try again."
-        }`,
+        t("scan.camera.errors.open", {
+          message:
+            error instanceof Error ? error.message : t("scan.camera.errors.tryAgain"),
+        }),
       );
     } finally {
       setIsPickingImage(false);
@@ -174,10 +178,10 @@ export default function ScanReceiptScreen() {
         ]}
       >
         <Text style={[styles.title, { color: themeColors.text }]}>
-          Camera access
+          {t("scan.camera.permission.title")}
         </Text>
         <Text style={[styles.body, { color: themeColors.mutedText }]}>
-          Allow camera access to scan receipts.
+          {t("scan.camera.permission.body")}
         </Text>
         <Pressable
           style={[
@@ -192,7 +196,7 @@ export default function ScanReceiptScreen() {
               { color: themeColors.primaryText },
             ]}
           >
-            Allow camera
+            {t("scan.camera.permission.action")}
           </Text>
         </Pressable>
       </View>
@@ -206,8 +210,8 @@ export default function ScanReceiptScreen() {
     >
       <View style={styles.headerWrap}>
         <ScreenHeader
-          title="Scan Receipt"
-          subtitle="Place the receipt inside the frame."
+          title={t("scan.camera.title")}
+          subtitle={t("scan.camera.subtitle")}
           onBack={() => router.back()}
         />
       </View>
@@ -271,7 +275,7 @@ export default function ScanReceiptScreen() {
         ) : null}
         <View style={styles.instructions}>
           <Text style={styles.instructionText}>
-            Place the receipt inside the frame
+            {t("scan.camera.instruction")}
           </Text>
         </View>
       </View>
@@ -284,7 +288,7 @@ export default function ScanReceiptScreen() {
 
       <View style={styles.footer}>
         <Pressable
-          accessibilityLabel="Choose receipt from gallery"
+          accessibilityLabel={t("scan.camera.galleryAccessibility")}
           accessibilityRole="button"
           style={[
             styles.galleryButton,

@@ -2,6 +2,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { BaseModal } from "@repo/ui";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
@@ -24,6 +25,7 @@ type Props = {
 export function NewCategoryModal({ onClose, visible }: Props) {
   const themeColors = useThemeColors();
   const resolvedTheme = useResolvedTheme();
+  const { t } = useTranslation();
   const postCategoryMutation = usePostCategoryMutation();
   const [categoryName, setCategoryName] = useState("");
   const [monthlyLimit, setMonthlyLimit] = useState("");
@@ -66,20 +68,20 @@ export function NewCategoryModal({ onClose, visible }: Props) {
       onRequestClose={onClose}
     >
       <Text style={[styles.title, { color: themeColors.text }]}>
-        New Category
+        {t("budget.newCategory.title")}
       </Text>
       <Text style={[styles.subtitle, { color: themeColors.mutedText }]}>
-        Organize your spending with custom budget limits.
+        {t("budget.newCategory.subtitle")}
       </Text>
 
       <View style={styles.fieldGroup}>
         <Text style={[styles.label, { color: themeColors.text }]}>
-          CATEGORY NAME
+          {t("budget.newCategory.categoryName")}
         </Text>
         <TextInput
           value={categoryName}
           onChangeText={setCategoryName}
-          placeholder="e.g. Travel & Leisure"
+          placeholder={t("budget.newCategory.categoryNamePlaceholder")}
           placeholderTextColor={themeColors.mutedText}
           style={[
             styles.input,
@@ -94,7 +96,7 @@ export function NewCategoryModal({ onClose, visible }: Props) {
 
       <View style={styles.fieldGroup}>
         <Text style={[styles.label, { color: themeColors.text }]}>
-          VISUAL IDENTIFIER
+          {t("budget.newCategory.visualIdentifier")}
         </Text>
         <View style={styles.iconGrid}>
           {visualIdentifiers.map((icon, index) => (
@@ -126,13 +128,13 @@ export function NewCategoryModal({ onClose, visible }: Props) {
 
       <View style={styles.fieldGroup}>
         <Text style={[styles.label, { color: themeColors.text }]}>
-          MONTHLY LIMIT
+          {t("budget.newCategory.monthlyLimit")}
         </Text>
         <TextInput
           value={monthlyLimit}
           onChangeText={setMonthlyLimit}
           keyboardType="decimal-pad"
-          placeholder="$ 0.00"
+          placeholder={t("budget.newCategory.monthlyLimitPlaceholder")}
           placeholderTextColor={themeColors.mutedText}
           style={[
             styles.input,
@@ -149,7 +151,7 @@ export function NewCategoryModal({ onClose, visible }: Props) {
       <View style={styles.actions}>
         <Pressable style={styles.cancelButton} onPress={onClose}>
           <Text style={[styles.cancelText, { color: themeColors.primary }]}>
-            Cancel
+            {t("common.cancel")}
           </Text>
         </Pressable>
         <Pressable
@@ -162,7 +164,9 @@ export function NewCategoryModal({ onClose, visible }: Props) {
           onPress={addCategory}
         >
           <Text style={[styles.addText, { color: themeColors.primaryText }]}>
-            {postCategoryMutation.isPending ? "Adding..." : "Add Category"}
+            {postCategoryMutation.isPending
+              ? t("budget.newCategory.adding")
+              : t("budget.newCategory.addCategory")}
           </Text>
         </Pressable>
       </View>

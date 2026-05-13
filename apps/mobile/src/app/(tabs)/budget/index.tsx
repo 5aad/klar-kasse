@@ -2,6 +2,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Pressable,
   RefreshControl,
@@ -45,6 +46,7 @@ function isValidIcon(
 export default function BudgetScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
+  const { i18n, t } = useTranslation();
   const monthlyBudgetQuery = useMonthlyBudgetQuery();
   const saveMonthlyBudgetMutation = useSaveMonthlyBudgetMutation();
   const categoriesQuery = useCategoriesQuery();
@@ -52,7 +54,7 @@ export default function BudgetScreen() {
   const [isNewCategoryModalVisible, setIsNewCategoryModalVisible] =
     useState(false);
   const [monthlyBudget, setMonthlyBudget] = useState("");
-  const budgetMonth = new Intl.DateTimeFormat("en", {
+  const budgetMonth = new Intl.DateTimeFormat(i18n.language, {
     month: "long",
     year: "numeric",
   }).format(new Date());
@@ -71,7 +73,7 @@ export default function BudgetScreen() {
       id: category.id,
       icon: isValidIcon(category.icon) ? category.icon : "tag-outline",
       name: category.name,
-      type: "CUSTOM",
+      type: t("budget.category.typeCustom"),
       spent: category.spentAmount,
       limit: category.limitAmount,
     })) ?? [];
@@ -113,10 +115,10 @@ export default function BudgetScreen() {
       >
         <View style={styles.header}>
           <Text style={[styles.title, { color: themeColors.text }]}>
-            Budget
+            {t("budget.title")}
           </Text>
           <Text style={[styles.subtitle, { color: themeColors.mutedText }]}>
-            Track spending across every category.
+            {t("budget.subtitle")}
           </Text>
         </View>
 
@@ -130,13 +132,13 @@ export default function BudgetScreen() {
             ]}
           />
           <Text style={[styles.cardEyebrow, { color: themeColors.mutedText }]}>
-            TOTAL BUDGET STATUS
+            {t("budget.status.eyebrow")}
           </Text>
 
           <View style={styles.budgetSetup}>
             <View style={styles.budgetField}>
               <Text style={[styles.budgetLabel, { color: themeColors.text }]}>
-                MONTH
+                {t("budget.status.month")}
               </Text>
               <View
                 style={[
@@ -153,7 +155,7 @@ export default function BudgetScreen() {
             </View>
             <View style={styles.budgetField}>
               <Text style={[styles.budgetLabel, { color: themeColors.text }]}>
-                BUDGET
+                {t("budget.status.budget")}
               </Text>
               <TextInput
                 keyboardType="decimal-pad"
@@ -162,7 +164,7 @@ export default function BudgetScreen() {
                   setMonthlyBudget(value.replace(/[^\d.]/g, ""))
                 }
                 onBlur={saveTotalBudget}
-                placeholder="$0"
+                placeholder={t("budget.status.budgetPlaceholder")}
                 placeholderTextColor={themeColors.mutedText}
                 style={[
                   styles.budgetInput,
@@ -179,23 +181,27 @@ export default function BudgetScreen() {
             {totalPercent}%
           </Text>
           <Text style={[styles.statusCopy, { color: themeColors.mutedText }]}>
-            of your{" "}
+            {t("budget.status.usedPrefix")}{" "}
             <Text style={[styles.strong, { color: themeColors.text }]}>
               ${formattedBudget}
             </Text>{" "}
-            monthly budget used
+            {t("budget.status.usedSuffix")}
           </Text>
 
           <View style={styles.statusAmounts}>
             <Text
               style={[styles.primaryAmount, { color: themeColors.primary }]}
             >
-              ${totalSpent.toLocaleString()} spent
+              {t("budget.status.spent", {
+                amount: totalSpent.toLocaleString(),
+              })}
             </Text>
             <Text
               style={[styles.secondaryAmount, { color: themeColors.mutedText }]}
             >
-              ${totalLeft.toLocaleString()} left
+              {t("budget.status.left", {
+                amount: totalLeft.toLocaleString(),
+              })}
             </Text>
           </View>
           <ProgressBar
@@ -207,7 +213,7 @@ export default function BudgetScreen() {
 
         <View style={styles.categoryHeader}>
           <Text style={[styles.sectionTitle, { color: themeColors.text }]}>
-            Category Budgets
+            {t("budget.category.title")}
           </Text>
           <Pressable
             style={[styles.addButton, { backgroundColor: themeColors.primary }]}
@@ -221,7 +227,7 @@ export default function BudgetScreen() {
             <Text
               style={[styles.addButtonText, { color: themeColors.primaryText }]}
             >
-              Add
+              {t("budget.category.add")}
             </Text>
           </Pressable>
         </View>
@@ -237,9 +243,9 @@ export default function BudgetScreen() {
             ))
           ) : (
             <EmptyStateCard
-              body="Add your first category to start tracking budgets."
+              body={t("budget.category.emptyBody")}
               icon="tag-outline"
-              title="No categories yet"
+              title={t("budget.category.emptyTitle")}
             />
           )}
         </View>
@@ -281,6 +287,7 @@ function CategoryBudgetCard({
   onDelete?: (id: string) => void;
 }) {
   const themeColors = useThemeColors();
+  const { t } = useTranslation();
   const remaining = budget.limit - budget.spent;
   const progress = budget.limit > 0 ? budget.spent / budget.limit : 0;
   const isAlert = Boolean(budget.alert);
@@ -323,7 +330,9 @@ function CategoryBudgetCard({
         </View>
         <View style={styles.categoryActions}>
           <Pressable
-            accessibilityLabel={`Edit ${budget.name} budget`}
+            accessibilityLabel={t("budget.category.editAccessibility", {
+              name: budget.name,
+            })}
             accessibilityRole="button"
             style={[
               styles.categoryIconAction,
@@ -350,7 +359,9 @@ function CategoryBudgetCard({
             />
           </Pressable>
           <Pressable
-            accessibilityLabel={`Delete ${budget.name} category`}
+            accessibilityLabel={t("budget.category.deleteAccessibility", {
+              name: budget.name,
+            })}
             accessibilityRole="button"
             style={[
               styles.categoryIconAction,
@@ -369,7 +380,10 @@ function CategoryBudgetCard({
 
       <View style={styles.categoryAmounts}>
         <Text style={[styles.categorySpent, { color: themeColors.text }]}>
-          ${budget.spent.toLocaleString()} of ${budget.limit.toLocaleString()}
+          {t("budget.category.spentOf", {
+            limit: budget.limit.toLocaleString(),
+            spent: budget.spent.toLocaleString(),
+          })}
         </Text>
         <Text
           style={[
@@ -377,7 +391,9 @@ function CategoryBudgetCard({
             { color: isAlert ? themeColors.primary : themeColors.text },
           ]}
         >
-          ${remaining.toLocaleString()} remaining
+          {t("budget.category.remaining", {
+            amount: remaining.toLocaleString(),
+          })}
         </Text>
       </View>
       <ProgressBar
