@@ -5,6 +5,13 @@
     "save": "Speichern",
     "submit": "Senden"
   },
+  "tabs": {
+    "budget": "Budget",
+    "dashboard": "Dashboard",
+    "insight": "Einblick",
+    "scan": "Scan",
+    "settings": "Einstellungen"
+  },
   "dashboard": {
     "receiptFallback": "Beleg",
     "search": {
@@ -232,6 +239,12 @@
     },
     "preferences": {
       "appTheme": "APP-DESIGN",
+      "currency": "WAEHRUNG",
+      "currencyOptions": {
+        "eur": "Euro (EUR)",
+        "gbp": "Britisches Pfund (GBP)",
+        "usd": "US-Dollar (USD)"
+      },
       "displayName": "ANZEIGENAME",
       "namePlaceholder": "Dein Name",
       "profileDoodle": "PROFIL-DOODLE",
@@ -241,7 +254,11 @@
         "light": "Hell",
         "system": "System"
       },
-      "title": "Einstellungen"
+      "title": "Einstellungen",
+      "vat": "MWST.",
+      "vatRate": "MwSt.-Prozentsatz",
+      "vatRateDescription": "Wird zur Steuerberechnung fuer Belegsummen verwendet.",
+      "vatRatePlaceholder": "19"
     },
     "yourData": {
       "archiveMeta": "EUR {{budget}} Budget, {{categories}} Kategorien, {{receipts}} Belege",
