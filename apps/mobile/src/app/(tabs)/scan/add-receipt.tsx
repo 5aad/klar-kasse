@@ -15,9 +15,11 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useCategoriesQuery } from "@/queries/categories";
 import { usePostReceiptMutation } from "@/queries/receipts";
+import { formatDateInput, formatDateTextInput } from "@/utils/date-input";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 
@@ -50,13 +52,12 @@ function parseAmount(value: string) {
 export default function AddReceiptScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
-  const { i18n, t } = useTranslation();
+  const { t } = useTranslation();
+  const { currency } = useCurrencyFormatter();
   const categoriesQuery = useCategoriesQuery();
   const postReceiptMutation = usePostReceiptMutation();
   const [store, setStore] = useState("");
-  const [date, setDate] = useState(() =>
-    new Date().toLocaleDateString(i18n.language),
-  );
+  const [date, setDate] = useState(() => formatDateInput(new Date()));
   const [total, setTotal] = useState("");
   const [note, setNote] = useState("");
   const [paymentMethod, setPaymentMethod] =
@@ -161,24 +162,25 @@ export default function AddReceiptScreen() {
           <View style={styles.twoColumnRow}>
             <ManualField
               compact
+              keyboardType="number-pad"
               label={t("scan.add.fields.date")}
               placeholder={t("scan.add.placeholders.date")}
               value={date}
-              onChangeText={setDate}
+              onChangeText={(value) => setDate(formatDateTextInput(value))}
             />
             <ManualField
               compact
-              label={t("scan.add.fields.total")}
+              label={t("scan.preview.fields.amount", { currency })}
               keyboardType="decimal-pad"
-              placeholder={t("scan.add.placeholders.amount")}
+              placeholder={t("scan.preview.placeholders.amount")}
               value={displayedTotal}
               onChangeText={setTotal}
             />
           </View>
           <ManualField
-            label={t("scan.add.fields.note")}
+            label={t("scan.preview.fields.note")}
             multiline
-            placeholder={t("scan.add.placeholders.note")}
+            placeholder={t("scan.preview.placeholders.note")}
             value={note}
             onChangeText={setNote}
           />
@@ -201,7 +203,7 @@ export default function AddReceiptScreen() {
           getOptionLabel={(option) => t(paymentMethodLabels[option])}
         />
 
-        <View style={styles.sectionHeader}>
+        {/* <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: themeColors.text }]}>
             {t("scan.add.items.title")}
           </Text>
@@ -265,7 +267,7 @@ export default function AddReceiptScreen() {
               </View>
             </View>
           ))}
-        </View>
+        </View> */}
 
         <Pressable
           style={[styles.saveButton, { backgroundColor: themeColors.primary }]}
@@ -298,7 +300,7 @@ function ManualField({
   value,
 }: {
   compact?: boolean;
-  keyboardType?: "default" | "decimal-pad";
+  keyboardType?: "default" | "decimal-pad" | "number-pad";
   label: string;
   multiline?: boolean;
   onChangeText: (value: string) => void;

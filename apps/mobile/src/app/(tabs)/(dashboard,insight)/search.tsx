@@ -23,6 +23,7 @@ import {
   TransactionList,
   type TransactionListItem,
 } from "@/components/shared/transaction-list";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useCategoriesQuery } from "@/queries/categories";
 import { useReceiptsQuery } from "@/queries/receipts";
@@ -114,6 +115,7 @@ export default function SearchScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
   const { i18n, t } = useTranslation();
+  const { formatCurrency } = useCurrencyFormatter();
   const params = useLocalSearchParams<{
     category?: string;
     page?: string;
@@ -160,14 +162,11 @@ export default function SearchScreen() {
   const filteredReceipts = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
-    return (receiptsQuery.data ?? []).filter((receipt) => {
+    const matchingReceipts = (receiptsQuery.data ?? []).filter((receipt) => {
       const receiptDate =
         parseReceiptDate(receipt.dateText) ?? parseReceiptDate(receipt.createdAt);
 
       if (receiptDate && !isSameMonth(receiptDate, selectedMonth)) return false;
-      if (activeFilter === "significant" && Math.abs(receipt.total) < 100) {
-        return false;
-      }
       if (
         activeFilter !== "all" &&
         activeFilter !== "significant" &&
@@ -192,6 +191,10 @@ export default function SearchScreen() {
 
       return searchableText.includes(normalizedQuery);
     });
+
+    if (activeFilter !== "significant") return matchingReceipts;
+
+    return [...matchingReceipts].sort((left, right) => right.total - left.total);
   }, [
     activeCategoryId,
     activeCategoryName,
@@ -222,15 +225,13 @@ export default function SearchScreen() {
         title: receipt.store,
         category: receipt.categoryName ?? t("dashboard.receiptFallback"),
         date: receipt.dateText ?? receipt.createdAt,
-        amount: `- ${t("common.currencyAmount", {
-          amount: receipt.total.toFixed(2),
-        })}`,
+        amount: `- ${formatCurrency(receipt.total)}`,
       });
       sections.set(dateKey, section);
     }
 
     return [...sections.values()];
-  }, [dateFormatter, paginatedReceipts, t]);
+  }, [dateFormatter, formatCurrency, paginatedReceipts, t]);
 
   const setSearchParam = (q: string) => {
     router.setParams({ page: "1", q });

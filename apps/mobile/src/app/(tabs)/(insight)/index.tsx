@@ -18,6 +18,7 @@ import {
   MonthSelector,
 } from "@/components/shared/month-selector";
 import { TransactionList } from "@/components/shared/transaction-list";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useCategoriesQuery } from "@/queries/categories";
 import { useReceiptsQuery } from "@/queries/receipts";
@@ -36,28 +37,44 @@ type CategoryBreakdownItem = {
   value: number;
 };
 
-function formatReceiptItemAmount(amount: number, currencyAmount: string) {
-  return `- ${currencyAmount}`;
+const categoryIcons = {
+  "Food & Drinks": "silverware-fork-knife",
+  Groceries: "cart",
+  Housing: "home",
+  Shopping: "shopping",
+  Travel: "airplane",
+} as const;
+
+function getReceiptIcon(category?: string | null) {
+  return (
+    categoryIcons[category as keyof typeof categoryIcons] ??
+    "receipt-text-outline"
+  );
 }
 
-function formatCategoryAmount(currencyAmount: string) {
-  return currencyAmount;
-}
+function isReceiptInMonth(
+  dateText: string | null,
+  selectedMonth: Date,
+  fallbackDateText?: string | null,
+) {
+  const parsedDate =
+    (dateText ? parseReceiptDate(dateText) : null) ??
+    (fallbackDateText ? parseReceiptDate(fallbackDateText) : null);
 
-function isReceiptInMonth(dateText: string | null, selectedMonth: Date) {
-  if (!dateText) return true;
-
-  const parsedDate = parseReceiptDate(dateText);
-
-  if (!parsedDate) return true;
+  if (!parsedDate) return false;
 
   return isSameMonth(parsedDate, selectedMonth);
 }
 
 function parseReceiptDate(dateText: string) {
-  const match = dateText.match(/^(\d{2})\.(\d{2})\.(\d{2}|\d{4})$/);
+  const normalizedDate = dateText.trim();
+  const match = normalizedDate.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2}|\d{4})$/);
 
-  if (!match) return null;
+  if (!match) {
+    const date = new Date(normalizedDate);
+
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
 
   const year =
     match[3].length === 2 ? Number(`20${match[3]}`) : Number(match[3]);
@@ -69,6 +86,7 @@ export default function InsightScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
   const { i18n, t } = useTranslation();
+  const { formatCurrency } = useCurrencyFormatter();
   const categoriesQuery = useCategoriesQuery();
   const receiptsQuery = useReceiptsQuery();
   const [selectedMonth, setSelectedMonth] = useState(getInitialMonth);
@@ -83,23 +101,22 @@ export default function InsightScreen() {
   const significantSpending = useMemo(
     () =>
       receiptsQuery.data
-        ?.flatMap((receipt) =>
-          receipt.items.map((item) => ({
-            id: item.id,
-            icon: "receipt-text-outline" as const,
-            title: item.name,
-            category: receipt.categoryName ?? receipt.store,
-            date: receipt.dateText ?? receipt.createdAt,
-            amount: formatReceiptItemAmount(
-              item.price,
-              t("common.currencyAmount", { amount: item.price.toFixed(2) }),
-            ),
-            value: item.price,
-          })),
+        ?.filter((receipt) =>
+          isReceiptInMonth(receipt.dateText, selectedMonth, receipt.createdAt),
         )
-        .sort((left, right) => right.value - left.value)
+        .slice()
+        .sort((left, right) => right.total - left.total)
+        .map((receipt) => ({
+          id: receipt.id,
+          icon: getReceiptIcon(receipt.categoryName),
+          title: receipt.store,
+          category: receipt.categoryName ?? t("dashboard.receiptFallback"),
+          date: receipt.dateText ?? receipt.createdAt,
+          amount: `- ${formatCurrency(receipt.total)}`,
+          value: receipt.total,
+        }))
         .slice(0, 5) ?? [],
-    [receiptsQuery.data, t],
+    [formatCurrency, receiptsQuery.data, selectedMonth, t],
   );
   const categorySpending = useMemo<CategorySpendingItem[]>(() => {
     const totals = new Map<string, number>();
@@ -109,7 +126,9 @@ export default function InsightScreen() {
     }
 
     for (const receipt of receiptsQuery.data ?? []) {
-      if (!isReceiptInMonth(receipt.dateText, selectedMonth)) continue;
+      if (!isReceiptInMonth(receipt.dateText, selectedMonth, receipt.createdAt)) {
+        continue;
+      }
 
       const categoryName = receipt.categoryName ?? "Receipt";
 
@@ -133,11 +152,7 @@ export default function InsightScreen() {
 
         return {
           name: category.name,
-          amount: formatCategoryAmount(
-            t("common.currencyAmount", {
-              amount: category.value.toFixed(2),
-            }),
-          ),
+          amount: formatCurrency(category.value),
           percent: `${Math.round(progress * 100)}%`,
           progress,
           value: category.value,
@@ -145,7 +160,7 @@ export default function InsightScreen() {
       })
       .sort((left, right) => right.progress - left.progress)
       .slice(0, 5);
-  }, [categorySpending, t]);
+  }, [categorySpending, formatCurrency]);
   const refreshInsights = () => {
     categoriesQuery.refetch();
     receiptsQuery.refetch();

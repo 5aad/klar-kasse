@@ -1,31 +1,34 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { colors, fontSize, radius, spacing } from "@repo/theme";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  ActivityIndicator,
+  Alert,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
-  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { AvatarCarousel } from "@/components/settings/avatar-carousel";
 import { ScreenHeader } from "@/components/shared/screen-header";
 import { useThemeColors } from "@/hooks/use-theme-colors";
+import {
+  useSaveUserPreferencesMutation,
+  useUserPreferencesQuery,
+} from "@/queries/users";
 import { useThemeStore, type ThemePreference } from "@/stores/theme-store";
+import {
+  avatarImageUrls,
+  discoverAvatarImageUrls,
+  downloadAvatarImage,
+  isAvatarImageDownloaded,
+} from "@/utils/avatar-images";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
-
-const doodles = [
-  "face-man-profile",
-  "face-woman-profile",
-  "emoticon-cool-outline",
-  "emoticon-happy-outline",
-  "robot-happy-outline",
-  "account-star-outline",
-] as const;
+import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 
 const themeOptions = [
   {
@@ -45,46 +48,131 @@ const themeOptions = [
   },
 ] as const;
 
-const currencyOptions = [
-  {
-    key: "EUR",
-    labelKey: "settings.preferences.currencyOptions.eur",
-    icon: "currency-eur",
-  },
-  {
-    key: "USD",
-    labelKey: "settings.preferences.currencyOptions.usd",
-    icon: "currency-usd",
-  },
-  {
-    key: "GBP",
-    labelKey: "settings.preferences.currencyOptions.gbp",
-    icon: "currency-gbp",
-  },
-] as const;
-
 export default function PreferencesScreen() {
-  const { width } = useWindowDimensions();
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
-  const [name, setName] = useState("Tom Hillson");
-  const [selectedDoodle, setSelectedDoodle] = useState(0);
-  const [selectedCurrency, setSelectedCurrency] = useState("EUR");
-  const [vatRate, setVatRate] = useState("19");
+  const [name, setName] = useState("set your name");
+  const [currency, setCurrency] = useState("EUR");
+  const [profileImageUri, setProfileImageUri] = useState<string | null>(null);
+  const [downloadingAvatarUrl, setDownloadingAvatarUrl] = useState<
+    string | null
+  >(null);
+  const [downloadedAvatarUrls, setDownloadedAvatarUrls] = useState<string[]>(
+    [],
+  );
+  const [availableAvatarUrls, setAvailableAvatarUrls] =
+    useState(avatarImageUrls);
+  const [isRefreshingAvatars, setIsRefreshingAvatars] = useState(false);
+  const [avatarPreviewRefreshKey, setAvatarPreviewRefreshKey] = useState(0);
   const selectedTheme = useThemeStore((state) => state.themePreference);
   const setSelectedTheme = useThemeStore((state) => state.setThemePreference);
-  const doodleTileSize = (width - spacing.lg * 2 - spacing.md * 2) / 3;
-  const updateVatRate = (value: string) => {
-    setVatRate(value.replace(",", ".").replace(/[^\d.]/g, ""));
-  };
+  const userPreferencesQuery = useUserPreferencesQuery();
+  const saveUserPreferencesMutation = useSaveUserPreferencesMutation();
+
+  useEffect(() => {
+    if (!userPreferencesQuery.data) return;
+
+    setName(userPreferencesQuery.data.name);
+    setCurrency(userPreferencesQuery.data.currency);
+    setProfileImageUri(userPreferencesQuery.data.profileImageUri);
+    setSelectedTheme(userPreferencesQuery.data.appTheme as ThemePreference);
+  }, [setSelectedTheme, userPreferencesQuery.data]);
+
+  async function loadDownloadedAvatarUrls(avatarUrls = availableAvatarUrls) {
+    const downloadedUrls = (
+      await Promise.all(
+        avatarUrls.map(async (url) =>
+          (await isAvatarImageDownloaded(url)) ? url : null,
+        ),
+      )
+    ).filter((url): url is string => Boolean(url));
+
+    setDownloadedAvatarUrls(downloadedUrls);
+  }
+
+  async function refreshAvatarList() {
+    setIsRefreshingAvatars(true);
+
+    try {
+      await userPreferencesQuery.refetch();
+      const nextAvatarUrls = await discoverAvatarImageUrls(availableAvatarUrls);
+
+      setAvailableAvatarUrls(nextAvatarUrls);
+      await loadDownloadedAvatarUrls(nextAvatarUrls);
+      setAvatarPreviewRefreshKey((currentKey) => currentKey + 1);
+    } finally {
+      setIsRefreshingAvatars(false);
+    }
+  }
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadAvatars() {
+      const nextAvatarUrls = await discoverAvatarImageUrls(avatarImageUrls);
+      const nextDownloadedUrls = (
+        await Promise.all(
+          nextAvatarUrls.map(async (url) =>
+            (await isAvatarImageDownloaded(url)) ? url : null,
+          ),
+        )
+      ).filter((url): url is string => Boolean(url));
+
+      if (isMounted) {
+        setAvailableAvatarUrls(nextAvatarUrls);
+        setDownloadedAvatarUrls(nextDownloadedUrls);
+      }
+    }
+
+    loadAvatars();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  function saveName() {
+    saveUserPreferencesMutation.mutate({ name });
+  }
+
+  function saveCurrency() {
+    saveUserPreferencesMutation.mutate({ currency });
+  }
+
+  function selectTheme(theme: ThemePreference) {
+    setSelectedTheme(theme);
+    saveUserPreferencesMutation.mutate({ appTheme: theme });
+  }
+
+  async function selectAvatar(url: string) {
+    setDownloadingAvatarUrl(url);
+
+    try {
+      const localUri = await downloadAvatarImage(url);
+
+      setProfileImageUri(localUri);
+      setDownloadedAvatarUrls((currentUrls) =>
+        currentUrls.includes(url) ? currentUrls : [...currentUrls, url],
+      );
+      saveUserPreferencesMutation.mutate({ profileImageUri: localUri });
+    } catch (error) {
+      console.warn("Avatar download failed:", error);
+      Alert.alert(
+        t("settings.preferences.avatarDownloadErrorTitle"),
+        t("settings.preferences.avatarDownloadErrorBody"),
+      );
+    } finally {
+      setDownloadingAvatarUrl(null);
+    }
+  }
 
   return (
     <SafeAreaView
       style={[styles.screen, { backgroundColor: themeColors.background }]}
       edges={["top"]}
     >
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.content,
           { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
@@ -103,6 +191,7 @@ export default function PreferencesScreen() {
           <TextInput
             value={name}
             onChangeText={setName}
+            onBlur={saveName}
             placeholder={t("settings.preferences.namePlaceholder")}
             placeholderTextColor={themeColors.mutedText}
             style={[
@@ -117,38 +206,39 @@ export default function PreferencesScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.label, { color: themeColors.text }]}>
-            {t("settings.preferences.profileDoodle")}
-          </Text>
-          <View style={styles.doodleGrid}>
-            {doodles.map((doodle, index) => (
-              <Pressable
-                key={doodle}
-                style={[
-                  styles.doodleTile,
-                  {
-                    width: doodleTileSize,
-                    height: doodleTileSize,
-                    borderRadius: doodleTileSize / 2,
-                    backgroundColor: themeColors.surface,
-                    borderColor: themeColors.text,
-                  },
-                  selectedDoodle === index && styles.selectedTile,
-                ]}
-                onPress={() => setSelectedDoodle(index)}
-              >
+          <View style={styles.sectionLabelRow}>
+            <Text style={[styles.label, { color: themeColors.text }]}>
+              {t("settings.preferences.profileImage")}
+            </Text>
+            <Pressable
+              accessibilityLabel={t("settings.preferences.refreshAvatars")}
+              accessibilityRole="button"
+              style={[
+                styles.refreshButton,
+                { backgroundColor: themeColors.surface },
+              ]}
+              disabled={isRefreshingAvatars}
+              onPress={refreshAvatarList}
+            >
+              {isRefreshingAvatars ? (
+                <ActivityIndicator color={themeColors.text} size="small" />
+              ) : (
                 <MaterialCommunityIcons
-                  color={
-                    selectedDoodle === index
-                      ? colors.primaryText
-                      : themeColors.text
-                  }
-                  name={doodle}
-                  size={54}
+                  color={themeColors.text}
+                  name="refresh"
+                  size={18}
                 />
-              </Pressable>
-            ))}
+              )}
+            </Pressable>
           </View>
+          <AvatarCarousel
+            avatarUrls={availableAvatarUrls}
+            downloadedAvatarUrls={downloadedAvatarUrls}
+            downloadingAvatarUrl={downloadingAvatarUrl}
+            previewRefreshKey={avatarPreviewRefreshKey}
+            profileImageUri={profileImageUri}
+            onSelectAvatar={selectAvatar}
+          />
         </View>
 
         <View style={styles.section}>
@@ -170,9 +260,7 @@ export default function PreferencesScreen() {
                     },
                     isSelected && styles.themeOptionSelected,
                   ]}
-                  onPress={() =>
-                    setSelectedTheme(option.key as ThemePreference)
-                  }
+                  onPress={() => selectTheme(option.key as ThemePreference)}
                 >
                   <MaterialCommunityIcons
                     color={isSelected ? colors.primary : themeColors.text}
@@ -203,97 +291,52 @@ export default function PreferencesScreen() {
           <Text style={[styles.label, { color: themeColors.text }]}>
             {t("settings.preferences.currency")}
           </Text>
-          <View style={styles.themeList}>
-            {currencyOptions.map((option) => {
-              const isSelected = selectedCurrency === option.key;
-
-              return (
-                <Pressable
-                  key={option.key}
-                  style={[
-                    styles.themeOption,
-                    {
-                      backgroundColor: themeColors.surface,
-                      borderColor: themeColors.text,
-                    },
-                    isSelected && styles.themeOptionSelected,
-                  ]}
-                  onPress={() => setSelectedCurrency(option.key)}
-                >
-                  <MaterialCommunityIcons
-                    color={isSelected ? colors.primary : themeColors.text}
-                    name={option.icon}
-                    size={25}
-                  />
-                  <Text
-                    style={[
-                      styles.themeText,
-                      { color: themeColors.text },
-                      isSelected && styles.themeTextSelected,
-                    ]}
-                  >
-                    {t(option.labelKey)}
-                  </Text>
-                  <MaterialCommunityIcons
-                    color={isSelected ? colors.primary : themeColors.mutedText}
-                    name={isSelected ? "radiobox-marked" : "radiobox-blank"}
-                    size={24}
-                  />
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.label, { color: themeColors.text }]}>
-            {t("settings.preferences.vat")}
-          </Text>
           <View
             style={[
-              styles.vatRateField,
+              styles.preferenceField,
               {
                 backgroundColor: themeColors.surface,
                 borderColor: themeColors.text,
               },
             ]}
           >
-            <View style={styles.vatRateCopy}>
-              <Text style={[styles.vatRateLabel, { color: themeColors.text }]}>
-                {t("settings.preferences.vatRate")}
+            <View style={styles.preferenceCopy}>
+              <Text
+                style={[styles.preferenceTitle, { color: themeColors.text }]}
+              >
+                {t("settings.preferences.currencyCode")}
               </Text>
               <Text
                 style={[
-                  styles.vatRateDescription,
+                  styles.preferenceDescription,
                   { color: themeColors.mutedText },
                 ]}
               >
-                {t("settings.preferences.vatRateDescription")}
+                {t("settings.preferences.currencyDescription")}
               </Text>
             </View>
-            <View
+            <TextInput
+              autoCapitalize="characters"
+              maxLength={6}
+              value={currency}
+              onChangeText={(value) =>
+                setCurrency(value.replace(/\s+/g, " ").toUpperCase())
+              }
+              onBlur={saveCurrency}
+              placeholder={t("settings.preferences.currencyPlaceholder")}
+              placeholderTextColor={themeColors.mutedText}
               style={[
-                styles.vatRateInputWrap,
-                { borderColor: themeColors.mutedText },
+                styles.preferenceInput,
+                {
+                  borderColor: themeColors.mutedText,
+                  color: themeColors.text,
+                },
               ]}
-            >
-              <TextInput
-                keyboardType="decimal-pad"
-                value={vatRate}
-                onChangeText={updateVatRate}
-                placeholder={t("settings.preferences.vatRatePlaceholder")}
-                placeholderTextColor={themeColors.mutedText}
-                style={[styles.vatRateInput, { color: themeColors.text }]}
-              />
-              <Text
-                style={[styles.vatRateSuffix, { color: themeColors.mutedText }]}
-              >
-                %
-              </Text>
-            </View>
+            />
           </View>
         </View>
-      </ScrollView>
+
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
@@ -309,6 +352,12 @@ const styles = StyleSheet.create({
     paddingBottom: 36,
   },
   section: {
+    gap: spacing.md,
+  },
+  sectionLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: spacing.md,
   },
   label: {
@@ -328,22 +377,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     backgroundColor: colors.surface,
   },
-  doodleGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.md,
-    justifyContent: "center",
-  },
-  doodleTile: {
+  refreshButton: {
+    width: 36,
+    height: 36,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.text,
-    backgroundColor: colors.surface,
-  },
-  selectedTile: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary,
+    borderRadius: radius.sm,
   },
   themeList: {
     gap: spacing.md,
@@ -371,7 +410,7 @@ const styles = StyleSheet.create({
   themeTextSelected: {
     color: colors.primary,
   },
-  vatRateField: {
+  preferenceField: {
     minHeight: 76,
     flexDirection: "row",
     alignItems: "center",
@@ -381,38 +420,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
-  vatRateCopy: {
+  preferenceCopy: {
     flex: 1,
     gap: spacing.xs,
   },
-  vatRateLabel: {
+  preferenceTitle: {
     fontSize: fontSize.md,
     fontWeight: "800",
   },
-  vatRateDescription: {
+  preferenceDescription: {
     fontSize: fontSize.sm,
     fontWeight: "500",
     lineHeight: 18,
   },
-  vatRateInputWrap: {
+  preferenceInput: {
     minWidth: 88,
     minHeight: 44,
-    flexDirection: "row",
-    alignItems: "center",
     borderWidth: 1,
     borderRadius: radius.sm,
     paddingHorizontal: spacing.sm,
-  },
-  vatRateInput: {
-    minWidth: 42,
-    padding: 0,
     fontSize: fontSize.lg,
     fontWeight: "800",
-    textAlign: "right",
-  },
-  vatRateSuffix: {
-    marginLeft: 2,
-    fontSize: fontSize.md,
-    fontWeight: "800",
+    textAlign: "center",
   },
 });

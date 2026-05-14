@@ -1,7 +1,7 @@
 {
   "common": {
     "cancel": "Abbrechen",
-    "currencyAmount": "EUR {{amount}}",
+    "currencyAmount": "{{currency}} {{amount}}",
     "save": "Speichern",
     "submit": "Senden"
   },
@@ -57,8 +57,8 @@
       "editAccessibility": "Budget {{name}} bearbeiten",
       "emptyBody": "Fuege deine erste Kategorie hinzu, um Budgets zu verfolgen.",
       "emptyTitle": "Noch keine Kategorien",
-      "remaining": "${{amount}} verbleibend",
-      "spentOf": "${{spent}} von ${{limit}}",
+      "remaining": "{{amount}} verbleibend",
+      "spentOf": "{{spent}} von {{limit}}",
       "title": "Kategorie-Budgets",
       "typeCustom": "BENUTZERDEFINIERT"
     },
@@ -83,18 +83,18 @@
       "categoryName": "KATEGORIENAME",
       "categoryNamePlaceholder": "z. B. Reisen & Freizeit",
       "monthlyLimit": "MONATSLIMIT",
-      "monthlyLimitPlaceholder": "$ 0.00",
+      "monthlyLimitPlaceholder": "{{currency}} 0.00",
       "subtitle": "Organisiere deine Ausgaben mit eigenen Budgetlimits.",
       "title": "Neue Kategorie",
       "visualIdentifier": "VISUELLES MERKMAL"
     },
     "status": {
       "budget": "BUDGET",
-      "budgetPlaceholder": "$0",
+      "budgetPlaceholder": "{{currency}} 0",
       "eyebrow": "GESAMTSTATUS DES BUDGETS",
-      "left": "${{amount}} uebrig",
+      "left": "{{amount}} uebrig",
       "month": "MONAT",
-      "spent": "${{amount}} ausgegeben",
+      "spent": "{{amount}} ausgegeben",
       "usedPrefix": "von deinem",
       "usedSuffix": "Monatsbudget genutzt"
     },
@@ -126,7 +126,7 @@
       },
       "placeholders": {
         "amount": "0.00",
-        "date": "07.05.2026",
+        "date": "DD.MM.YYYY",
         "itemName": "Artikelname",
         "merchant": "z. B. LIDL",
         "note": "Optionale Notiz"
@@ -172,20 +172,22 @@
       "confirm": "Bestaetigen & hinzufuegen",
       "defaultCategory": "Essen & Trinken",
       "discard": "SCAN VERWERFEN",
+      "emptyCategories": "Fuege zuerst Kategorien im Budget-Bildschirm hinzu.",
       "emptyTitle": "Kein Belegbild gefunden",
       "fallbackFileName": "beleg.jpg",
       "fields": {
-        "amount": "BETRAG ($)",
+        "amount": "BETRAG ({{currency}})",
         "category": "KATEGORIE",
         "date": "DATUM",
         "merchant": "HAENDLERNAME",
-        "note": "PERSOENLICHE NOTIZ (OPTIONAL)"
+        "note": "PERSOENLICHE NOTIZ (OPTIONAL)",
+        "payment": "ZAHLUNG"
       },
       "goBack": "Zurueck",
       "placeholders": {
         "amount": "0.00",
         "category": "Kategorie",
-        "date": "Datum",
+        "date": "DD.MM.YYYY",
         "merchant": "Haendlername",
         "note": "Kaffee mit dem Designteam..."
       },
@@ -240,29 +242,27 @@
     },
     "preferences": {
       "appTheme": "APP-DESIGN",
+      "avatarDownloadErrorBody": "Pruefe deine Internetverbindung und versuche es erneut.",
+      "avatarDownloadErrorTitle": "Avatar konnte nicht heruntergeladen werden",
       "currency": "WAEHRUNG",
-      "currencyOptions": {
-        "eur": "Euro (EUR)",
-        "gbp": "Britisches Pfund (GBP)",
-        "usd": "US-Dollar (USD)"
-      },
+      "currencyCode": "Waehrungscode",
+      "currencyDescription": "Wird zur Anzeige von Betraegen in der App verwendet.",
+      "currencyPlaceholder": "EUR",
       "displayName": "ANZEIGENAME",
       "namePlaceholder": "Dein Name",
       "profileDoodle": "PROFIL-DOODLE",
+      "profileImage": "PROFILBILD",
+      "refreshAvatars": "Avatar-Liste aktualisieren",
       "subtitle": "Aktualisiere dein Profil und deine Anzeigeeinstellungen.",
       "theme": {
         "dark": "Dunkel",
         "light": "Hell",
         "system": "System"
       },
-      "title": "Einstellungen",
-      "vat": "MWST.",
-      "vatRate": "MwSt.-Prozentsatz",
-      "vatRateDescription": "Wird zur Steuerberechnung fuer Belegsummen verwendet.",
-      "vatRatePlaceholder": "19"
+      "title": "Einstellungen"
     },
     "yourData": {
-      "archiveMeta": "EUR {{budget}} Budget, {{categories}} Kategorien, {{receipts}} Belege",
+      "archiveMeta": "{{currency}} {{budget}} Budget, {{categories}} Kategorien, {{receipts}} Belege",
       "emptyBody": "Lege ein Monatsbudget fest, um Export- und Loeschoptionen hier zu sehen.",
       "emptyTitle": "Noch keine Monatsdaten",
       "subtitle": "Exportiere oder loesche monatliche Ausgabenaufzeichnungen.",

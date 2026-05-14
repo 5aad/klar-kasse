@@ -16,6 +16,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useEditCategoryMutation } from "@/queries/categories";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
@@ -25,6 +26,7 @@ export default function EditBudgetScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
+  const { currency, formatCurrency } = useCurrencyFormatter();
   const editCategoryMutation = useEditCategoryMutation();
   const params = useLocalSearchParams<{
     id?: string;
@@ -164,7 +166,7 @@ export default function EditBudgetScreen() {
                 {t("budget.edit.used")}
               </Text>
               <Text style={[styles.statValue, { color: themeColors.text }]}>
-                ${spent.toFixed(2)}
+                {formatCurrency(spent)}
               </Text>
             </View>
             <View
@@ -179,7 +181,7 @@ export default function EditBudgetScreen() {
                 {t("budget.edit.currentLimit")}
               </Text>
               <Text style={[styles.statValue, { color: themeColors.text }]}>
-                ${limit.toFixed(2)}
+                {formatCurrency(limit)}
               </Text>
             </View>
           </View>
@@ -199,7 +201,7 @@ export default function EditBudgetScreen() {
                 color: themeColors.text,
               },
             ]}
-            value={`$${limitValue}`}
+            value={`${currency} ${limitValue}`}
             onChangeText={(value) =>
               setLimitValue(value.replace(/[^\d.]/g, ""))
             }
@@ -264,12 +266,12 @@ export default function EditBudgetScreen() {
             <Text
               style={[styles.sliderLabel, { color: themeColors.mutedText }]}
             >
-              $100
+              100
             </Text>
             <Text
               style={[styles.sliderLabel, { color: themeColors.mutedText }]}
             >
-              $1,200
+              1,200
             </Text>
           </View>
         </View> */}

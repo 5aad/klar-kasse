@@ -16,6 +16,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
 import { NewCategoryModal } from "@/components/budget/new-category-modal";
 import { EmptyStateCard } from "@/components/shared/empty-state-card";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import {
   useCategoriesQuery,
@@ -47,6 +48,7 @@ export default function BudgetScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
   const { i18n, t } = useTranslation();
+  const { currency, formatCurrency } = useCurrencyFormatter();
   const monthlyBudgetQuery = useMonthlyBudgetQuery();
   const saveMonthlyBudgetMutation = useSaveMonthlyBudgetMutation();
   const categoriesQuery = useCategoriesQuery();
@@ -67,7 +69,6 @@ export default function BudgetScreen() {
   const totalProgress =
     totalBudget > 0 ? Math.min(totalSpent / totalBudget, 1) : 0;
   const totalPercent = Math.round(totalProgress * 100);
-  const formattedBudget = totalBudget.toLocaleString();
   const categoryBudgets: CategoryBudget[] =
     categoriesQuery.data?.map((category) => ({
       id: category.id,
@@ -159,12 +160,18 @@ export default function BudgetScreen() {
               </Text>
               <TextInput
                 keyboardType="decimal-pad"
-                value={displayedMonthlyBudget ? `$${displayedMonthlyBudget}` : ""}
+                value={
+                  displayedMonthlyBudget
+                    ? `${currency} ${displayedMonthlyBudget}`
+                    : ""
+                }
                 onChangeText={(value) =>
                   setMonthlyBudget(value.replace(/[^\d.]/g, ""))
                 }
                 onBlur={saveTotalBudget}
-                placeholder={t("budget.status.budgetPlaceholder")}
+                placeholder={t("budget.status.budgetPlaceholder", {
+                  currency,
+                })}
                 placeholderTextColor={themeColors.mutedText}
                 style={[
                   styles.budgetInput,
@@ -183,7 +190,10 @@ export default function BudgetScreen() {
           <Text style={[styles.statusCopy, { color: themeColors.mutedText }]}>
             {t("budget.status.usedPrefix")}{" "}
             <Text style={[styles.strong, { color: themeColors.text }]}>
-              ${formattedBudget}
+              {formatCurrency(totalBudget, {
+                maximumFractionDigits: 0,
+                minimumFractionDigits: 0,
+              })}
             </Text>{" "}
             {t("budget.status.usedSuffix")}
           </Text>
@@ -193,14 +203,14 @@ export default function BudgetScreen() {
               style={[styles.primaryAmount, { color: themeColors.primary }]}
             >
               {t("budget.status.spent", {
-                amount: totalSpent.toLocaleString(),
+                amount: formatCurrency(totalSpent),
               })}
             </Text>
             <Text
               style={[styles.secondaryAmount, { color: themeColors.mutedText }]}
             >
               {t("budget.status.left", {
-                amount: totalLeft.toLocaleString(),
+                amount: formatCurrency(totalLeft),
               })}
             </Text>
           </View>
@@ -288,6 +298,7 @@ function CategoryBudgetCard({
 }) {
   const themeColors = useThemeColors();
   const { t } = useTranslation();
+  const { formatCurrency } = useCurrencyFormatter();
   const remaining = budget.limit - budget.spent;
   const progress = budget.limit > 0 ? budget.spent / budget.limit : 0;
   const isAlert = Boolean(budget.alert);
@@ -381,8 +392,8 @@ function CategoryBudgetCard({
       <View style={styles.categoryAmounts}>
         <Text style={[styles.categorySpent, { color: themeColors.text }]}>
           {t("budget.category.spentOf", {
-            limit: budget.limit.toLocaleString(),
-            spent: budget.spent.toLocaleString(),
+            limit: formatCurrency(budget.limit),
+            spent: formatCurrency(budget.spent),
           })}
         </Text>
         <Text
@@ -392,7 +403,7 @@ function CategoryBudgetCard({
           ]}
         >
           {t("budget.category.remaining", {
-            amount: remaining.toLocaleString(),
+            amount: formatCurrency(remaining),
           })}
         </Text>
       </View>
