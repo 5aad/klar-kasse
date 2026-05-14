@@ -1,6 +1,5 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { colors, fontSize, radius, spacing } from "@repo/theme";
-import { Image } from "expo-image";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -11,10 +10,10 @@ import {
   Text,
   TextInput,
   View,
-  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { AvatarCarousel } from "@/components/settings/avatar-carousel";
 import { ScreenHeader } from "@/components/shared/screen-header";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import {
@@ -24,8 +23,8 @@ import {
 import { useThemeStore, type ThemePreference } from "@/stores/theme-store";
 import {
   avatarImageUrls,
+  discoverAvatarImageUrls,
   downloadAvatarImage,
-  getAvatarFileName,
   isAvatarImageDownloaded,
 } from "@/utils/avatar-images";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
@@ -50,7 +49,6 @@ const themeOptions = [
 ] as const;
 
 export default function PreferencesScreen() {
-  const { width } = useWindowDimensions();
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
@@ -63,13 +61,14 @@ export default function PreferencesScreen() {
   const [downloadedAvatarUrls, setDownloadedAvatarUrls] = useState<string[]>(
     [],
   );
+  const [availableAvatarUrls, setAvailableAvatarUrls] =
+    useState(avatarImageUrls);
   const [isRefreshingAvatars, setIsRefreshingAvatars] = useState(false);
   const [avatarPreviewRefreshKey, setAvatarPreviewRefreshKey] = useState(0);
   const selectedTheme = useThemeStore((state) => state.themePreference);
   const setSelectedTheme = useThemeStore((state) => state.setThemePreference);
   const userPreferencesQuery = useUserPreferencesQuery();
   const saveUserPreferencesMutation = useSaveUserPreferencesMutation();
-  const avatarTileSize = (width - spacing.lg * 2 - spacing.md * 2) / 3;
 
   useEffect(() => {
     if (!userPreferencesQuery.data) return;
@@ -80,10 +79,10 @@ export default function PreferencesScreen() {
     setSelectedTheme(userPreferencesQuery.data.appTheme as ThemePreference);
   }, [setSelectedTheme, userPreferencesQuery.data]);
 
-  async function loadDownloadedAvatarUrls() {
+  async function loadDownloadedAvatarUrls(avatarUrls = availableAvatarUrls) {
     const downloadedUrls = (
       await Promise.all(
-        avatarImageUrls.map(async (url) =>
+        avatarUrls.map(async (url) =>
           (await isAvatarImageDownloaded(url)) ? url : null,
         ),
       )
@@ -97,7 +96,10 @@ export default function PreferencesScreen() {
 
     try {
       await userPreferencesQuery.refetch();
-      await loadDownloadedAvatarUrls();
+      const nextAvatarUrls = await discoverAvatarImageUrls(availableAvatarUrls);
+
+      setAvailableAvatarUrls(nextAvatarUrls);
+      await loadDownloadedAvatarUrls(nextAvatarUrls);
       setAvatarPreviewRefreshKey((currentKey) => currentKey + 1);
     } finally {
       setIsRefreshingAvatars(false);
@@ -107,21 +109,23 @@ export default function PreferencesScreen() {
   useEffect(() => {
     let isMounted = true;
 
-    async function loadDownloadedAvatars() {
+    async function loadAvatars() {
+      const nextAvatarUrls = await discoverAvatarImageUrls(avatarImageUrls);
       const nextDownloadedUrls = (
         await Promise.all(
-          avatarImageUrls.map(async (url) =>
+          nextAvatarUrls.map(async (url) =>
             (await isAvatarImageDownloaded(url)) ? url : null,
           ),
         )
       ).filter((url): url is string => Boolean(url));
 
       if (isMounted) {
+        setAvailableAvatarUrls(nextAvatarUrls);
         setDownloadedAvatarUrls(nextDownloadedUrls);
       }
     }
 
-    loadDownloadedAvatars();
+    loadAvatars();
 
     return () => {
       isMounted = false;
@@ -227,76 +231,14 @@ export default function PreferencesScreen() {
               )}
             </Pressable>
           </View>
-          <View style={styles.avatarGrid}>
-            {avatarImageUrls.map((url) => {
-              const isSelected = profileImageUri?.endsWith(
-                getAvatarFileName(url),
-              );
-              const isDownloading = downloadingAvatarUrl === url;
-              const isDownloaded = downloadedAvatarUrls.includes(url);
-
-              return (
-              <Pressable
-                key={url}
-                style={[
-                  styles.avatarTile,
-                  {
-                    width: avatarTileSize,
-                    height: avatarTileSize,
-                    backgroundColor: themeColors.surface,
-                    borderColor: themeColors.text,
-                  },
-                  isSelected && styles.selectedAvatarTile,
-                ]}
-                disabled={Boolean(downloadingAvatarUrl)}
-                onPress={() => selectAvatar(url)}
-              >
-                <Image
-                  cachePolicy="none"
-                  source={{ uri: `${url}?refresh=${avatarPreviewRefreshKey}` }}
-                  style={styles.avatarImage}
-                  contentFit="cover"
-                />
-                {isDownloaded ? null : (
-                  <View
-                    pointerEvents="none"
-                    style={[
-                      styles.avatarTint,
-                      {
-                        backgroundColor: themeColors.primary,
-                        opacity: 0.12,
-                      },
-                    ]}
-                  />
-                )}
-                {isSelected ? (
-                  <View
-                    style={[
-                      styles.avatarCheck,
-                      { backgroundColor: themeColors.primary },
-                    ]}
-                  >
-                    <MaterialCommunityIcons
-                      color={themeColors.primaryText}
-                      name="check"
-                      size={16}
-                    />
-                  </View>
-                ) : null}
-                {isDownloading ? (
-                  <View
-                    style={[
-                      styles.avatarLoading,
-                      { backgroundColor: `${themeColors.background}CC` },
-                    ]}
-                  >
-                    <ActivityIndicator color={themeColors.primary} />
-                  </View>
-                ) : null}
-              </Pressable>
-              );
-            })}
-          </View>
+          <AvatarCarousel
+            avatarUrls={availableAvatarUrls}
+            downloadedAvatarUrls={downloadedAvatarUrls}
+            downloadingAvatarUrl={downloadingAvatarUrl}
+            previewRefreshKey={avatarPreviewRefreshKey}
+            profileImageUri={profileImageUri}
+            onSelectAvatar={selectAvatar}
+          />
         </View>
 
         <View style={styles.section}>
@@ -441,47 +383,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,
-  },
-  avatarGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.md,
-    justifyContent: "center",
-  },
-  avatarTile: {
-    overflow: "hidden",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    borderColor: colors.text,
-    backgroundColor: colors.surface,
-  },
-  selectedAvatarTile: {
-    borderColor: colors.primary,
-    borderWidth: 2,
-  },
-  avatarImage: {
-    width: "100%",
-    height: "100%",
-  },
-  avatarTint: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  avatarCheck: {
-    position: "absolute",
-    right: 8,
-    top: 8,
-    width: 26,
-    height: 26,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 13,
-  },
-  avatarLoading: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: "center",
-    justifyContent: "center",
   },
   themeList: {
     gap: spacing.md,
