@@ -3,7 +3,7 @@ import * as FileSystem from "expo-file-system/legacy";
 const AVATAR_STORAGE_BASE_URL =
   "https://scxkggwbkyrtujvewtxw.supabase.co/storage/v1/object/public/avatar";
 const DEFAULT_AVATAR_COUNT = 6;
-const MAX_AVATAR_SCAN_COUNT = 120;
+export const MAX_AVATAR_SCAN_COUNT = 120;
 const MAX_CONSECUTIVE_MISSING_AVATARS = 6;
 
 export const avatarImageUrls = Array.from(
@@ -13,6 +13,12 @@ export const avatarImageUrls = Array.from(
 
 function getAvatarImageUrl(index: number) {
   return `${AVATAR_STORAGE_BASE_URL}/portrait_${index}.png`;
+}
+
+export function getPotentialAvatarImageUrls() {
+  return Array.from({ length: MAX_AVATAR_SCAN_COUNT }, (_, index) =>
+    getAvatarImageUrl(index + 1),
+  );
 }
 
 async function hasRemoteAvatarImage(url: string) {
@@ -25,7 +31,7 @@ async function hasRemoteAvatarImage(url: string) {
   }
 }
 
-export async function discoverAvatarImageUrls(fallbackUrls = avatarImageUrls) {
+export async function discoverAvatarImageUrls() {
   const discoveredUrls: string[] = [];
   let missingCount = 0;
 
@@ -46,7 +52,7 @@ export async function discoverAvatarImageUrls(fallbackUrls = avatarImageUrls) {
     }
   }
 
-  return discoveredUrls.length ? discoveredUrls : fallbackUrls;
+  return discoveredUrls;
 }
 
 export function getAvatarFileName(url: string) {
@@ -61,6 +67,20 @@ export async function isAvatarImageDownloaded(url: string) {
   const existingFile = await FileSystem.getInfoAsync(getAvatarLocalUri(url));
 
   return existingFile.exists;
+}
+
+export async function getDownloadedAvatarImageUrls(
+  avatarUrls = avatarImageUrls,
+) {
+  const downloadedUrls = (
+    await Promise.all(
+      avatarUrls.map(async (url) =>
+        (await isAvatarImageDownloaded(url)) ? url : null,
+      ),
+    )
+  ).filter((url): url is string => Boolean(url));
+
+  return downloadedUrls;
 }
 
 export async function downloadAvatarImage(url: string) {
