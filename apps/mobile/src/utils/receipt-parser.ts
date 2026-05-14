@@ -114,6 +114,52 @@ function findAmountAfterLabel(lines: string[], labelPattern: RegExp) {
   return null;
 }
 
+function parseStoreName(normalizedText: string) {
+  if (/\bLIDL\b/i.test(normalizedText)) return "LIDL";
+  if (/NORMA/i.test(normalizedText)) return "NORMA";
+
+  return "";
+}
+
+function parseReceiptDate(normalizedText: string, store: string) {
+  if (store === "LIDL") {
+    const dateMatch = normalizedText.match(/\b(\d{2}\.\d{2}\.\d{4})\b/);
+
+    return dateMatch?.[1] ?? "";
+  }
+
+  const dateMatch = normalizedText.match(/\bDatum\s+(\d{2}\.\d{2}\.\d{2})/i);
+
+  return dateMatch?.[1] ?? "";
+}
+
+function parseTotalAmount(
+  normalizedText: string,
+  lines: string[],
+  store: string,
+  fallbackTotal = 0,
+) {
+  if (store === "LIDL") {
+    const paymentTotal = findAmountAfterLabel(lines, /zahlung\s+erfolgt/i);
+    const sumTotal = findAmountAfterLabel(lines, /^summe\b/i);
+    const betragTotal = findAmountAfterLabel(lines, /^betrag\b/i);
+
+    return paymentTotal ?? sumTotal ?? betragTotal ?? fallbackTotal;
+  }
+
+  const eurTotalMatch = normalizedText.match(
+    new RegExp(`EUR\\s*(${MONEY_AMOUNT})`, "i"),
+  );
+  const totals = [...normalizedText.matchAll(PRICE_WITH_EURO)].map((match) =>
+    parseGermanMoney(match[1]),
+  );
+
+  if (eurTotalMatch) return parseGermanMoney(eurTotalMatch[1]);
+  if (totals.length) return Math.max(...totals);
+
+  return fallbackTotal;
+}
+
 function getVatRateForCode(vatCode?: string) {
   if (/^A$/i.test(vatCode ?? "")) return 7;
   if (/^B$/i.test(vatCode ?? "")) return 19;
@@ -176,7 +222,7 @@ function parseLidlReceipt(
   lines: string[],
   result: ReceiptParseResult,
 ) {
-  result.store = "LIDL";
+  result.store = parseStoreName(normalizedText);
 
   const postalCodeIndex = lines.findIndex((line) => /^\d{5}\s+/.test(line));
   if (postalCodeIndex >= 0) {
@@ -188,13 +234,14 @@ function parseLidlReceipt(
     result.address = lines.slice(streetIndex, postalCodeIndex + 1);
   }
 
-  const dateMatch = normalizedText.match(/\b(\d{2}\.\d{2}\.\d{4})\b/);
-  if (dateMatch) result.date = dateMatch[1];
+  result.date = parseReceiptDate(normalizedText, result.store);
 
-  const paymentTotal = findAmountAfterLabel(lines, /zahlung\s+erfolgt/i);
-  const sumTotal = findAmountAfterLabel(lines, /^summe\b/i);
-  const betragTotal = findAmountAfterLabel(lines, /^betrag\b/i);
-  result.total = paymentTotal ?? sumTotal ?? betragTotal ?? result.total;
+  result.total = parseTotalAmount(
+    normalizedText,
+    lines,
+    result.store,
+    result.total,
+  );
 
   if (/visa/i.test(normalizedText)) result.paymentMethod = "Visa";
 
@@ -261,9 +308,7 @@ export function parseNormaReceipt(rawText: string): ReceiptParseResult {
     return result;
   }
 
-  if (/NORMA/i.test(normalizedText)) {
-    result.store = "NORMA";
-  }
+  result.store = parseStoreName(normalizedText);
 
   const addressStart = lines.findIndex((line) => /^\d{5}\s+/.test(line));
   if (addressStart >= 0) {
@@ -275,22 +320,17 @@ export function parseNormaReceipt(rawText: string): ReceiptParseResult {
     }
   }
 
-  const dateMatch = normalizedText.match(/\bDatum\s+(\d{2}\.\d{2}\.\d{2})/i);
-  if (dateMatch) {
-    result.date = dateMatch[1];
-  }
+  result.date = parseReceiptDate(normalizedText, result.store);
 
   const eurTotalMatch = normalizedText.match(
     new RegExp(`EUR\\s*(${MONEY_AMOUNT})`, "i"),
   );
-  const totals = [...normalizedText.matchAll(PRICE_WITH_EURO)].map((match) =>
-    parseGermanMoney(match[1]),
+  result.total = parseTotalAmount(
+    normalizedText,
+    lines,
+    result.store,
+    result.total,
   );
-  if (eurTotalMatch) {
-    result.total = parseGermanMoney(eurTotalMatch[1]);
-  } else if (totals.length) {
-    result.total = Math.max(...totals);
-  }
 
   if (/visa/i.test(normalizedText)) result.paymentMethod = "Visa";
 
