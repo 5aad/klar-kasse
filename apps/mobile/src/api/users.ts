@@ -23,7 +23,7 @@ function createLocalId(prefix: string) {
 }
 
 function normalizeCurrency(currency?: string) {
-  const value = currency?.replace(/[^a-z]/gi, "").toUpperCase().slice(0, 3);
+  const value = currency?.trim().replace(/\s+/g, " ").slice(0, 6);
 
   return value || "EUR";
 }

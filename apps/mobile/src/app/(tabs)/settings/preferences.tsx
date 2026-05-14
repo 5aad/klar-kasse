@@ -233,10 +233,10 @@ export default function PreferencesScreen() {
             </View>
             <TextInput
               autoCapitalize="characters"
-              maxLength={3}
+              maxLength={6}
               value={currency}
               onChangeText={(value) =>
-                setCurrency(value.replace(/[^a-z]/gi, "").toUpperCase())
+                setCurrency(value.replace(/\s+/g, " ").toUpperCase())
               }
               onBlur={saveCurrency}
               placeholder={t("settings.preferences.currencyPlaceholder")}
