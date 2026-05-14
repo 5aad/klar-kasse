@@ -126,7 +126,7 @@
       },
       "placeholders": {
         "amount": "0.00",
-        "date": "07.05.2026",
+        "date": "DD.MM.YYYY",
         "itemName": "Artikelname",
         "merchant": "z. B. LIDL",
         "note": "Optionale Notiz"
@@ -180,13 +180,14 @@
         "category": "KATEGORIE",
         "date": "DATUM",
         "merchant": "HAENDLERNAME",
-        "note": "PERSOENLICHE NOTIZ (OPTIONAL)"
+        "note": "PERSOENLICHE NOTIZ (OPTIONAL)",
+        "payment": "ZAHLUNG"
       },
       "goBack": "Zurueck",
       "placeholders": {
         "amount": "0.00",
         "category": "Kategorie",
-        "date": "Datum",
+        "date": "DD.MM.YYYY",
         "merchant": "Haendlername",
         "note": "Kaffee mit dem Designteam..."
       },

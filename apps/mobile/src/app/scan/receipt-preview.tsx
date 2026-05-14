@@ -29,6 +29,29 @@ import {
 import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 
 type ThemeColors = ReturnType<typeof useThemeColors>;
+const paymentMethods = ["Cash", "Visa", "Mastercard", "Debit"] as const;
+const paymentMethodLabels: Record<(typeof paymentMethods)[number], string> = {
+  Cash: "scan.add.paymentMethods.cash",
+  Visa: "scan.add.paymentMethods.visa",
+  Mastercard: "scan.add.paymentMethods.mastercard",
+  Debit: "scan.add.paymentMethods.debit",
+};
+
+function formatDateInput(date: Date) {
+  return [
+    String(date.getDate()).padStart(2, "0"),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    date.getFullYear(),
+  ].join(".");
+}
+
+function getPaymentMethod(value?: string) {
+  const paymentMethod = paymentMethods.find(
+    (method) => method.toLowerCase() === value?.toLowerCase(),
+  );
+
+  return paymentMethod ?? "Visa";
+}
 
 export default function CapturedReceiptMlKitScreen() {
   const themeColors = useThemeColors();
@@ -42,8 +65,10 @@ export default function CapturedReceiptMlKitScreen() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [merchantName, setMerchantName] = useState("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(() => formatDateInput(new Date()));
   const [amount, setAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] =
+    useState<(typeof paymentMethods)[number]>("Visa");
   const [category, setCategory] = useState("");
   const [note, setNote] = useState("");
   const [parsedReceipt, setParsedReceipt] = useState<ReceiptParseResult | null>(
@@ -87,8 +112,9 @@ export default function CapturedReceiptMlKitScreen() {
         if (!isMounted) return;
 
         setMerchantName(parsedReceipt.store || "");
-        setDate(parsedReceipt.date || "");
+        setDate(parsedReceipt.date || formatDateInput(new Date()));
         setAmount(parsedReceipt.total ? parsedReceipt.total.toFixed(2) : "");
+        setPaymentMethod(getPaymentMethod(parsedReceipt.paymentMethod));
         setParsedReceipt(parsedReceipt);
       } catch (error) {
         console.error("Receipt processing failed:", error);
@@ -132,7 +158,7 @@ export default function CapturedReceiptMlKitScreen() {
         imageUri: croppedImage?.uri,
         items: parsedReceipt?.items ?? [],
         note,
-        paymentMethod: parsedReceipt?.paymentMethod ?? "",
+        paymentMethod,
         rawText: parsedReceipt?.rawText ?? "",
         store: merchantName,
         total: Number(amount.replace(",", ".")) || parsedReceipt?.total || 0,
@@ -287,12 +313,20 @@ export default function CapturedReceiptMlKitScreen() {
           />
         </View>
 
-        <CategoryChoiceGroup
+        <ChoiceGroup
           emptyText={t("scan.preview.emptyCategories")}
           label={t("scan.preview.fields.category")}
           options={categoryOptions}
           value={category}
           onChange={setCategory}
+        />
+
+        <ChoiceGroup
+          getOptionLabel={(option) => t(paymentMethodLabels[option])}
+          label={t("scan.preview.fields.payment")}
+          options={paymentMethods}
+          value={paymentMethod}
+          onChange={setPaymentMethod}
         />
 
         <ReviewField
@@ -389,18 +423,20 @@ function ReviewField({
   );
 }
 
-function CategoryChoiceGroup({
+function ChoiceGroup<TValue extends string>({
   emptyText,
+  getOptionLabel,
   label,
   onChange,
   options,
   value,
 }: {
-  emptyText: string;
+  emptyText?: string;
+  getOptionLabel?: (value: TValue) => string;
   label: string;
-  onChange: (value: string) => void;
-  options: readonly string[];
-  value: string;
+  onChange: (value: TValue) => void;
+  options: readonly TValue[];
+  value: TValue;
 }) {
   const themeColors = useThemeColors();
 
@@ -437,7 +473,7 @@ function CategoryChoiceGroup({
                     },
                   ]}
                 >
-                  {option}
+                  {getOptionLabel ? getOptionLabel(option) : option}
                 </Text>
               </Pressable>
             );

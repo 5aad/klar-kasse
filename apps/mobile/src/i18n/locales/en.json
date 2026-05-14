@@ -126,7 +126,7 @@
       },
       "placeholders": {
         "amount": "0.00",
-        "date": "07.05.2026",
+        "date": "DD.MM.YYYY",
         "itemName": "Item name",
         "merchant": "e.g. LIDL",
         "note": "Optional note"
@@ -180,13 +180,14 @@
         "category": "CATEGORY",
         "date": "DATE",
         "merchant": "MERCHANT NAME",
-        "note": "PERSONAL NOTE (OPTIONAL)"
+        "note": "PERSONAL NOTE (OPTIONAL)",
+        "payment": "PAYMENT"
       },
       "goBack": "Go back",
       "placeholders": {
         "amount": "0.00",
         "category": "Category",
-        "date": "Date",
+        "date": "DD.MM.YYYY",
         "merchant": "Merchant name",
         "note": "Coffee with the design team..."
       },

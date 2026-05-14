@@ -47,16 +47,22 @@ function parseAmount(value: string) {
   return Number(value.replace(",", ".").replace(/[^\d.]/g, "")) || 0;
 }
 
+function formatDateInput(date: Date) {
+  return [
+    String(date.getDate()).padStart(2, "0"),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    date.getFullYear(),
+  ].join(".");
+}
+
 export default function AddReceiptScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
-  const { i18n, t } = useTranslation();
+  const { t } = useTranslation();
   const categoriesQuery = useCategoriesQuery();
   const postReceiptMutation = usePostReceiptMutation();
   const [store, setStore] = useState("");
-  const [date, setDate] = useState(() =>
-    new Date().toLocaleDateString(i18n.language),
-  );
+  const [date, setDate] = useState(() => formatDateInput(new Date()));
   const [total, setTotal] = useState("");
   const [note, setNote] = useState("");
   const [paymentMethod, setPaymentMethod] =
@@ -168,17 +174,17 @@ export default function AddReceiptScreen() {
             />
             <ManualField
               compact
-              label={t("scan.add.fields.total")}
+              label={t("scan.preview.fields.amount")}
               keyboardType="decimal-pad"
-              placeholder={t("scan.add.placeholders.amount")}
+              placeholder={t("scan.preview.placeholders.amount")}
               value={displayedTotal}
               onChangeText={setTotal}
             />
           </View>
           <ManualField
-            label={t("scan.add.fields.note")}
+            label={t("scan.preview.fields.note")}
             multiline
-            placeholder={t("scan.add.placeholders.note")}
+            placeholder={t("scan.preview.placeholders.note")}
             value={note}
             onChangeText={setNote}
           />
@@ -201,7 +207,7 @@ export default function AddReceiptScreen() {
           getOptionLabel={(option) => t(paymentMethodLabels[option])}
         />
 
-        <View style={styles.sectionHeader}>
+        {/* <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: themeColors.text }]}>
             {t("scan.add.items.title")}
           </Text>
@@ -265,7 +271,7 @@ export default function AddReceiptScreen() {
               </View>
             </View>
           ))}
-        </View>
+        </View> */}
 
         <Pressable
           style={[styles.saveButton, { backgroundColor: themeColors.primary }]}
