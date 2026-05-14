@@ -38,7 +38,8 @@
       },
       "placeholder": "Haendler, Kategorie oder Stichwort...",
       "subtitle": "Finde Transaktionen nach Haendler, Kategorie oder Betrag.",
-      "title": "Suche"
+      "title": "Suche",
+      "unknownDate": "Unbekanntes Datum"
     },
     "remainingBudget": "Verbleibendes Budget",
     "searchTransactions": "Transaktionen suchen",

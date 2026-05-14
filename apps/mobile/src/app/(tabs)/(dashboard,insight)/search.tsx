@@ -1,9 +1,11 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
+import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
   TextInput,
@@ -23,16 +25,10 @@ import {
 } from "@/components/shared/transaction-list";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useCategoriesQuery } from "@/queries/categories";
+import { useReceiptsQuery } from "@/queries/receipts";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 type FilterKey = "all" | "significant" | `category:${string}`;
-
-type SearchTransaction = TransactionListItem & {
-  categoryKey: string;
-  group: "today" | "yesterday";
-  groupKey: string;
-  value: number;
-};
 
 type SearchFilter = {
   categoryName?: string;
@@ -40,71 +36,99 @@ type SearchFilter = {
   label: string;
 };
 
-const transactions: SearchTransaction[] = [
-  {
-    icon: "silverware-fork-knife",
-    title: "Artisan Boulangerie",
-    category: "",
-    categoryKey: "dashboard.search.categories.foodDining",
-    date: "10:45 AM",
-    amount: "- $14.50",
-    value: -14.5,
-    group: "today",
-    groupKey: "dashboard.search.groups.today",
-  },
-  {
-    icon: "home",
-    title: "Skyline Management",
-    category: "",
-    categoryKey: "dashboard.search.categories.housing",
-    date: "08:00 AM",
-    amount: "- $2,100.00",
-    value: -2100,
-    group: "today",
-    groupKey: "dashboard.search.groups.today",
-  },
-  {
-    icon: "cash-multiple",
-    title: "Creative Studio Inc.",
-    category: "",
-    categoryKey: "dashboard.search.categories.payroll",
-    date: "Oct 23",
-    amount: "+ $4,250.00",
-    value: 4250,
-    group: "yesterday",
-    groupKey: "dashboard.search.groups.yesterday",
-  },
-  {
-    icon: "car",
-    title: "Uber Technologies",
-    category: "",
-    categoryKey: "dashboard.search.categories.travel",
-    date: "Oct 23",
-    amount: "- $23.40",
-    value: -23.4,
-    group: "yesterday",
-    groupKey: "dashboard.search.groups.yesterday",
-  },
-  {
-    icon: "shopping",
-    title: "Apple Store",
-    category: "",
-    categoryKey: "dashboard.search.categories.shopping",
-    date: "Oct 23",
-    amount: "- $129.00",
-    value: -129,
-    group: "yesterday",
-    groupKey: "dashboard.search.groups.yesterday",
-  },
-];
+const PAGE_SIZE = 12;
+
+const categoryIcons = {
+  "Food & Drinks": "silverware-fork-knife",
+  Groceries: "cart",
+  Housing: "home",
+  Shopping: "shopping",
+  Travel: "airplane",
+} as const;
+
+function getParamValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function parsePositivePage(value: string | string[] | undefined) {
+  const page = Number(getParamValue(value));
+
+  return Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+}
+
+function getFilterKey(value: string | string[] | undefined): FilterKey {
+  const filter = getParamValue(value);
+
+  if (!filter || filter === "all") return "all";
+  if (filter === "significant") return "significant";
+
+  return `category:${filter}`;
+}
+
+function getFilterParam(filter: FilterKey) {
+  if (filter === "all" || filter === "significant") return filter;
+
+  return filter.replace("category:", "");
+}
+
+function parseReceiptDate(dateText?: string | null) {
+  if (!dateText) return null;
+
+  const germanDate = dateText.match(/^(\d{2})\.(\d{2})\.(\d{2}|\d{4})$/);
+  if (germanDate) {
+    const year =
+      germanDate[3].length === 2
+        ? Number(`20${germanDate[3]}`)
+        : Number(germanDate[3]);
+
+    return new Date(year, Number(germanDate[2]) - 1, Number(germanDate[1]));
+  }
+
+  const date = new Date(dateText);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function isSameMonth(left: Date, right: Date) {
+  return (
+    left.getFullYear() === right.getFullYear() &&
+    left.getMonth() === right.getMonth()
+  );
+}
+
+function getDateKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+    2,
+    "0",
+  )}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function getReceiptIcon(category?: string | null) {
+  return (
+    categoryIcons[category as keyof typeof categoryIcons] ??
+    "receipt-text-outline"
+  );
+}
 
 export default function SearchScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
+  const params = useLocalSearchParams<{
+    category?: string;
+    page?: string;
+    q?: string;
+  }>();
   const categoriesQuery = useCategoriesQuery();
-  const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
+  const receiptsQuery = useReceiptsQuery();
+  const searchQuery = getParamValue(params.q) ?? "";
+  const activeFilter = getFilterKey(params.category);
+  const currentPage = parsePositivePage(params.page);
   const [selectedMonth, setSelectedMonth] = useState(getInitialMonth);
+  const activeCategoryId =
+    activeFilter === "all" || activeFilter === "significant"
+      ? null
+      : activeFilter.replace("category:", "");
   const filters = useMemo<SearchFilter[]>(
     () => [
       { key: "all", label: t("dashboard.search.filters.all") },
@@ -123,33 +147,108 @@ export default function SearchScreen() {
   const activeCategoryName = filters.find(
     (filter) => filter.key === activeFilter,
   )?.categoryName;
+  const dateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(i18n.language, {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+    [i18n.language],
+  );
 
-  const filteredTransactions = useMemo(
-    () => {
-      const translatedCategories = transactions.map((transaction) => ({
-        ...transaction,
-        category: t(transaction.categoryKey),
-      }));
+  const filteredReceipts = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
 
-      return translatedCategories.filter((transaction) => {
-        if (activeFilter === "all") return true;
-        if (activeFilter === "significant")
-          return Math.abs(transaction.value) >= 100;
+    return (receiptsQuery.data ?? []).filter((receipt) => {
+      const receiptDate =
+        parseReceiptDate(receipt.dateText) ?? parseReceiptDate(receipt.createdAt);
 
-        return activeCategoryName
-          ? transaction.category === activeCategoryName
-          : true;
+      if (receiptDate && !isSameMonth(receiptDate, selectedMonth)) return false;
+      if (activeFilter === "significant" && Math.abs(receipt.total) < 100) {
+        return false;
+      }
+      if (
+        activeFilter !== "all" &&
+        activeFilter !== "significant" &&
+        activeCategoryId &&
+        receipt.categoryId !== activeCategoryId &&
+        receipt.categoryName !== activeCategoryName
+      ) {
+        return false;
+      }
+      if (!normalizedQuery) return true;
+
+      const searchableText = [
+        receipt.store,
+        receipt.categoryName,
+        receipt.note,
+        receipt.total.toFixed(2),
+        ...receipt.items.map((item) => item.name),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return searchableText.includes(normalizedQuery);
+    });
+  }, [
+    activeCategoryId,
+    activeCategoryName,
+    activeFilter,
+    receiptsQuery.data,
+    searchQuery,
+    selectedMonth,
+  ]);
+  const paginatedReceipts = filteredReceipts.slice(0, currentPage * PAGE_SIZE);
+  const hasMoreReceipts = paginatedReceipts.length < filteredReceipts.length;
+  const receiptSections = useMemo(() => {
+    const sections = new Map<string, { items: TransactionListItem[]; title: string }>();
+
+    for (const receipt of paginatedReceipts) {
+      const receiptDate =
+        parseReceiptDate(receipt.dateText) ?? parseReceiptDate(receipt.createdAt);
+      const dateKey = receiptDate ? getDateKey(receiptDate) : "unknown";
+      const section = sections.get(dateKey) ?? {
+        title: receiptDate
+          ? dateFormatter.format(receiptDate)
+          : t("dashboard.search.unknownDate"),
+        items: [],
+      };
+
+      section.items.push({
+        id: receipt.id,
+        icon: getReceiptIcon(receipt.categoryName),
+        title: receipt.store,
+        category: receipt.categoryName ?? t("dashboard.receiptFallback"),
+        date: receipt.dateText ?? receipt.createdAt,
+        amount: `- ${t("common.currencyAmount", {
+          amount: receipt.total.toFixed(2),
+        })}`,
       });
-    },
-    [activeCategoryName, activeFilter, t],
-  );
+      sections.set(dateKey, section);
+    }
 
-  const todayItems = filteredTransactions.filter(
-    (transaction) => transaction.group === "today",
-  );
-  const yesterdayItems = filteredTransactions.filter(
-    (transaction) => transaction.group === "yesterday",
-  );
+    return [...sections.values()];
+  }, [dateFormatter, paginatedReceipts, t]);
+
+  const setSearchParam = (q: string) => {
+    router.setParams({ page: "1", q });
+  };
+  const setCategoryFilter = (filter: FilterKey) => {
+    router.setParams({ category: getFilterParam(filter), page: "1" });
+  };
+  const setSearchMonth = (month: Date) => {
+    setSelectedMonth(month);
+    router.setParams({ page: "1" });
+  };
+  const loadNextPage = () => {
+    router.setParams({ page: String(currentPage + 1) });
+  };
+  const refreshSearch = () => {
+    categoriesQuery.refetch();
+    receiptsQuery.refetch();
+  };
 
   return (
     <SafeAreaView
@@ -161,6 +260,15 @@ export default function SearchScreen() {
           styles.content,
           { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
         ]}
+        refreshControl={
+          <RefreshControl
+            refreshing={categoriesQuery.isRefetching || receiptsQuery.isRefetching}
+            tintColor={themeColors.primary}
+            colors={[themeColors.primary]}
+            progressBackgroundColor={themeColors.surface}
+            onRefresh={refreshSearch}
+          />
+        }
         showsVerticalScrollIndicator={false}
       >
         <ScreenHeader
@@ -170,7 +278,7 @@ export default function SearchScreen() {
 
         <MonthSelector
           selectedMonth={selectedMonth}
-          onChange={setSelectedMonth}
+          onChange={setSearchMonth}
         />
 
         <View style={[styles.panel, { backgroundColor: themeColors.surface }]}>
@@ -184,6 +292,8 @@ export default function SearchScreen() {
               size={22}
             />
             <TextInput
+              value={searchQuery}
+              onChangeText={setSearchParam}
               placeholder={t("dashboard.search.placeholder")}
               placeholderTextColor={themeColors.mutedText}
               style={[styles.searchInput, { color: themeColors.text }]}
@@ -210,7 +320,7 @@ export default function SearchScreen() {
                         : themeColors.background,
                     },
                   ]}
-                  onPress={() => setActiveFilter(filter.key)}
+                  onPress={() => setCategoryFilter(filter.key)}
                 >
                   <Text
                     style={[
@@ -230,34 +340,38 @@ export default function SearchScreen() {
           </View>
         </View>
 
-        {todayItems.length ? (
+        {receiptSections.length ? (
+          receiptSections.map((section) => (
+            <TransactionList
+              actionLabel={null}
+              items={section.items}
+              key={section.title}
+              title={section.title}
+            />
+          ))
+        ) : (
           <TransactionList
             actionLabel={null}
-            items={todayItems}
-            title={t("dashboard.search.groups.today")}
+            items={[]}
+            title={t("dashboard.transactionList.title")}
           />
-        ) : null}
+        )}
 
-        {yesterdayItems.length ? (
-          <TransactionList
-            actionLabel={null}
-            items={yesterdayItems}
-            title={t("dashboard.search.groups.yesterday")}
-          />
+        {hasMoreReceipts ? (
+          <Pressable
+            style={[styles.olderButton, { backgroundColor: themeColors.surface }]}
+            onPress={loadNextPage}
+          >
+            <Text style={[styles.olderText, { color: themeColors.text }]}>
+              {t("dashboard.search.exploreOlder")}
+            </Text>
+            <MaterialCommunityIcons
+              color={themeColors.text}
+              name="chevron-down"
+              size={18}
+            />
+          </Pressable>
         ) : null}
-
-        <Pressable
-          style={[styles.olderButton, { backgroundColor: themeColors.surface }]}
-        >
-          <Text style={[styles.olderText, { color: themeColors.text }]}>
-            {t("dashboard.search.exploreOlder")}
-          </Text>
-          <MaterialCommunityIcons
-            color={themeColors.text}
-            name="chevron-down"
-            size={18}
-          />
-        </Pressable>
       </KeyboardAwareScrollView>
     </SafeAreaView>
   );
