@@ -22,7 +22,7 @@ export function initializeDatabase() {
 
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY NOT NULL,
-      name TEXT NOT NULL DEFAULT 'Tom Hillson',
+      name TEXT NOT NULL DEFAULT 'set your name',
       app_theme TEXT NOT NULL DEFAULT 'system',
       currency TEXT NOT NULL DEFAULT 'EUR',
       profile_image_uri TEXT,
@@ -200,6 +200,8 @@ export function initializeDatabase() {
   if (receiptColumns.some((column) => column.name === "time_text")) {
     sqlite.execSync("ALTER TABLE receipts DROP COLUMN time_text;");
   }
+
+  sqlite.execSync("UPDATE users SET name = 'set your name' WHERE name = 'Tom Hillson';");
 
   hasInitialized = true;
 }

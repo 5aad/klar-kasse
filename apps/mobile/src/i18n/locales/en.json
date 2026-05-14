@@ -242,6 +242,8 @@
     },
     "preferences": {
       "appTheme": "APP THEME",
+      "avatarDownloadErrorBody": "Check your internet connection and try again.",
+      "avatarDownloadErrorTitle": "Could not download avatar",
       "currency": "CURRENCY",
       "currencyCode": "Currency code",
       "currencyDescription": "Used when showing amounts across the app.",
@@ -249,6 +251,8 @@
       "displayName": "DISPLAY NAME",
       "namePlaceholder": "Your name",
       "profileDoodle": "PROFILE DOODLE",
+      "profileImage": "PROFILE IMAGE",
+      "refreshAvatars": "Refresh avatar list",
       "subtitle": "Update your profile and display settings.",
       "theme": {
         "dark": "Dark",

@@ -1,8 +1,11 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { colors, fontSize, radius, spacing } from "@repo/theme";
+import { Image } from "expo-image";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  ActivityIndicator,
+  Alert,
   Pressable,
   StyleSheet,
   Text,
@@ -19,17 +22,14 @@ import {
   useUserPreferencesQuery,
 } from "@/queries/users";
 import { useThemeStore, type ThemePreference } from "@/stores/theme-store";
+import {
+  avatarImageUrls,
+  downloadAvatarImage,
+  getAvatarFileName,
+  isAvatarImageDownloaded,
+} from "@/utils/avatar-images";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
-
-const doodles = [
-  "face-man-profile",
-  "face-woman-profile",
-  "emoticon-cool-outline",
-  "emoticon-happy-outline",
-  "robot-happy-outline",
-  "account-star-outline",
-] as const;
 
 const themeOptions = [
   {
@@ -54,22 +54,79 @@ export default function PreferencesScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
-  const [name, setName] = useState("Tom Hillson");
-  const [selectedDoodle, setSelectedDoodle] = useState(0);
+  const [name, setName] = useState("set your name");
   const [currency, setCurrency] = useState("EUR");
+  const [profileImageUri, setProfileImageUri] = useState<string | null>(null);
+  const [downloadingAvatarUrl, setDownloadingAvatarUrl] = useState<
+    string | null
+  >(null);
+  const [downloadedAvatarUrls, setDownloadedAvatarUrls] = useState<string[]>(
+    [],
+  );
+  const [isRefreshingAvatars, setIsRefreshingAvatars] = useState(false);
+  const [avatarPreviewRefreshKey, setAvatarPreviewRefreshKey] = useState(0);
   const selectedTheme = useThemeStore((state) => state.themePreference);
   const setSelectedTheme = useThemeStore((state) => state.setThemePreference);
   const userPreferencesQuery = useUserPreferencesQuery();
   const saveUserPreferencesMutation = useSaveUserPreferencesMutation();
-  const doodleTileSize = (width - spacing.lg * 2 - spacing.md * 2) / 3;
+  const avatarTileSize = (width - spacing.lg * 2 - spacing.md * 2) / 3;
 
   useEffect(() => {
     if (!userPreferencesQuery.data) return;
 
     setName(userPreferencesQuery.data.name);
     setCurrency(userPreferencesQuery.data.currency);
+    setProfileImageUri(userPreferencesQuery.data.profileImageUri);
     setSelectedTheme(userPreferencesQuery.data.appTheme as ThemePreference);
   }, [setSelectedTheme, userPreferencesQuery.data]);
+
+  async function loadDownloadedAvatarUrls() {
+    const downloadedUrls = (
+      await Promise.all(
+        avatarImageUrls.map(async (url) =>
+          (await isAvatarImageDownloaded(url)) ? url : null,
+        ),
+      )
+    ).filter((url): url is string => Boolean(url));
+
+    setDownloadedAvatarUrls(downloadedUrls);
+  }
+
+  async function refreshAvatarList() {
+    setIsRefreshingAvatars(true);
+
+    try {
+      await userPreferencesQuery.refetch();
+      await loadDownloadedAvatarUrls();
+      setAvatarPreviewRefreshKey((currentKey) => currentKey + 1);
+    } finally {
+      setIsRefreshingAvatars(false);
+    }
+  }
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadDownloadedAvatars() {
+      const nextDownloadedUrls = (
+        await Promise.all(
+          avatarImageUrls.map(async (url) =>
+            (await isAvatarImageDownloaded(url)) ? url : null,
+          ),
+        )
+      ).filter((url): url is string => Boolean(url));
+
+      if (isMounted) {
+        setDownloadedAvatarUrls(nextDownloadedUrls);
+      }
+    }
+
+    loadDownloadedAvatars();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   function saveName() {
     saveUserPreferencesMutation.mutate({ name });
@@ -82,6 +139,28 @@ export default function PreferencesScreen() {
   function selectTheme(theme: ThemePreference) {
     setSelectedTheme(theme);
     saveUserPreferencesMutation.mutate({ appTheme: theme });
+  }
+
+  async function selectAvatar(url: string) {
+    setDownloadingAvatarUrl(url);
+
+    try {
+      const localUri = await downloadAvatarImage(url);
+
+      setProfileImageUri(localUri);
+      setDownloadedAvatarUrls((currentUrls) =>
+        currentUrls.includes(url) ? currentUrls : [...currentUrls, url],
+      );
+      saveUserPreferencesMutation.mutate({ profileImageUri: localUri });
+    } catch (error) {
+      console.warn("Avatar download failed:", error);
+      Alert.alert(
+        t("settings.preferences.avatarDownloadErrorTitle"),
+        t("settings.preferences.avatarDownloadErrorBody"),
+      );
+    } finally {
+      setDownloadingAvatarUrl(null);
+    }
   }
 
   return (
@@ -123,37 +202,100 @@ export default function PreferencesScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.label, { color: themeColors.text }]}>
-            {t("settings.preferences.profileDoodle")}
-          </Text>
-          <View style={styles.doodleGrid}>
-            {doodles.map((doodle, index) => (
+          <View style={styles.sectionLabelRow}>
+            <Text style={[styles.label, { color: themeColors.text }]}>
+              {t("settings.preferences.profileImage")}
+            </Text>
+            <Pressable
+              accessibilityLabel={t("settings.preferences.refreshAvatars")}
+              accessibilityRole="button"
+              style={[
+                styles.refreshButton,
+                { backgroundColor: themeColors.surface },
+              ]}
+              disabled={isRefreshingAvatars}
+              onPress={refreshAvatarList}
+            >
+              {isRefreshingAvatars ? (
+                <ActivityIndicator color={themeColors.text} size="small" />
+              ) : (
+                <MaterialCommunityIcons
+                  color={themeColors.text}
+                  name="refresh"
+                  size={18}
+                />
+              )}
+            </Pressable>
+          </View>
+          <View style={styles.avatarGrid}>
+            {avatarImageUrls.map((url) => {
+              const isSelected = profileImageUri?.endsWith(
+                getAvatarFileName(url),
+              );
+              const isDownloading = downloadingAvatarUrl === url;
+              const isDownloaded = downloadedAvatarUrls.includes(url);
+
+              return (
               <Pressable
-                key={doodle}
+                key={url}
                 style={[
-                  styles.doodleTile,
+                  styles.avatarTile,
                   {
-                    width: doodleTileSize,
-                    height: doodleTileSize,
-                    borderRadius: doodleTileSize / 2,
+                    width: avatarTileSize,
+                    height: avatarTileSize,
                     backgroundColor: themeColors.surface,
                     borderColor: themeColors.text,
                   },
-                  selectedDoodle === index && styles.selectedTile,
+                  isSelected && styles.selectedAvatarTile,
                 ]}
-                onPress={() => setSelectedDoodle(index)}
+                disabled={Boolean(downloadingAvatarUrl)}
+                onPress={() => selectAvatar(url)}
               >
-                <MaterialCommunityIcons
-                  color={
-                    selectedDoodle === index
-                      ? colors.primaryText
-                      : themeColors.text
-                  }
-                  name={doodle}
-                  size={54}
+                <Image
+                  cachePolicy="none"
+                  source={{ uri: `${url}?refresh=${avatarPreviewRefreshKey}` }}
+                  style={styles.avatarImage}
+                  contentFit="cover"
                 />
+                {isDownloaded ? null : (
+                  <View
+                    pointerEvents="none"
+                    style={[
+                      styles.avatarTint,
+                      {
+                        backgroundColor: themeColors.primary,
+                        opacity: 0.12,
+                      },
+                    ]}
+                  />
+                )}
+                {isSelected ? (
+                  <View
+                    style={[
+                      styles.avatarCheck,
+                      { backgroundColor: themeColors.primary },
+                    ]}
+                  >
+                    <MaterialCommunityIcons
+                      color={themeColors.primaryText}
+                      name="check"
+                      size={16}
+                    />
+                  </View>
+                ) : null}
+                {isDownloading ? (
+                  <View
+                    style={[
+                      styles.avatarLoading,
+                      { backgroundColor: `${themeColors.background}CC` },
+                    ]}
+                  >
+                    <ActivityIndicator color={themeColors.primary} />
+                  </View>
+                ) : null}
               </Pressable>
-            ))}
+              );
+            })}
           </View>
         </View>
 
@@ -270,6 +412,12 @@ const styles = StyleSheet.create({
   section: {
     gap: spacing.md,
   },
+  sectionLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+  },
   label: {
     color: colors.text,
     fontSize: fontSize.sm,
@@ -287,22 +435,53 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     backgroundColor: colors.surface,
   },
-  doodleGrid: {
+  refreshButton: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.sm,
+  },
+  avatarGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.md,
     justifyContent: "center",
   },
-  doodleTile: {
+  avatarTile: {
+    overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
+    borderRadius: radius.lg,
     borderColor: colors.text,
     backgroundColor: colors.surface,
   },
-  selectedTile: {
+  selectedAvatarTile: {
     borderColor: colors.primary,
-    backgroundColor: colors.primary,
+    borderWidth: 2,
+  },
+  avatarImage: {
+    width: "100%",
+    height: "100%",
+  },
+  avatarTint: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  avatarCheck: {
+    position: "absolute",
+    right: 8,
+    top: 8,
+    width: 26,
+    height: 26,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 13,
+  },
+  avatarLoading: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
   },
   themeList: {
     gap: spacing.md,

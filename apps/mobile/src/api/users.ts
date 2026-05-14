@@ -3,8 +3,10 @@ import { eq } from "drizzle-orm";
 import { db, initializeDatabase } from "@/db";
 import { syncOutbox, users, type User } from "@/db/schema";
 import type { ThemePreference } from "@/stores/theme-store";
+import { avatarImageUrls, downloadAvatarImage } from "@/utils/avatar-images";
 
 const LOCAL_USER_ID = "local_user";
+const DEFAULT_USER_NAME = "set your name";
 
 export type SaveUserPreferencesInput = {
   appTheme?: ThemePreference;
@@ -42,7 +44,7 @@ function ensureLocalUser() {
   db.insert(users)
     .values({
       id: LOCAL_USER_ID,
-      name: "Tom Hillson",
+      name: DEFAULT_USER_NAME,
       appTheme: "system",
       currency: "EUR",
       syncStatus: "pending",
@@ -55,10 +57,35 @@ function ensureLocalUser() {
   return db.select().from(users).where(eq(users.id, LOCAL_USER_ID)).get();
 }
 
+async function ensureDefaultProfileImage(user: User | undefined) {
+  if (!user || user.profileImageUri) return user;
+
+  try {
+    const now = new Date().toISOString();
+    const profileImageUri = await downloadAvatarImage(avatarImageUrls[0]);
+
+    db.update(users)
+      .set({
+        profileImageUri,
+        syncStatus: "pending",
+        syncAction: user.syncAction === "create" ? "create" : "update",
+        updatedAt: now,
+      })
+      .where(eq(users.id, LOCAL_USER_ID))
+      .run();
+
+    return db.select().from(users).where(eq(users.id, LOCAL_USER_ID)).get();
+  } catch (error) {
+    console.warn("Default avatar download failed:", error);
+
+    return user;
+  }
+}
+
 export async function getUserPreferences() {
   initializeDatabase();
 
-  return ensureLocalUser();
+  return ensureDefaultProfileImage(ensureLocalUser());
 }
 
 export async function saveUserPreferences(input: SaveUserPreferencesInput) {

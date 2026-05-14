@@ -242,6 +242,8 @@
     },
     "preferences": {
       "appTheme": "APP-DESIGN",
+      "avatarDownloadErrorBody": "Pruefe deine Internetverbindung und versuche es erneut.",
+      "avatarDownloadErrorTitle": "Avatar konnte nicht heruntergeladen werden",
       "currency": "WAEHRUNG",
       "currencyCode": "Waehrungscode",
       "currencyDescription": "Wird zur Anzeige von Betraegen in der App verwendet.",
@@ -249,6 +251,8 @@
       "displayName": "ANZEIGENAME",
       "namePlaceholder": "Dein Name",
       "profileDoodle": "PROFIL-DOODLE",
+      "profileImage": "PROFILBILD",
+      "refreshAvatars": "Avatar-Liste aktualisieren",
       "subtitle": "Aktualisiere dein Profil und deine Anzeigeeinstellungen.",
       "theme": {
         "dark": "Dunkel",
