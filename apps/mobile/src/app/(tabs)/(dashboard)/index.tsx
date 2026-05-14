@@ -101,6 +101,16 @@ function getCurrentMonthSpendingPoints(
   });
 }
 
+function isReceiptInMonth(
+  receipt: NonNullable<ReturnType<typeof useReceiptsQuery>["data"]>[number],
+  selectedMonth: Date,
+) {
+  const receiptDate =
+    parseReceiptDate(receipt.dateText) ?? parseReceiptDate(receipt.createdAt);
+
+  return receiptDate ? isSameMonth(receiptDate, selectedMonth) : false;
+}
+
 export default function DashboardScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
@@ -117,17 +127,21 @@ export default function DashboardScreen() {
     () => getCurrentMonthSpendingPoints(receiptsQuery.data ?? [], selectedMonth),
     [receiptsQuery.data, selectedMonth],
   );
-  const receiptTransactions =
-    receiptsQuery.data
-      ?.slice(0, 5)
-      .map((receipt) => ({
+  const receiptTransactions = useMemo(
+    () =>
+      receiptsQuery.data
+        ?.filter((receipt) => isReceiptInMonth(receipt, selectedMonth))
+        .slice(0, 5)
+        .map((receipt) => ({
         id: receipt.id,
         icon: getReceiptIcon(receipt.categoryName),
         title: receipt.store,
         category: receipt.categoryName ?? t("dashboard.receiptFallback"),
         date: receipt.dateText ?? receipt.createdAt,
         amount: formatReceiptAmount(receipt.total),
-      })) ?? [];
+        })) ?? [],
+    [receiptsQuery.data, selectedMonth, t],
+  );
 
   const refreshDashboard = () => {
     monthlyBudgetQuery.refetch();

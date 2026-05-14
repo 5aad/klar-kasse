@@ -39,7 +39,6 @@ erDiagram
     text category_name
     text address_json
     text date_text
-    text time_text
     real total
     text payment_method
     text card_last4

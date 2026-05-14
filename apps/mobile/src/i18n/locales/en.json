@@ -38,7 +38,8 @@
       },
       "placeholder": "Merchant, category, or keyword...",
       "subtitle": "Find transactions by merchant, category, or amount.",
-      "title": "Search"
+      "title": "Search",
+      "unknownDate": "Unknown date"
     },
     "remainingBudget": "Remaining Budget",
     "searchTransactions": "Search transactions",
