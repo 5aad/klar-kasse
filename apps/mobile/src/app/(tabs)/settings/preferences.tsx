@@ -25,7 +25,8 @@ import {
   avatarImageUrls,
   discoverAvatarImageUrls,
   downloadAvatarImage,
-  isAvatarImageDownloaded,
+  getDownloadedAvatarImageUrls,
+  getPotentialAvatarImageUrls,
 } from "@/utils/avatar-images";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
@@ -80,15 +81,11 @@ export default function PreferencesScreen() {
   }, [setSelectedTheme, userPreferencesQuery.data]);
 
   async function loadDownloadedAvatarUrls(avatarUrls = availableAvatarUrls) {
-    const downloadedUrls = (
-      await Promise.all(
-        avatarUrls.map(async (url) =>
-          (await isAvatarImageDownloaded(url)) ? url : null,
-        ),
-      )
-    ).filter((url): url is string => Boolean(url));
+    const downloadedUrls = await getDownloadedAvatarImageUrls(avatarUrls);
 
     setDownloadedAvatarUrls(downloadedUrls);
+
+    return downloadedUrls;
   }
 
   async function refreshAvatarList() {
@@ -96,10 +93,17 @@ export default function PreferencesScreen() {
 
     try {
       await userPreferencesQuery.refetch();
-      const nextAvatarUrls = await discoverAvatarImageUrls(availableAvatarUrls);
+      const nextAvatarUrls = await discoverAvatarImageUrls();
+      const hasRemoteAvatars = nextAvatarUrls.length > 0;
+      const avatarUrlsToCheck = hasRemoteAvatars
+        ? nextAvatarUrls
+        : getPotentialAvatarImageUrls();
+      const downloadedUrls =
+        await getDownloadedAvatarImageUrls(avatarUrlsToCheck);
+      const visibleAvatarUrls = hasRemoteAvatars ? nextAvatarUrls : downloadedUrls;
 
-      setAvailableAvatarUrls(nextAvatarUrls);
-      await loadDownloadedAvatarUrls(nextAvatarUrls);
+      setAvailableAvatarUrls(visibleAvatarUrls);
+      setDownloadedAvatarUrls(downloadedUrls);
       setAvatarPreviewRefreshKey((currentKey) => currentKey + 1);
     } finally {
       setIsRefreshingAvatars(false);
@@ -110,17 +114,19 @@ export default function PreferencesScreen() {
     let isMounted = true;
 
     async function loadAvatars() {
-      const nextAvatarUrls = await discoverAvatarImageUrls(avatarImageUrls);
-      const nextDownloadedUrls = (
-        await Promise.all(
-          nextAvatarUrls.map(async (url) =>
-            (await isAvatarImageDownloaded(url)) ? url : null,
-          ),
-        )
-      ).filter((url): url is string => Boolean(url));
+      const nextAvatarUrls = await discoverAvatarImageUrls();
+      const hasRemoteAvatars = nextAvatarUrls.length > 0;
+      const avatarUrlsToCheck = hasRemoteAvatars
+        ? nextAvatarUrls
+        : getPotentialAvatarImageUrls();
+      const nextDownloadedUrls =
+        await getDownloadedAvatarImageUrls(avatarUrlsToCheck);
+      const visibleAvatarUrls = hasRemoteAvatars
+        ? nextAvatarUrls
+        : nextDownloadedUrls;
 
       if (isMounted) {
-        setAvailableAvatarUrls(nextAvatarUrls);
+        setAvailableAvatarUrls(visibleAvatarUrls);
         setDownloadedAvatarUrls(nextDownloadedUrls);
       }
     }

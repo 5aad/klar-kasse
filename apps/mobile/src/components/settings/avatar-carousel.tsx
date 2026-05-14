@@ -14,7 +14,7 @@ import {
 } from "react-native";
 
 import { useThemeColors } from "@/hooks/use-theme-colors";
-import { getAvatarFileName } from "@/utils/avatar-images";
+import { getAvatarFileName, getAvatarLocalUri } from "@/utils/avatar-images";
 
 const AVATARS_PER_PAGE = 6;
 
@@ -128,6 +128,9 @@ export function AvatarCarousel({
               );
               const isDownloading = downloadingAvatarUrl === url;
               const isDownloaded = downloadedAvatarUrls.includes(url);
+              const imageUri = isDownloaded
+                ? getAvatarLocalUri(url)
+                : `${url}?refresh=${previewRefreshKey}`;
 
               return (
                 <Pressable
@@ -150,7 +153,7 @@ export function AvatarCarousel({
                   <Image
                     cachePolicy="none"
                     contentFit="cover"
-                    source={{ uri: `${url}?refresh=${previewRefreshKey}` }}
+                    source={{ uri: imageUri }}
                     style={styles.avatarImage}
                   />
                   {isDownloaded ? null : (
