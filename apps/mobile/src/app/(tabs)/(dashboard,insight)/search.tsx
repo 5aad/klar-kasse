@@ -160,14 +160,11 @@ export default function SearchScreen() {
   const filteredReceipts = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
-    return (receiptsQuery.data ?? []).filter((receipt) => {
+    const matchingReceipts = (receiptsQuery.data ?? []).filter((receipt) => {
       const receiptDate =
         parseReceiptDate(receipt.dateText) ?? parseReceiptDate(receipt.createdAt);
 
       if (receiptDate && !isSameMonth(receiptDate, selectedMonth)) return false;
-      if (activeFilter === "significant" && Math.abs(receipt.total) < 100) {
-        return false;
-      }
       if (
         activeFilter !== "all" &&
         activeFilter !== "significant" &&
@@ -192,6 +189,10 @@ export default function SearchScreen() {
 
       return searchableText.includes(normalizedQuery);
     });
+
+    if (activeFilter !== "significant") return matchingReceipts;
+
+    return [...matchingReceipts].sort((left, right) => right.total - left.total);
   }, [
     activeCategoryId,
     activeCategoryName,
