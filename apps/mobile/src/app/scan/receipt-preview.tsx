@@ -10,7 +10,6 @@ import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -20,18 +19,21 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
 import { useThemeColors } from "@/hooks/use-theme-colors";
+import { useCategoriesQuery } from "@/queries/categories";
 import { usePostReceiptMutation } from "@/queries/receipts";
 import { useReceiptScanStore } from "@/stores/receipt-scan-store";
 import {
   parseNormaReceipt,
   type ReceiptParseResult,
 } from "@/utils/receipt-parser";
+import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 
 type ThemeColors = ReturnType<typeof useThemeColors>;
 
 export default function CapturedReceiptMlKitScreen() {
   const themeColors = useThemeColors();
   const { t } = useTranslation();
+  const categoriesQuery = useCategoriesQuery();
   const postReceiptMutation = usePostReceiptMutation();
   const croppedImage = useReceiptScanStore((state) => state.croppedImage);
   const clearReceiptImages = useReceiptScanStore(
@@ -42,9 +44,7 @@ export default function CapturedReceiptMlKitScreen() {
   const [merchantName, setMerchantName] = useState("");
   const [date, setDate] = useState("");
   const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState(() =>
-    t("scan.preview.defaultCategory"),
-  );
+  const [category, setCategory] = useState("");
   const [note, setNote] = useState("");
   const [parsedReceipt, setParsedReceipt] = useState<ReceiptParseResult | null>(
     null,
@@ -56,6 +56,14 @@ export default function CapturedReceiptMlKitScreen() {
 
     return name || t("scan.preview.fallbackFileName");
   }, [croppedImage?.uri, t]);
+  const categoryOptions =
+    categoriesQuery.data?.map((categoryItem) => categoryItem.name) ?? [];
+
+  useEffect(() => {
+    if (category || !categoryOptions.length) return;
+
+    setCategory(categoryOptions[0]);
+  }, [category, categoryOptions]);
 
   useEffect(() => {
     if (!croppedImage?.uri) return;
@@ -176,7 +184,7 @@ export default function CapturedReceiptMlKitScreen() {
       style={[styles.screen, { backgroundColor: themeColors.background }]}
       edges={["top", "bottom"]}
     >
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
@@ -279,27 +287,13 @@ export default function CapturedReceiptMlKitScreen() {
           />
         </View>
 
-        <View
-          style={[styles.selectField, { backgroundColor: themeColors.surface }]}
-        >
-          <View>
-            <Text style={[styles.fieldLabel, { color: themeColors.mutedText }]}>
-              {t("scan.preview.fields.category")}
-            </Text>
-            <TextInput
-              style={[styles.fieldInput, { color: themeColors.text }]}
-              value={category}
-              onChangeText={setCategory}
-              placeholder={t("scan.preview.placeholders.category")}
-              placeholderTextColor={themeColors.mutedText}
-            />
-          </View>
-          <MaterialCommunityIcons
-            name="chevron-down"
-            size={24}
-            color={themeColors.text}
-          />
-        </View>
+        <CategoryChoiceGroup
+          emptyText={t("scan.preview.emptyCategories")}
+          label={t("scan.preview.fields.category")}
+          options={categoryOptions}
+          value={category}
+          onChange={setCategory}
+        />
 
         <ReviewField
           label={t("scan.preview.fields.note")}
@@ -341,7 +335,7 @@ export default function CapturedReceiptMlKitScreen() {
             {t("scan.preview.discard")}
           </Text>
         </Pressable>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
@@ -391,6 +385,69 @@ function ReviewField({
         keyboardType={keyboardType}
         multiline={multiline}
       />
+    </View>
+  );
+}
+
+function CategoryChoiceGroup({
+  emptyText,
+  label,
+  onChange,
+  options,
+  value,
+}: {
+  emptyText: string;
+  label: string;
+  onChange: (value: string) => void;
+  options: readonly string[];
+  value: string;
+}) {
+  const themeColors = useThemeColors();
+
+  return (
+    <View style={styles.choiceSection}>
+      <Text style={[styles.choiceLabel, { color: themeColors.text }]}>
+        {label}
+      </Text>
+      <View style={styles.choiceList}>
+        {options.length ? (
+          options.map((option) => {
+            const isSelected = option === value;
+
+            return (
+              <Pressable
+                key={option}
+                style={[
+                  styles.choiceChip,
+                  {
+                    backgroundColor: isSelected
+                      ? themeColors.primary
+                      : themeColors.surface,
+                  },
+                ]}
+                onPress={() => onChange(option)}
+              >
+                <Text
+                  style={[
+                    styles.choiceText,
+                    {
+                      color: isSelected
+                        ? themeColors.primaryText
+                        : themeColors.text,
+                    },
+                  ]}
+                >
+                  {option}
+                </Text>
+              </Pressable>
+            );
+          })
+        ) : (
+          <Text style={[styles.choiceEmptyText, { color: themeColors.mutedText }]}>
+            {emptyText}
+          </Text>
+        )}
+      </View>
     </View>
   );
 }
@@ -464,20 +521,38 @@ const styles = StyleSheet.create({
   compactField: {
     flex: 1,
   },
-  selectField: {
-    minHeight: 78,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.md,
-    borderRadius: radius.md,
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-  },
   fieldLabel: {
     fontSize: fontSize.xs,
     fontWeight: "800",
     letterSpacing: 1.5,
+  },
+  choiceSection: {
+    gap: spacing.sm,
+  },
+  choiceLabel: {
+    fontSize: fontSize.sm,
+    fontWeight: "800",
+    letterSpacing: 1.1,
+  },
+  choiceList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  choiceChip: {
+    minHeight: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.md,
+  },
+  choiceText: {
+    fontSize: fontSize.sm,
+    fontWeight: "800",
+  },
+  choiceEmptyText: {
+    fontSize: fontSize.md,
+    fontWeight: "600",
   },
   fieldInput: {
     minWidth: 0,

@@ -172,6 +172,7 @@
       "confirm": "Confirm & Add",
       "defaultCategory": "Food & Drinks",
       "discard": "DISCARD SCAN",
+      "emptyCategories": "Add categories from the Budget screen first.",
       "emptyTitle": "No receipt image found",
       "fallbackFileName": "receipt.jpg",
       "fields": {
@@ -255,11 +256,7 @@
         "light": "Light",
         "system": "System"
       },
-      "title": "Preferences",
-      "vat": "VAT",
-      "vatRate": "VAT tax percentage",
-      "vatRateDescription": "Used when calculating tax on receipt totals.",
-      "vatRatePlaceholder": "19"
+      "title": "Preferences"
     },
     "yourData": {
       "archiveMeta": "EUR {{budget}} budget, {{categories}} categories, {{receipts}} receipts",

@@ -172,6 +172,7 @@
       "confirm": "Bestaetigen & hinzufuegen",
       "defaultCategory": "Essen & Trinken",
       "discard": "SCAN VERWERFEN",
+      "emptyCategories": "Fuege zuerst Kategorien im Budget-Bildschirm hinzu.",
       "emptyTitle": "Kein Belegbild gefunden",
       "fallbackFileName": "beleg.jpg",
       "fields": {
@@ -255,11 +256,7 @@
         "light": "Hell",
         "system": "System"
       },
-      "title": "Einstellungen",
-      "vat": "MWST.",
-      "vatRate": "MwSt.-Prozentsatz",
-      "vatRateDescription": "Wird zur Steuerberechnung fuer Belegsummen verwendet.",
-      "vatRatePlaceholder": "19"
+      "title": "Einstellungen"
     },
     "yourData": {
       "archiveMeta": "EUR {{budget}} Budget, {{categories}} Kategorien, {{receipts}} Belege",
