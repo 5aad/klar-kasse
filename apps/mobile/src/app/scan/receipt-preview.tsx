@@ -18,6 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useCategoriesQuery } from "@/queries/categories";
 import { usePostReceiptMutation } from "@/queries/receipts";
@@ -49,6 +50,7 @@ function getPaymentMethod(value?: string) {
 export default function CapturedReceiptMlKitScreen() {
   const themeColors = useThemeColors();
   const { t } = useTranslation();
+  const { currency } = useCurrencyFormatter();
   const categoriesQuery = useCategoriesQuery();
   const postReceiptMutation = usePostReceiptMutation();
   const croppedImage = useReceiptScanStore((state) => state.croppedImage);
@@ -298,7 +300,7 @@ export default function CapturedReceiptMlKitScreen() {
           />
           <ReviewField
             compact
-            label={t("scan.preview.fields.amount")}
+            label={t("scan.preview.fields.amount", { currency })}
             value={amount}
             onChangeText={setAmount}
             placeholder={t("scan.preview.placeholders.amount")}

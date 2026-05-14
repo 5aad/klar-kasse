@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
 import { usePostCategoryMutation } from "@/queries/categories";
 
@@ -26,6 +27,7 @@ export function NewCategoryModal({ onClose, visible }: Props) {
   const themeColors = useThemeColors();
   const resolvedTheme = useResolvedTheme();
   const { t } = useTranslation();
+  const { currency } = useCurrencyFormatter();
   const postCategoryMutation = usePostCategoryMutation();
   const [categoryName, setCategoryName] = useState("");
   const [monthlyLimit, setMonthlyLimit] = useState("");
@@ -134,7 +136,9 @@ export function NewCategoryModal({ onClose, visible }: Props) {
           value={monthlyLimit}
           onChangeText={setMonthlyLimit}
           keyboardType="decimal-pad"
-          placeholder={t("budget.newCategory.monthlyLimitPlaceholder")}
+          placeholder={t("budget.newCategory.monthlyLimitPlaceholder", {
+            currency,
+          })}
           placeholderTextColor={themeColors.mutedText}
           style={[
             styles.input,

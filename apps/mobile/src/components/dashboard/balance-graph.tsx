@@ -1,6 +1,5 @@
 import { spacing } from "@repo/theme";
 import { useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
 import {
   PanResponder,
   StyleSheet,
@@ -17,6 +16,7 @@ import Svg, {
 } from "react-native-svg";
 
 import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 
 type SpendingPoint = {
   label: string;
@@ -47,7 +47,7 @@ export function BalanceGraph({ points }: Props) {
   const { width } = useWindowDimensions();
   const themeColors = useThemeColors();
   const resolvedTheme = useResolvedTheme();
-  const { t } = useTranslation();
+  const { formatCurrency } = useCurrencyFormatter();
   const chartWidth = Math.min(width - spacing.lg * 4, 340);
   const chartHeight = 168;
   const today = new Date();
@@ -212,9 +212,7 @@ export function BalanceGraph({ points }: Props) {
                 x={activeLabelX}
                 y={activeLabelY + 13}
               >
-                {t("common.currencyAmount", {
-                  amount: activePoint.value.toFixed(2),
-                })}
+                {formatCurrency(activePoint.value)}
               </SvgText>
             </>
           ) : null}

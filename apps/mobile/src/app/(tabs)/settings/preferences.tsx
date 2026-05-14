@@ -1,10 +1,9 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { colors, fontSize, radius, spacing } from "@repo/theme";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -15,8 +14,13 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
 import { ScreenHeader } from "@/components/shared/screen-header";
 import { useThemeColors } from "@/hooks/use-theme-colors";
+import {
+  useSaveUserPreferencesMutation,
+  useUserPreferencesQuery,
+} from "@/queries/users";
 import { useThemeStore, type ThemePreference } from "@/stores/theme-store";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
+import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 
 const doodles = [
   "face-man-profile",
@@ -45,24 +49,6 @@ const themeOptions = [
   },
 ] as const;
 
-const currencyOptions = [
-  {
-    key: "EUR",
-    labelKey: "settings.preferences.currencyOptions.eur",
-    icon: "currency-eur",
-  },
-  {
-    key: "USD",
-    labelKey: "settings.preferences.currencyOptions.usd",
-    icon: "currency-usd",
-  },
-  {
-    key: "GBP",
-    labelKey: "settings.preferences.currencyOptions.gbp",
-    icon: "currency-gbp",
-  },
-] as const;
-
 export default function PreferencesScreen() {
   const { width } = useWindowDimensions();
   const themeColors = useThemeColors();
@@ -70,17 +56,40 @@ export default function PreferencesScreen() {
   const { t } = useTranslation();
   const [name, setName] = useState("Tom Hillson");
   const [selectedDoodle, setSelectedDoodle] = useState(0);
-  const [selectedCurrency, setSelectedCurrency] = useState("EUR");
+  const [currency, setCurrency] = useState("EUR");
   const selectedTheme = useThemeStore((state) => state.themePreference);
   const setSelectedTheme = useThemeStore((state) => state.setThemePreference);
+  const userPreferencesQuery = useUserPreferencesQuery();
+  const saveUserPreferencesMutation = useSaveUserPreferencesMutation();
   const doodleTileSize = (width - spacing.lg * 2 - spacing.md * 2) / 3;
+
+  useEffect(() => {
+    if (!userPreferencesQuery.data) return;
+
+    setName(userPreferencesQuery.data.name);
+    setCurrency(userPreferencesQuery.data.currency);
+    setSelectedTheme(userPreferencesQuery.data.appTheme as ThemePreference);
+  }, [setSelectedTheme, userPreferencesQuery.data]);
+
+  function saveName() {
+    saveUserPreferencesMutation.mutate({ name });
+  }
+
+  function saveCurrency() {
+    saveUserPreferencesMutation.mutate({ currency });
+  }
+
+  function selectTheme(theme: ThemePreference) {
+    setSelectedTheme(theme);
+    saveUserPreferencesMutation.mutate({ appTheme: theme });
+  }
 
   return (
     <SafeAreaView
       style={[styles.screen, { backgroundColor: themeColors.background }]}
       edges={["top"]}
     >
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.content,
           { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
@@ -99,6 +108,7 @@ export default function PreferencesScreen() {
           <TextInput
             value={name}
             onChangeText={setName}
+            onBlur={saveName}
             placeholder={t("settings.preferences.namePlaceholder")}
             placeholderTextColor={themeColors.mutedText}
             style={[
@@ -166,9 +176,7 @@ export default function PreferencesScreen() {
                     },
                     isSelected && styles.themeOptionSelected,
                   ]}
-                  onPress={() =>
-                    setSelectedTheme(option.key as ThemePreference)
-                  }
+                  onPress={() => selectTheme(option.key as ThemePreference)}
                 >
                   <MaterialCommunityIcons
                     color={isSelected ? colors.primary : themeColors.text}
@@ -199,49 +207,52 @@ export default function PreferencesScreen() {
           <Text style={[styles.label, { color: themeColors.text }]}>
             {t("settings.preferences.currency")}
           </Text>
-          <View style={styles.themeList}>
-            {currencyOptions.map((option) => {
-              const isSelected = selectedCurrency === option.key;
-
-              return (
-                <Pressable
-                  key={option.key}
-                  style={[
-                    styles.themeOption,
-                    {
-                      backgroundColor: themeColors.surface,
-                      borderColor: themeColors.text,
-                    },
-                    isSelected && styles.themeOptionSelected,
-                  ]}
-                  onPress={() => setSelectedCurrency(option.key)}
-                >
-                  <MaterialCommunityIcons
-                    color={isSelected ? colors.primary : themeColors.text}
-                    name={option.icon}
-                    size={25}
-                  />
-                  <Text
-                    style={[
-                      styles.themeText,
-                      { color: themeColors.text },
-                      isSelected && styles.themeTextSelected,
-                    ]}
-                  >
-                    {t(option.labelKey)}
-                  </Text>
-                  <MaterialCommunityIcons
-                    color={isSelected ? colors.primary : themeColors.mutedText}
-                    name={isSelected ? "radiobox-marked" : "radiobox-blank"}
-                    size={24}
-                  />
-                </Pressable>
-              );
-            })}
+          <View
+            style={[
+              styles.preferenceField,
+              {
+                backgroundColor: themeColors.surface,
+                borderColor: themeColors.text,
+              },
+            ]}
+          >
+            <View style={styles.preferenceCopy}>
+              <Text
+                style={[styles.preferenceTitle, { color: themeColors.text }]}
+              >
+                {t("settings.preferences.currencyCode")}
+              </Text>
+              <Text
+                style={[
+                  styles.preferenceDescription,
+                  { color: themeColors.mutedText },
+                ]}
+              >
+                {t("settings.preferences.currencyDescription")}
+              </Text>
+            </View>
+            <TextInput
+              autoCapitalize="characters"
+              maxLength={3}
+              value={currency}
+              onChangeText={(value) =>
+                setCurrency(value.replace(/[^a-z]/gi, "").toUpperCase())
+              }
+              onBlur={saveCurrency}
+              placeholder={t("settings.preferences.currencyPlaceholder")}
+              placeholderTextColor={themeColors.mutedText}
+              style={[
+                styles.preferenceInput,
+                {
+                  borderColor: themeColors.mutedText,
+                  color: themeColors.text,
+                },
+              ]}
+            />
           </View>
         </View>
 
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
@@ -318,5 +329,38 @@ const styles = StyleSheet.create({
   },
   themeTextSelected: {
     color: colors.primary,
+  },
+  preferenceField: {
+    minHeight: 76,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  preferenceCopy: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  preferenceTitle: {
+    fontSize: fontSize.md,
+    fontWeight: "800",
+  },
+  preferenceDescription: {
+    fontSize: fontSize.sm,
+    fontWeight: "500",
+    lineHeight: 18,
+  },
+  preferenceInput: {
+    minWidth: 88,
+    minHeight: 44,
+    borderWidth: 1,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.sm,
+    fontSize: fontSize.lg,
+    fontWeight: "800",
+    textAlign: "center",
   },
 });

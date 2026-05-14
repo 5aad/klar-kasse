@@ -20,6 +20,23 @@ export function initializeDatabase() {
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY NOT NULL,
+      name TEXT NOT NULL DEFAULT 'Tom Hillson',
+      app_theme TEXT NOT NULL DEFAULT 'system',
+      currency TEXT NOT NULL DEFAULT 'EUR',
+      profile_image_uri TEXT,
+      sync_status TEXT NOT NULL DEFAULT 'pending',
+      sync_action TEXT NOT NULL DEFAULT 'create',
+      remote_id TEXT,
+      sync_version INTEGER NOT NULL DEFAULT 0,
+      last_synced_at TEXT,
+      sync_error TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      deleted_at TEXT
+    );
+
     CREATE TABLE IF NOT EXISTS categories (
       id TEXT PRIMARY KEY NOT NULL,
       name TEXT NOT NULL,
@@ -153,6 +170,8 @@ export function initializeDatabase() {
 
     CREATE INDEX IF NOT EXISTS categories_sync_status_idx ON categories(sync_status);
     CREATE UNIQUE INDEX IF NOT EXISTS categories_remote_id_idx ON categories(remote_id) WHERE remote_id IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS users_sync_status_idx ON users(sync_status);
+    CREATE UNIQUE INDEX IF NOT EXISTS users_remote_id_idx ON users(remote_id) WHERE remote_id IS NOT NULL;
     CREATE INDEX IF NOT EXISTS receipts_category_id_idx ON receipts(category_id);
     CREATE INDEX IF NOT EXISTS receipts_date_text_idx ON receipts(date_text);
     CREATE INDEX IF NOT EXISTS receipts_sync_status_idx ON receipts(sync_status);

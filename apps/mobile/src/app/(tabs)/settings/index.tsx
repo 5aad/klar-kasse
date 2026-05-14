@@ -10,6 +10,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { CustomerSupportModal } from "@/components/settings/customer-support-modal";
 import { LanguageModal } from "@/components/settings/language-modal";
 import { useThemeColors } from "@/hooks/use-theme-colors";
+import { useUserPreferencesQuery } from "@/queries/users";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 type ThemeColors = ReturnType<typeof useThemeColors>;
@@ -21,6 +22,7 @@ export default function SettingsScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
+  const userPreferencesQuery = useUserPreferencesQuery();
   const [isLanguageModalVisible, setIsLanguageModalVisible] = useState(false);
   const [isSupportModalVisible, setIsSupportModalVisible] = useState(false);
 
@@ -39,7 +41,7 @@ export default function SettingsScreen() {
           <Image source={{ uri: PROFILE_IMAGE }} style={styles.avatar} />
         </View>
         <Text style={[styles.name, { color: themeColors.text }]}>
-          Tom Hillson
+          {userPreferencesQuery.data?.name ?? "Tom Hillson"}
         </Text>
         {/* <Text style={styles.email}>Tomhill@mail.com</Text> */}
       </View>

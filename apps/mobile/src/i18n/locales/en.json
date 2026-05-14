@@ -1,7 +1,7 @@
 {
   "common": {
     "cancel": "Cancel",
-    "currencyAmount": "EUR {{amount}}",
+    "currencyAmount": "{{currency}} {{amount}}",
     "save": "Save",
     "submit": "Submit"
   },
@@ -57,8 +57,8 @@
       "editAccessibility": "Edit {{name}} budget",
       "emptyBody": "Add your first category to start tracking budgets.",
       "emptyTitle": "No categories yet",
-      "remaining": "${{amount}} remaining",
-      "spentOf": "${{spent}} of ${{limit}}",
+      "remaining": "{{amount}} remaining",
+      "spentOf": "{{spent}} of {{limit}}",
       "title": "Category Budgets",
       "typeCustom": "CUSTOM"
     },
@@ -83,18 +83,18 @@
       "categoryName": "CATEGORY NAME",
       "categoryNamePlaceholder": "e.g. Travel & Leisure",
       "monthlyLimit": "MONTHLY LIMIT",
-      "monthlyLimitPlaceholder": "$ 0.00",
+      "monthlyLimitPlaceholder": "{{currency}} 0.00",
       "subtitle": "Organize your spending with custom budget limits.",
       "title": "New Category",
       "visualIdentifier": "VISUAL IDENTIFIER"
     },
     "status": {
       "budget": "BUDGET",
-      "budgetPlaceholder": "$0",
+      "budgetPlaceholder": "{{currency}} 0",
       "eyebrow": "TOTAL BUDGET STATUS",
-      "left": "${{amount}} left",
+      "left": "{{amount}} left",
       "month": "MONTH",
-      "spent": "${{amount}} spent",
+      "spent": "{{amount}} spent",
       "usedPrefix": "of your",
       "usedSuffix": "monthly budget used"
     },
@@ -176,7 +176,7 @@
       "emptyTitle": "No receipt image found",
       "fallbackFileName": "receipt.jpg",
       "fields": {
-        "amount": "AMOUNT ($)",
+        "amount": "AMOUNT ({{currency}})",
         "category": "CATEGORY",
         "date": "DATE",
         "merchant": "MERCHANT NAME",
@@ -243,11 +243,9 @@
     "preferences": {
       "appTheme": "APP THEME",
       "currency": "CURRENCY",
-      "currencyOptions": {
-        "eur": "Euro (EUR)",
-        "gbp": "British Pound (GBP)",
-        "usd": "US Dollar (USD)"
-      },
+      "currencyCode": "Currency code",
+      "currencyDescription": "Used when showing amounts across the app.",
+      "currencyPlaceholder": "EUR",
       "displayName": "DISPLAY NAME",
       "namePlaceholder": "Your name",
       "profileDoodle": "PROFILE DOODLE",
@@ -260,7 +258,7 @@
       "title": "Preferences"
     },
     "yourData": {
-      "archiveMeta": "EUR {{budget}} budget, {{categories}} categories, {{receipts}} receipts",
+      "archiveMeta": "{{currency}} {{budget}} budget, {{categories}} categories, {{receipts}} receipts",
       "emptyBody": "Set a monthly budget to see export and delete options here.",
       "emptyTitle": "No monthly data yet",
       "subtitle": "Export or delete monthly spending records.",

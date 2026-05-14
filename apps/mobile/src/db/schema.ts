@@ -40,6 +40,22 @@ export const deviceInfo = sqliteTable("device_info", {
     .default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const users = sqliteTable(
+  "users",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull().default("Tom Hillson"),
+    appTheme: text("app_theme").notNull().default("system"),
+    currency: text("currency").notNull().default("EUR"),
+    profileImageUri: text("profile_image_uri"),
+    ...syncColumns,
+  },
+  (table) => [
+    index("users_sync_status_idx").on(table.syncStatus),
+    uniqueIndex("users_remote_id_idx").on(table.remoteId),
+  ],
+);
+
 export const categories = sqliteTable(
   "categories",
   {
@@ -196,6 +212,8 @@ export const syncOutbox = sqliteTable(
 
 export type Category = typeof categories.$inferSelect;
 export type NewCategory = typeof categories.$inferInsert;
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
 export type Receipt = typeof receipts.$inferSelect;
 export type NewReceipt = typeof receipts.$inferInsert;
 export type ReceiptItem = typeof receiptItems.$inferSelect;

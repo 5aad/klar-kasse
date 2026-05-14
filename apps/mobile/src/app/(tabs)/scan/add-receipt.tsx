@@ -15,6 +15,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useCategoriesQuery } from "@/queries/categories";
 import { usePostReceiptMutation } from "@/queries/receipts";
@@ -52,6 +53,7 @@ export default function AddReceiptScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
+  const { currency } = useCurrencyFormatter();
   const categoriesQuery = useCategoriesQuery();
   const postReceiptMutation = usePostReceiptMutation();
   const [store, setStore] = useState("");
@@ -168,7 +170,7 @@ export default function AddReceiptScreen() {
             />
             <ManualField
               compact
-              label={t("scan.preview.fields.amount")}
+              label={t("scan.preview.fields.amount", { currency })}
               keyboardType="decimal-pad"
               placeholder={t("scan.preview.placeholders.amount")}
               value={displayedTotal}

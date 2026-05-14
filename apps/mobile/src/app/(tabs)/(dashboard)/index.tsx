@@ -20,6 +20,7 @@ import {
   MonthSelector,
 } from "@/components/shared/month-selector";
 import { TransactionList } from "@/components/shared/transaction-list";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useMonthlyBudgetQuery } from "@/queries/budgets";
 import { useReceiptsQuery } from "@/queries/receipts";
@@ -32,10 +33,6 @@ const categoryIcons = {
   Shopping: "shopping",
   Travel: "airplane",
 } as const;
-
-function formatReceiptAmount(total: number) {
-  return `- EUR ${total.toFixed(2)}`;
-}
 
 function getReceiptIcon(category?: string | null) {
   return (
@@ -115,6 +112,7 @@ export default function DashboardScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
+  const { formatCurrency } = useCurrencyFormatter();
   const monthlyBudgetQuery = useMonthlyBudgetQuery();
   const receiptsQuery = useReceiptsQuery();
   const [selectedMonth, setSelectedMonth] = useState(getInitialMonth);
@@ -138,9 +136,9 @@ export default function DashboardScreen() {
         title: receipt.store,
         category: receipt.categoryName ?? t("dashboard.receiptFallback"),
         date: receipt.dateText ?? receipt.createdAt,
-        amount: formatReceiptAmount(receipt.total),
+        amount: `- ${formatCurrency(receipt.total)}`,
         })) ?? [],
-    [receiptsQuery.data, selectedMonth, t],
+    [formatCurrency, receiptsQuery.data, selectedMonth, t],
   );
 
   const refreshDashboard = () => {
@@ -174,9 +172,9 @@ export default function DashboardScreen() {
         <View style={styles.header}>
           <View style={styles.balanceRow}>
             <Text style={[styles.balance, { color: themeColors.text }]}>
-              EUR{" "}
-              {remainingBudget.toLocaleString(undefined, {
+              {formatCurrency(remainingBudget, {
                 maximumFractionDigits: 0,
+                minimumFractionDigits: 0,
               })}
             </Text>
             <Text

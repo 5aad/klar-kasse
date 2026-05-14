@@ -14,6 +14,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
 import { ScreenHeader } from "@/components/shared/screen-header";
 import { EmptyStateCard } from "@/components/shared/empty-state-card";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import {
   useDeleteMonthlyBudgetMutation,
@@ -46,6 +47,7 @@ export default function YourDataScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
   const { i18n, t } = useTranslation();
+  const { currency } = useCurrencyFormatter();
   const monthlyBudgetsQuery = useMonthlyBudgetsQuery();
   const deleteMonthlyBudgetMutation = useDeleteMonthlyBudgetMutation();
   const archives: DataArchive[] =
@@ -88,6 +90,7 @@ export default function YourDataScreen() {
         </Text>
         <Text style={[styles.archiveMeta, { color: themeColors.mutedText }]}>
           {t("settings.yourData.archiveMeta", {
+            currency,
             budget: item.limitAmount.toLocaleString(),
             categories: item.categoryBudgetCount,
             receipts: item.receiptCount,

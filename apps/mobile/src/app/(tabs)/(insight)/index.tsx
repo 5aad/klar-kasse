@@ -18,6 +18,7 @@ import {
   MonthSelector,
 } from "@/components/shared/month-selector";
 import { TransactionList } from "@/components/shared/transaction-list";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useCategoriesQuery } from "@/queries/categories";
 import { useReceiptsQuery } from "@/queries/receipts";
@@ -44,19 +45,11 @@ const categoryIcons = {
   Travel: "airplane",
 } as const;
 
-function formatReceiptAmount(currencyAmount: string) {
-  return `- ${currencyAmount}`;
-}
-
 function getReceiptIcon(category?: string | null) {
   return (
     categoryIcons[category as keyof typeof categoryIcons] ??
     "receipt-text-outline"
   );
-}
-
-function formatCategoryAmount(currencyAmount: string) {
-  return currencyAmount;
 }
 
 function isReceiptInMonth(
@@ -93,6 +86,7 @@ export default function InsightScreen() {
   const themeColors = useThemeColors();
   const { bottom } = useSafeAreaInsets();
   const { i18n, t } = useTranslation();
+  const { formatCurrency } = useCurrencyFormatter();
   const categoriesQuery = useCategoriesQuery();
   const receiptsQuery = useReceiptsQuery();
   const [selectedMonth, setSelectedMonth] = useState(getInitialMonth);
@@ -118,13 +112,11 @@ export default function InsightScreen() {
           title: receipt.store,
           category: receipt.categoryName ?? t("dashboard.receiptFallback"),
           date: receipt.dateText ?? receipt.createdAt,
-          amount: formatReceiptAmount(
-            t("common.currencyAmount", { amount: receipt.total.toFixed(2) }),
-          ),
+          amount: `- ${formatCurrency(receipt.total)}`,
           value: receipt.total,
         }))
         .slice(0, 5) ?? [],
-    [receiptsQuery.data, selectedMonth, t],
+    [formatCurrency, receiptsQuery.data, selectedMonth, t],
   );
   const categorySpending = useMemo<CategorySpendingItem[]>(() => {
     const totals = new Map<string, number>();
@@ -160,11 +152,7 @@ export default function InsightScreen() {
 
         return {
           name: category.name,
-          amount: formatCategoryAmount(
-            t("common.currencyAmount", {
-              amount: category.value.toFixed(2),
-            }),
-          ),
+          amount: formatCurrency(category.value),
           percent: `${Math.round(progress * 100)}%`,
           progress,
           value: category.value,
@@ -172,7 +160,7 @@ export default function InsightScreen() {
       })
       .sort((left, right) => right.progress - left.progress)
       .slice(0, 5);
-  }, [categorySpending, t]);
+  }, [categorySpending, formatCurrency]);
   const refreshInsights = () => {
     categoriesQuery.refetch();
     receiptsQuery.refetch();
