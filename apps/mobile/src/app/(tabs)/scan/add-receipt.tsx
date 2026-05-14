@@ -18,6 +18,7 @@ import { ScreenHeader } from "@/components/shared/screen-header";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useCategoriesQuery } from "@/queries/categories";
 import { usePostReceiptMutation } from "@/queries/receipts";
+import { formatDateInput, formatDateTextInput } from "@/utils/date-input";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 
@@ -45,14 +46,6 @@ function createItem(): ManualItem {
 
 function parseAmount(value: string) {
   return Number(value.replace(",", ".").replace(/[^\d.]/g, "")) || 0;
-}
-
-function formatDateInput(date: Date) {
-  return [
-    String(date.getDate()).padStart(2, "0"),
-    String(date.getMonth() + 1).padStart(2, "0"),
-    date.getFullYear(),
-  ].join(".");
 }
 
 export default function AddReceiptScreen() {
@@ -167,10 +160,11 @@ export default function AddReceiptScreen() {
           <View style={styles.twoColumnRow}>
             <ManualField
               compact
+              keyboardType="number-pad"
               label={t("scan.add.fields.date")}
               placeholder={t("scan.add.placeholders.date")}
               value={date}
-              onChangeText={setDate}
+              onChangeText={(value) => setDate(formatDateTextInput(value))}
             />
             <ManualField
               compact
@@ -304,7 +298,7 @@ function ManualField({
   value,
 }: {
   compact?: boolean;
-  keyboardType?: "default" | "decimal-pad";
+  keyboardType?: "default" | "decimal-pad" | "number-pad";
   label: string;
   multiline?: boolean;
   onChangeText: (value: string) => void;

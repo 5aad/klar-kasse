@@ -22,6 +22,7 @@ import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useCategoriesQuery } from "@/queries/categories";
 import { usePostReceiptMutation } from "@/queries/receipts";
 import { useReceiptScanStore } from "@/stores/receipt-scan-store";
+import { formatDateInput, formatDateTextInput } from "@/utils/date-input";
 import {
   parseNormaReceipt,
   type ReceiptParseResult,
@@ -36,14 +37,6 @@ const paymentMethodLabels: Record<(typeof paymentMethods)[number], string> = {
   Mastercard: "scan.add.paymentMethods.mastercard",
   Debit: "scan.add.paymentMethods.debit",
 };
-
-function formatDateInput(date: Date) {
-  return [
-    String(date.getDate()).padStart(2, "0"),
-    String(date.getMonth() + 1).padStart(2, "0"),
-    date.getFullYear(),
-  ].join(".");
-}
 
 function getPaymentMethod(value?: string) {
   const paymentMethod = paymentMethods.find(
@@ -298,8 +291,9 @@ export default function CapturedReceiptMlKitScreen() {
             compact
             label={t("scan.preview.fields.date")}
             value={date}
-            onChangeText={setDate}
+            onChangeText={(value) => setDate(formatDateTextInput(value))}
             placeholder={t("scan.preview.placeholders.date")}
+            keyboardType="number-pad"
             themeColors={themeColors}
           />
           <ReviewField
@@ -380,7 +374,7 @@ type ReviewFieldProps = {
   value: string;
   onChangeText: (value: string) => void;
   placeholder: string;
-  keyboardType?: "default" | "decimal-pad";
+  keyboardType?: "default" | "decimal-pad" | "number-pad";
   multiline?: boolean;
   themeColors: ThemeColors;
 };
