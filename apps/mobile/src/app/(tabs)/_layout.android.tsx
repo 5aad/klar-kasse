@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useThemeColors } from "@/hooks/use-theme-colors";
+import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
 
 type TabIconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
@@ -45,9 +45,14 @@ const tabs: TabConfig[] = [
 
 function FloatingTabBar({ descriptors, navigation, state }: any) {
   const themeColors = useThemeColors();
+  const resolvedTheme = useResolvedTheme();
   const { bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
   const regularTabs = tabs.filter((tab) => tab.name !== "scan");
+  const isDark = resolvedTheme === "dark";
+  const dockBackground = isDark ? "#050505" : colors.text;
+  const dockBorderColor = isDark ? "#343434" : "transparent";
+  const inactiveIconColor = isDark ? "#F4F1EA" : colors.primaryText;
   const scanRouteIndex = state.routes.findIndex(
     (route: { name: string }) => route.name === "scan",
   );
@@ -76,7 +81,18 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
       pointerEvents="box-none"
       style={[styles.tabBarWrap, { paddingBottom: Math.max(bottom, spacing.md) }]}
     >
-      <View style={styles.tabPill}>
+      <View
+        style={[
+          styles.tabPill,
+          {
+            backgroundColor: dockBackground,
+            borderColor: dockBorderColor,
+            boxShadow: isDark
+              ? "0 12px 22px rgba(0, 0, 0, 0.55)"
+              : "0 10px 18px rgba(0, 0, 0, 0.22)",
+          },
+        ]}
+      >
         {regularTabs.map((tab) => {
           const routeIndex = state.routes.findIndex(
             (route: { name: string }) => route.name === tab.name,
@@ -102,7 +118,7 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
               onPress={() => navigateToRoute(tab.name)}
             >
               <MaterialCommunityIcons
-                color={isFocused ? themeColors.text : colors.primaryText}
+                color={isFocused ? themeColors.text : inactiveIconColor}
                 name={tab.icon}
                 size={23}
               />
@@ -124,12 +140,19 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
         accessibilityState={state.index === scanRouteIndex ? { selected: true } : undefined}
         style={[
           styles.scanButton,
+          {
+            backgroundColor: dockBackground,
+            borderColor: dockBorderColor,
+            boxShadow: isDark
+              ? "0 12px 22px rgba(0, 0, 0, 0.55)"
+              : "0 10px 18px rgba(0, 0, 0, 0.22)",
+          },
           state.index === scanRouteIndex && { backgroundColor: themeColors.primary },
         ]}
         onPress={() => navigateToRoute("scan")}
       >
         <MaterialCommunityIcons
-          color={state.index === scanRouteIndex ? themeColors.primaryText : colors.primaryText}
+          color={state.index === scanRouteIndex ? themeColors.primaryText : inactiveIconColor}
           name="line-scan"
           size={34}
         />
@@ -186,9 +209,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     borderRadius: 999,
+    borderWidth: 1,
     padding: 4,
-    backgroundColor: colors.text,
-    boxShadow: "0 10px 18px rgba(0, 0, 0, 0.22)",
   },
   tabButton: {
     minWidth: 44,
@@ -217,7 +239,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 34,
-    backgroundColor: colors.text,
-    boxShadow: "0 10px 18px rgba(0, 0, 0, 0.22)",
+    borderWidth: 1,
   },
 });
