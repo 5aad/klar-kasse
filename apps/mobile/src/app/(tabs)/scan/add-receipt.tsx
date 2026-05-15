@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import {
   Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,

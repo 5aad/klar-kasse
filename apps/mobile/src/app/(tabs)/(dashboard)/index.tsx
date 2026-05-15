@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import {
   Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -14,6 +13,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BalanceGraph } from "@/components/dashboard/balance-graph";
+import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 import {
   getInitialMonth,
   isSameMonth,
@@ -149,7 +149,7 @@ export default function DashboardScreen() {
       style={[styles.screen, { backgroundColor: themeColors.background }]}
       edges={["top"]}
     >
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.content,
           { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
@@ -204,7 +204,7 @@ export default function DashboardScreen() {
         />
         <BalanceGraph points={spendingPoints} />
         <TransactionList items={receiptTransactions} />
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }

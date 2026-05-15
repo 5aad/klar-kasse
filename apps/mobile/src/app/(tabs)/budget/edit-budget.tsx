@@ -7,7 +7,6 @@ import {
   type GestureResponderEvent,
   PanResponder,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,

@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
+import { useTabBarStore } from "@/stores/tab-bar-store";
 
 type TabIconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
@@ -50,12 +51,21 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
   const { t } = useTranslation();
   const regularTabs = tabs.filter((tab) => tab.name !== "scan");
   const isDark = resolvedTheme === "dark";
+  const isMinimized = useTabBarStore((store) => store.isMinimized);
+  const setIsMinimized = useTabBarStore((store) => store.setIsMinimized);
   const dockBackground = isDark ? "#050505" : colors.text;
   const dockBorderColor = isDark ? "#343434" : "transparent";
   const inactiveIconColor = isDark ? "#F4F1EA" : colors.primaryText;
   const scanRouteIndex = state.routes.findIndex(
     (route: { name: string }) => route.name === "scan",
   );
+  const activeRoute = state.routes[state.index];
+  const activeTab =
+    tabs.find((tab) => tab.name === activeRoute?.name) ?? regularTabs[0];
+  const activeRouteOptions = activeRoute
+    ? descriptors[activeRoute.key]?.options
+    : undefined;
+  const activeLabel = activeRouteOptions?.title ?? t(activeTab.titleKey);
 
   function navigateToRoute(routeName: string) {
     const routeIndex = state.routes.findIndex(
@@ -81,6 +91,60 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
       pointerEvents="box-none"
       style={[styles.tabBarWrap, { paddingBottom: Math.max(bottom, spacing.md) }]}
     >
+      {isMinimized ? (
+        <>
+          <Pressable
+            accessibilityLabel={activeLabel}
+            accessibilityRole="button"
+            style={[
+              styles.compactButton,
+              {
+                backgroundColor: dockBackground,
+                borderColor: dockBorderColor,
+                boxShadow: isDark
+                  ? "0 12px 22px rgba(0, 0, 0, 0.55)"
+                  : "0 10px 18px rgba(0, 0, 0, 0.22)",
+              },
+            ]}
+            onPress={() => setIsMinimized(false)}
+          >
+            <MaterialCommunityIcons
+              color={inactiveIconColor}
+              name={activeTab.icon}
+              size={28}
+            />
+          </Pressable>
+          <View style={styles.compactSpacer} />
+          <Pressable
+            accessibilityRole="button"
+            style={[
+              styles.compactButton,
+              {
+                backgroundColor:
+                  state.index === scanRouteIndex
+                    ? themeColors.primary
+                    : dockBackground,
+                borderColor: dockBorderColor,
+                boxShadow: isDark
+                  ? "0 12px 22px rgba(0, 0, 0, 0.55)"
+                  : "0 10px 18px rgba(0, 0, 0, 0.22)",
+              },
+            ]}
+            onPress={() => navigateToRoute("scan")}
+          >
+            <MaterialCommunityIcons
+              color={
+                state.index === scanRouteIndex
+                  ? themeColors.primaryText
+                  : inactiveIconColor
+              }
+              name="line-scan"
+              size={34}
+            />
+          </Pressable>
+        </>
+      ) : (
+        <>
       <View
         style={[
           styles.tabPill,
@@ -157,6 +221,8 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
           size={34}
         />
       </Pressable>
+        </>
+      )}
     </View>
   );
 }
@@ -240,5 +306,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 34,
     borderWidth: 1,
+  },
+  compactButton: {
+    width: 64,
+    height: 64,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 32,
+    borderWidth: 1,
+  },
+  compactSpacer: {
+    flex: 1,
   },
 });

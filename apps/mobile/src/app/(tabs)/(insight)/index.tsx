@@ -3,7 +3,6 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -12,6 +11,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
 import { ExpenseDistributionChart } from "@/components/insight/expense-distribution-chart";
 import { EmptyStateCard } from "@/components/shared/empty-state-card";
+import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 import {
   getInitialMonth,
   isSameMonth,
@@ -171,7 +171,7 @@ export default function InsightScreen() {
       style={[styles.screen, { backgroundColor: themeColors.background }]}
       edges={["top"]}
     >
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.content,
           { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
@@ -217,7 +217,7 @@ export default function InsightScreen() {
           items={significantSpending}
           title={t("insight.significantSpending")}
         />
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
