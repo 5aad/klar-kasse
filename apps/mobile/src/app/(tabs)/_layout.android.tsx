@@ -3,7 +3,7 @@ import { colors, fontSize, radius, spacing } from "@repo/theme";
 import { Tabs } from "expo-router";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
@@ -16,6 +16,90 @@ type TabConfig = {
   name: string;
   titleKey: string;
 };
+
+type RegularTabButtonProps = {
+  iconColor: string;
+  isFocused: boolean;
+  label: string;
+  onPress: () => void;
+  tab: TabConfig;
+  themeColors: ReturnType<typeof useThemeColors>;
+  isFirst: boolean;
+  isLast: boolean;
+};
+
+function RegularTabButton({
+  iconColor,
+  isFocused,
+  isFirst,
+  isLast,
+  label,
+  onPress,
+  tab,
+  themeColors,
+}: RegularTabButtonProps) {
+  const selectedProgress = useRef(
+    new Animated.Value(isFocused ? 1 : 0),
+  ).current;
+  const targetLabelWidth = Math.min(Math.max(label.length * 7.5, 42), 82);
+  const labelWidth = selectedProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, targetLabelWidth],
+  });
+  const labelOpacity = selectedProgress.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0, 0, 1],
+  });
+  useEffect(() => {
+    Animated.timing(selectedProgress, {
+      toValue: isFocused ? 1 : 0,
+      duration: 160,
+      useNativeDriver: false,
+    }).start();
+  }, [isFocused, selectedProgress]);
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={isFocused ? { selected: true } : undefined}
+      style={[
+        styles.tabButton,
+        isFirst && styles.firstTabButton,
+        isLast && styles.lastTabButton,
+      ]}
+      onPress={onPress}
+    >
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.activeTabBackground,
+          {
+            backgroundColor: themeColors.surface,
+            opacity: selectedProgress,
+          },
+        ]}
+      />
+      <MaterialCommunityIcons
+        color={isFocused ? themeColors.text : iconColor}
+        name={tab.icon}
+        size={23}
+      />
+      <Animated.Text
+        numberOfLines={1}
+        style={[
+          styles.tabLabel,
+          {
+            color: themeColors.text,
+            opacity: labelOpacity,
+            width: labelWidth,
+          },
+        ]}
+      >
+        {label}
+      </Animated.Text>
+    </Pressable>
+  );
+}
 
 const tabs: TabConfig[] = [
   {
@@ -166,34 +250,17 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
             const label = options?.title ?? t(tab.titleKey);
 
             return (
-              <Pressable
+              <RegularTabButton
                 key={tab.name}
-                accessibilityRole="button"
-                accessibilityState={isFocused ? { selected: true } : undefined}
-                style={[
-                  styles.tabButton,
-                  tab.name === regularTabs[0].name && styles.firstTabButton,
-                  tab.name === regularTabs.at(-1)?.name && styles.lastTabButton,
-                  isFocused && {
-                    backgroundColor: themeColors.surface,
-                  },
-                ]}
+                iconColor={inactiveIconColor}
+                isFirst={tab.name === regularTabs[0].name}
+                isFocused={isFocused}
+                isLast={tab.name === regularTabs.at(-1)?.name}
+                label={label}
+                tab={tab}
+                themeColors={themeColors}
                 onPress={() => navigateToRoute(tab.name)}
-              >
-                <MaterialCommunityIcons
-                  color={isFocused ? themeColors.text : inactiveIconColor}
-                  name={tab.icon}
-                  size={23}
-                />
-                {isFocused ? (
-                  <Text
-                    style={[styles.tabLabel, { color: themeColors.text }]}
-                    numberOfLines={1}
-                  >
-                    {label}
-                  </Text>
-                ) : null}
-              </Pressable>
+              />
             );
           })}
         </View>
@@ -374,6 +441,15 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     borderRadius: 999,
     paddingHorizontal: spacing.sm,
+    overflow: "hidden",
+  },
+  activeTabBackground: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    borderRadius: 999,
   },
   firstTabButton: {
     paddingLeft: spacing.md,
@@ -382,9 +458,9 @@ const styles = StyleSheet.create({
     paddingRight: spacing.md,
   },
   tabLabel: {
-    maxWidth: 82,
     fontSize: fontSize.sm,
     fontWeight: "800",
+    overflow: "hidden",
   },
   scanButton: {
     width: 68,
