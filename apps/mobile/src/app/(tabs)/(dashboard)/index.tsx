@@ -117,10 +117,8 @@ export default function DashboardScreen() {
   const receiptsQuery = useReceiptsQuery();
   const [selectedMonth, setSelectedMonth] = useState(getInitialMonth);
   const monthlyBudget = monthlyBudgetQuery.data;
-  const remainingBudget = Math.max(
-    (monthlyBudget?.limitAmount ?? 0) - (monthlyBudget?.spentAmount ?? 0),
-    0,
-  );
+  const remainingBudget =
+    (monthlyBudget?.limitAmount ?? 0) - (monthlyBudget?.spentAmount ?? 0);
   const spendingPoints = useMemo(
     () => getCurrentMonthSpendingPoints(receiptsQuery.data ?? [], selectedMonth),
     [receiptsQuery.data, selectedMonth],
@@ -136,7 +134,7 @@ export default function DashboardScreen() {
         title: receipt.store,
         category: receipt.categoryName ?? t("dashboard.receiptFallback"),
         date: receipt.dateText ?? receipt.createdAt,
-        amount: `- ${formatCurrency(receipt.total)}`,
+        amount: formatCurrency(receipt.total),
         })) ?? [],
     [formatCurrency, receiptsQuery.data, selectedMonth, t],
   );

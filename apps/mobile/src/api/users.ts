@@ -7,6 +7,7 @@ import { avatarImageUrls, downloadAvatarImage } from "@/utils/avatar-images";
 
 const LOCAL_USER_ID = "local_user";
 const DEFAULT_USER_NAME = "set your name";
+const DEFAULT_CURRENCY = "€";
 
 export type SaveUserPreferencesInput = {
   appTheme?: ThemePreference;
@@ -27,7 +28,7 @@ function createLocalId(prefix: string) {
 function normalizeCurrency(currency?: string) {
   const value = currency?.trim().replace(/\s+/g, " ").slice(0, 6);
 
-  return value || "EUR";
+  return value || DEFAULT_CURRENCY;
 }
 
 function ensureLocalUser() {
@@ -46,7 +47,7 @@ function ensureLocalUser() {
       id: LOCAL_USER_ID,
       name: DEFAULT_USER_NAME,
       appTheme: "system",
-      currency: "EUR",
+      currency: DEFAULT_CURRENCY,
       syncStatus: "pending",
       syncAction: "create",
       createdAt: now,

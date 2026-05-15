@@ -90,9 +90,7 @@ export function TransactionList({
                 style={[
                   styles.amount,
                   {
-                    color: transaction.amount.startsWith("-")
-                      ? themeColors.mutedText
-                      : themeColors.text,
+                    color: themeColors.text
                   },
                 ]}
               >

@@ -247,7 +247,7 @@
       "currency": "CURRENCY",
       "currencyCode": "Currency code",
       "currencyDescription": "Used when showing amounts across the app.",
-      "currencyPlaceholder": "EUR",
+      "currencyPlaceholder": "€",
       "displayName": "DISPLAY NAME",
       "namePlaceholder": "Your name",
       "profileDoodle": "PROFILE DOODLE",

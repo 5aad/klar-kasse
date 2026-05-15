@@ -247,7 +247,7 @@
       "currency": "WAEHRUNG",
       "currencyCode": "Waehrungscode",
       "currencyDescription": "Wird zur Anzeige von Betraegen in der App verwendet.",
-      "currencyPlaceholder": "EUR",
+      "currencyPlaceholder": "€",
       "displayName": "ANZEIGENAME",
       "namePlaceholder": "Dein Name",
       "profileDoodle": "PROFIL-DOODLE",

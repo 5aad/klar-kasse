@@ -112,7 +112,7 @@ export default function InsightScreen() {
           title: receipt.store,
           category: receipt.categoryName ?? t("dashboard.receiptFallback"),
           date: receipt.dateText ?? receipt.createdAt,
-          amount: `- ${formatCurrency(receipt.total)}`,
+          amount: formatCurrency(receipt.total),
           value: receipt.total,
         }))
         .slice(0, 5) ?? [],

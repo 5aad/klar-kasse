@@ -46,7 +46,7 @@ export const users = sqliteTable(
     id: text("id").primaryKey(),
     name: text("name").notNull().default("set your name"),
     appTheme: text("app_theme").notNull().default("system"),
-    currency: text("currency").notNull().default("EUR"),
+    currency: text("currency").notNull().default("€"),
     profileImageUri: text("profile_image_uri"),
     ...syncColumns,
   },
