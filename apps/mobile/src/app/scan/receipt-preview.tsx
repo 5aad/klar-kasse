@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: "800",
+    fontWeight: "600",
   },
   subtitle: {
     fontSize: fontSize.md,
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: fontSize.xs,
-    fontWeight: "800",
+    fontWeight: "600",
   },
   receiptImage: {
     width: "100%",
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
   },
   retakeText: {
     fontSize: fontSize.sm,
-    fontWeight: "800",
+    fontWeight: "600",
   },
   fieldRow: {
     flexDirection: "row",
@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontSize: fontSize.xs,
-    fontWeight: "800",
+    fontWeight: "600",
     letterSpacing: 1.5,
   },
   choiceSection: {
@@ -563,7 +563,7 @@ const styles = StyleSheet.create({
   },
   choiceLabel: {
     fontSize: fontSize.sm,
-    fontWeight: "800",
+    fontWeight: "600",
     letterSpacing: 1.1,
   },
   choiceList: {
@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
   },
   choiceText: {
     fontSize: fontSize.sm,
-    fontWeight: "800",
+    fontWeight: "600",
   },
   choiceEmptyText: {
     fontSize: fontSize.md,
@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
     padding: 0,
     fontSize: fontSize.lg,
-    fontWeight: "700",
+    fontWeight: "500",
   },
   multilineInput: {
     minHeight: 42,
@@ -610,7 +610,7 @@ const styles = StyleSheet.create({
   },
   confirmButtonText: {
     fontSize: fontSize.lg,
-    fontWeight: "800",
+    fontWeight: "600",
   },
   discardButton: {
     alignItems: "center",
@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
   },
   discardButtonText: {
     fontSize: fontSize.xs,
-    fontWeight: "800",
+    fontWeight: "600",
     letterSpacing: 2,
   },
   errorText: {
@@ -632,7 +632,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 28,
-    fontWeight: "700",
+    fontWeight: "500",
   },
   primaryButton: {
     alignItems: "center",
@@ -643,7 +643,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     fontSize: fontSize.lg,
-    fontWeight: "700",
+    fontWeight: "500",
   },
   disabled: {
     opacity: 0.55,

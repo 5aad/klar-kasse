@@ -113,12 +113,12 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     fontSize: fontSize.xs,
-    fontWeight: "800",
+    fontWeight: "600",
     letterSpacing: 1.4,
   },
   title: {
     fontSize: fontSize.xxl,
-    fontWeight: "700",
+    fontWeight: "500",
   },
   subtitle: {
     fontSize: fontSize.md,
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   },
   actionTitle: {
     fontSize: fontSize.lg,
-    fontWeight: "800",
+    fontWeight: "600",
   },
   actionSubtitle: {
     fontSize: fontSize.md,

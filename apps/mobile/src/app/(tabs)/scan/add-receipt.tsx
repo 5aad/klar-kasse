@@ -430,13 +430,13 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontSize: fontSize.xs,
-    fontWeight: "800",
+    fontWeight: "600",
     letterSpacing: 1.2,
   },
   fieldInput: {
     padding: 0,
     fontSize: fontSize.lg,
-    fontWeight: "700",
+    fontWeight: "500",
   },
   multilineInput: {
     minHeight: 48,
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   },
   choiceLabel: {
     fontSize: fontSize.sm,
-    fontWeight: "800",
+    fontWeight: "600",
     letterSpacing: 1.1,
   },
   choiceList: {
@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
   },
   choiceText: {
     fontSize: fontSize.sm,
-    fontWeight: "800",
+    fontWeight: "600",
   },
   choiceEmptyText: {
     fontSize: fontSize.md,
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: fontSize.xl,
-    fontWeight: "800",
+    fontWeight: "600",
   },
   smallAction: {
     minHeight: 38,
@@ -493,7 +493,7 @@ const styles = StyleSheet.create({
   },
   smallActionText: {
     fontSize: fontSize.sm,
-    fontWeight: "800",
+    fontWeight: "600",
   },
   itemList: {
     gap: spacing.md,
@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
   },
   itemNumber: {
     fontSize: fontSize.xs,
-    fontWeight: "800",
+    fontWeight: "600",
     letterSpacing: 1.2,
   },
   itemFields: {
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 0,
     fontSize: fontSize.lg,
-    fontWeight: "700",
+    fontWeight: "500",
   },
   itemPriceInput: {
     width: 94,
@@ -531,7 +531,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     paddingHorizontal: spacing.sm,
     fontSize: fontSize.md,
-    fontWeight: "800",
+    fontWeight: "600",
     textAlign: "right",
   },
   saveButton: {
@@ -544,6 +544,6 @@ const styles = StyleSheet.create({
   },
   saveText: {
     fontSize: fontSize.lg,
-    fontWeight: "800",
+    fontWeight: "600",
   },
 });
