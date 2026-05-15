@@ -68,6 +68,7 @@ function normalizeOcrText(text: string): string {
     .replace(/\bLDL\b/gi, "LIDL")
     .replace(/\bLid[I1]\b/gi, "LIDL")
     .replace(/\bV[1I]SA\b/gi, "VISA")
+    .replace(/\bCntactless\b/gi, "Contactless")
     .replace(/kontakt\s+los/gi, "kontaktlos")
     .replace(/Ã¢â€šÂ¬/g, "\u20ac")
     .replace(/(\d),\s+(\d)/g, "$1,$2")
@@ -125,7 +126,7 @@ function isTaxOrMetaAmountLine(line: string) {
 }
 
 function isDateLikeLine(line: string) {
-  return /\b[0-3OD]\d[.\-/]\s*[01]\d[.\-/]\s*(?:20)?[0-9bB]{2}\b|\b\d{1,2}[.\-/]\d{1,2}[.\-/]\d{2,4}\b|\b\d{4}-\s*\d{2}-\s*\d{2}\b/.test(
+  return /\b[0-3OD]\d\s*[.,\-/]\s*[01]\d\s*[.,\-/]\s*(?:20)?[0-9bB]{2}\b|\b\d{1,2}\s*[.,\-/]\s*\d{1,2}\s*[.,\-/]\s*\d{2,4}\b|\b\d{4}\s*-\s*\d{2}\s*-\s*\d{2}\b|\b\d{1,2}\.\d{2},\s*\d{1,2}:\d{2}\b|\b\d{1,2}\s+\d{1,2}\s+20\d{2}\b/.test(
     line,
   );
 }
@@ -151,6 +152,18 @@ function findAmountAfterLabel(lines: string[], labelPattern: RegExp) {
 }
 
 function parseStoreName(normalizedText: string) {
+  if (/Zam\s*Zam\s+Halal\s+Food/i.test(normalizedText)) {
+    return "Zam Zam Halal Food";
+  }
+  if (/ZA[-\s]?RA\s+Markt|Zara\s+Market/i.test(normalizedText)) {
+    return "ZA-RA Markt";
+  }
+  if (/ROSSMANN|Rossnann|rOSsnann|Dirk\s+Rossmann/i.test(normalizedText)) {
+    return "ROSSMANN";
+  }
+  if (/WOOLWORTH|Woolworth|Hool\s*worth/i.test(normalizedText)) {
+    return "Woolworth";
+  }
   if (/\bREWE\b/i.test(normalizedText)) return "REWE";
   if (/\bLIDL\b|LIDL\s+Plus|Lade\s+dir\s+die\s+LIDL/i.test(normalizedText)) {
     return "LIDL";
@@ -206,7 +219,7 @@ function toReceiptDate(dayValue: string, monthValue: string, yearValue: string) 
 function parseReceiptDate(normalizedText: string, _store: string) {
   const europeanDateMatches = [
     ...normalizedText.matchAll(
-      /\b([0-3OD]\d)[.\-/]\s*([01]\d)[.\-/]\s*((?:20)?[0-9bB]{2})\b/g,
+      /\b([0-3OD]\d)\s*[.,\-/]\s*([01]\d)\s*[.,\-/]\s*((?:20)?[0-9bB]{2})\b/g,
     ),
   ];
 
@@ -216,12 +229,23 @@ function parseReceiptDate(normalizedText: string, _store: string) {
   }
 
   const isoDateMatch = normalizedText.match(
-    /\b(20\d{2})-\s*(\d{2})-\s*(\d{2})\b/,
+    /\b(20\d{2})\s*-\s*(\d{2})\s*-\s*(\d{2})(?=\D|$)/,
   );
 
   if (isoDateMatch) {
     return (
       toReceiptDate(isoDateMatch[3], isoDateMatch[2], isoDateMatch[1]) ?? ""
+    );
+  }
+
+  const spacedDateMatch = normalizedText.match(
+    /\b([0-3]?\d)\s+([01]?\d)\s+(20\d{2})\b/,
+  );
+
+  if (spacedDateMatch) {
+    return (
+      toReceiptDate(spacedDateMatch[1], spacedDateMatch[2], spacedDateMatch[3]) ??
+      ""
     );
   }
 
@@ -231,8 +255,11 @@ function parseReceiptDate(normalizedText: string, _store: string) {
 function parsePaymentMethod(normalizedText: string) {
   if (/master\s*card|mastercard/i.test(normalizedText)) return "Mastercard";
   if (/visa|v1sa/i.test(normalizedText)) return "Visa";
-  if (/bar[-\s]?zahlung|\bbar\b|\bcash\b/i.test(normalizedText)) return "Cash";
-  if (/debit|girocard|maestro|ec[-\s]?karte/i.test(normalizedText)) {
+  if (
+    /ec[-\s]?cash|bankkarte|debit|girocard|maestro|ec[-\s]?karte/i.test(
+      normalizedText,
+    )
+  ) {
     return "Debit";
   }
   if (
@@ -240,6 +267,7 @@ function parsePaymentMethod(normalizedText: string) {
   ) {
     return "Debit";
   }
+  if (/bar[-\s]?zahlung|\bbar\b|\bcash\b/i.test(normalizedText)) return "Cash";
 
   return "";
 }
