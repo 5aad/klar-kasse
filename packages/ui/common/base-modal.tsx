@@ -29,6 +29,7 @@ export function BaseModal({
   visible,
 }: BaseModalProps) {
   const content = <View style={[styles.content, contentStyle]}>{children}</View>;
+  const isAndroid = Platform.OS === "android";
 
   return (
     <Modal
@@ -46,14 +47,22 @@ export function BaseModal({
         />
         {keyboardAware ? (
           <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "position" : undefined}
+            behavior={isAndroid ? "height" : "position"}
             pointerEvents="box-none"
-            style={styles.keyboardAvoider}
+            style={
+              isAndroid
+                ? styles.androidKeyboardAvoider
+                : styles.iosKeyboardAvoider
+            }
           >
             <ScrollView
-              automaticallyAdjustKeyboardInsets
-              contentContainerStyle={styles.keyboardContent}
-              keyboardDismissMode="interactive"
+              automaticallyAdjustKeyboardInsets={!isAndroid}
+              contentContainerStyle={
+                isAndroid
+                  ? styles.androidKeyboardContent
+                  : styles.iosKeyboardContent
+              }
+              keyboardDismissMode={isAndroid ? "on-drag" : "interactive"}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
             >
@@ -84,11 +93,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     boxShadow: "0 24px 44px rgba(16, 16, 16, 0.22)",
   },
-  keyboardAvoider: {
+  iosKeyboardAvoider: {
     width: "100%",
   },
-  keyboardContent: {
+  androidKeyboardAvoider: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  iosKeyboardContent: {
     flexGrow: 1,
     justifyContent: "center",
+  },
+  androidKeyboardContent: {
+    flexGrow: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: spacing.lg,
   },
 });
