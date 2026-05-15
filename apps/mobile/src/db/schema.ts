@@ -145,6 +145,24 @@ export const receiptVat = sqliteTable(
   ],
 );
 
+export const receiptParserHints = sqliteTable(
+  "receipt_parser_hints",
+  {
+    id: text("id").primaryKey(),
+    pattern: text("pattern").notNull(),
+    store: text("store").notNull(),
+    sampleHeader: text("sample_header"),
+    useCount: integer("use_count").notNull().default(1),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [uniqueIndex("receipt_parser_hints_pattern_idx").on(table.pattern)],
+);
+
 export const monthlyBudgets = sqliteTable(
   "monthly_budgets",
   {
@@ -220,6 +238,8 @@ export type ReceiptItem = typeof receiptItems.$inferSelect;
 export type NewReceiptItem = typeof receiptItems.$inferInsert;
 export type ReceiptVat = typeof receiptVat.$inferSelect;
 export type NewReceiptVat = typeof receiptVat.$inferInsert;
+export type ReceiptParserHint = typeof receiptParserHints.$inferSelect;
+export type NewReceiptParserHint = typeof receiptParserHints.$inferInsert;
 export type MonthlyBudget = typeof monthlyBudgets.$inferSelect;
 export type NewMonthlyBudget = typeof monthlyBudgets.$inferInsert;
 export type CategoryBudget = typeof categoryBudgets.$inferSelect;

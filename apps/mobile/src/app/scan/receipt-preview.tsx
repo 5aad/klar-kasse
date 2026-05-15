@@ -18,6 +18,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
+import {
+  applyReceiptParserHints,
+  saveReceiptParserCorrection,
+} from "@/api/receipt-parser-hints";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useCategoriesQuery } from "@/queries/categories";
@@ -99,7 +103,9 @@ export default function CapturedReceiptMlKitScreen() {
           croppedImage.uri,
           TextRecognitionScript.LATIN,
         );
-        const parsedReceipt = parseNormaReceipt(result.text);
+        const parsedReceipt = await applyReceiptParserHints(
+          parseNormaReceipt(result.text),
+        );
 
         console.log("ML Kit OCR Result:", result.text);
         console.log("Receipt parser result:", parsedReceipt);
@@ -144,6 +150,12 @@ export default function CapturedReceiptMlKitScreen() {
   };
 
   const confirmReceipt = () => {
+    if (parsedReceipt) {
+      saveReceiptParserCorrection(parsedReceipt, {
+        store: merchantName,
+      });
+    }
+
     postReceiptMutation.mutate(
       {
         address: parsedReceipt?.address ?? [],

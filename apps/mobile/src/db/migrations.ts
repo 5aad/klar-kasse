@@ -119,6 +119,16 @@ export function initializeDatabase() {
       deleted_at TEXT
     );
 
+    CREATE TABLE IF NOT EXISTS receipt_parser_hints (
+      id TEXT PRIMARY KEY NOT NULL,
+      pattern TEXT NOT NULL,
+      store TEXT NOT NULL,
+      sample_header TEXT,
+      use_count INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS monthly_budgets (
       id TEXT PRIMARY KEY NOT NULL,
       month_key TEXT NOT NULL,
@@ -183,6 +193,7 @@ export function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS receipt_vat_receipt_id_idx ON receipt_vat(receipt_id);
     CREATE INDEX IF NOT EXISTS receipt_vat_sync_status_idx ON receipt_vat(sync_status);
     CREATE UNIQUE INDEX IF NOT EXISTS receipt_vat_remote_id_idx ON receipt_vat(remote_id) WHERE remote_id IS NOT NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS receipt_parser_hints_pattern_idx ON receipt_parser_hints(pattern);
     CREATE UNIQUE INDEX IF NOT EXISTS monthly_budgets_month_key_idx ON monthly_budgets(month_key);
     CREATE INDEX IF NOT EXISTS monthly_budgets_sync_status_idx ON monthly_budgets(sync_status);
     CREATE UNIQUE INDEX IF NOT EXISTS monthly_budgets_remote_id_idx ON monthly_budgets(remote_id) WHERE remote_id IS NOT NULL;
