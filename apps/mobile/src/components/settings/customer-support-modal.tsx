@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: fontSize.xl,
-    fontWeight: "900",
+    fontWeight: "700",
   },
   modalBody: {
     marginTop: spacing.xs,
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontSize: fontSize.sm,
-    fontWeight: "900",
+    fontWeight: "700",
     letterSpacing: 1,
   },
   input: {
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   },
   cancelText: {
     fontSize: fontSize.md,
-    fontWeight: "900",
+    fontWeight: "700",
   },
   submitButton: {
     minHeight: 46,
@@ -178,6 +178,6 @@ const styles = StyleSheet.create({
   },
   submitText: {
     fontSize: fontSize.md,
-    fontWeight: "900",
+    fontWeight: "700",
   },
 });

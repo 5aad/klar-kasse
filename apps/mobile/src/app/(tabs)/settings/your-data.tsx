@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   },
   archiveTitle: {
     fontSize: fontSize.lg,
-    fontWeight: "700",
+    fontWeight: "500",
   },
   archiveMeta: {
     fontSize: fontSize.sm,

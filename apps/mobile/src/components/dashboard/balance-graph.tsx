@@ -207,7 +207,7 @@ export function BalanceGraph({ points }: Props) {
               <SvgText
                 fill={themeColors.primaryText}
                 fontSize={10}
-                fontWeight="900"
+                fontWeight="700"
                 textAnchor="middle"
                 x={activeLabelX}
                 y={activeLabelY + 13}

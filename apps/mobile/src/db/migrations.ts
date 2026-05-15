@@ -24,7 +24,7 @@ export function initializeDatabase() {
       id TEXT PRIMARY KEY NOT NULL,
       name TEXT NOT NULL DEFAULT 'set your name',
       app_theme TEXT NOT NULL DEFAULT 'system',
-      currency TEXT NOT NULL DEFAULT 'EUR',
+      currency TEXT NOT NULL DEFAULT '€',
       profile_image_uri TEXT,
       sync_status TEXT NOT NULL DEFAULT 'pending',
       sync_action TEXT NOT NULL DEFAULT 'create',
@@ -202,6 +202,7 @@ export function initializeDatabase() {
   }
 
   sqlite.execSync("UPDATE users SET name = 'set your name' WHERE name = 'Tom Hillson';");
+  sqlite.execSync("UPDATE users SET currency = '€' WHERE currency = 'EUR';");
 
   hasInitialized = true;
 }

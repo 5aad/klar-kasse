@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   name: {
     marginTop: spacing.md,
     fontSize: fontSize.xl,
-    fontWeight: "800",
+    fontWeight: "600",
   },
   email: {
     marginTop: spacing.xs,

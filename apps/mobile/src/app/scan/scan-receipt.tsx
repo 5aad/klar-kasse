@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fontSize.xxl,
-    fontWeight: "700",
+    fontWeight: "500",
   },
   body: {
     marginTop: spacing.md,
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(16, 16, 16, 0.78)",
     color: "#ffffff",
     fontSize: fontSize.md,
-    fontWeight: "700",
+    fontWeight: "500",
   },
   error: {
     paddingHorizontal: 20,
@@ -575,6 +575,6 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     fontSize: fontSize.lg,
-    fontWeight: "700",
+    fontWeight: "500",
   },
 });

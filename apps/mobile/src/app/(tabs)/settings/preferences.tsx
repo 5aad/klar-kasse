@@ -54,7 +54,7 @@ export default function PreferencesScreen() {
   const { bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
   const [name, setName] = useState("set your name");
-  const [currency, setCurrency] = useState("EUR");
+  const [currency, setCurrency] = useState("€");
   const [profileImageUri, setProfileImageUri] = useState<string | null>(null);
   const [downloadingAvatarUrl, setDownloadingAvatarUrl] = useState<
     string | null
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
   },
   preferenceTitle: {
     fontSize: fontSize.md,
-    fontWeight: "800",
+    fontWeight: "600",
   },
   preferenceDescription: {
     fontSize: fontSize.sm,
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     paddingHorizontal: spacing.sm,
     fontSize: fontSize.lg,
-    fontWeight: "800",
+    fontWeight: "600",
     textAlign: "center",
   },
 });

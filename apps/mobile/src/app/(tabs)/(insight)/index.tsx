@@ -3,7 +3,6 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -12,6 +11,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
 import { ExpenseDistributionChart } from "@/components/insight/expense-distribution-chart";
 import { EmptyStateCard } from "@/components/shared/empty-state-card";
+import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 import {
   getInitialMonth,
   isSameMonth,
@@ -112,7 +112,7 @@ export default function InsightScreen() {
           title: receipt.store,
           category: receipt.categoryName ?? t("dashboard.receiptFallback"),
           date: receipt.dateText ?? receipt.createdAt,
-          amount: `- ${formatCurrency(receipt.total)}`,
+          amount: formatCurrency(receipt.total),
           value: receipt.total,
         }))
         .slice(0, 5) ?? [],
@@ -171,7 +171,7 @@ export default function InsightScreen() {
       style={[styles.screen, { backgroundColor: themeColors.background }]}
       edges={["top"]}
     >
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.content,
           { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
@@ -217,7 +217,7 @@ export default function InsightScreen() {
           items={significantSpending}
           title={t("insight.significantSpending")}
         />
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
@@ -316,12 +316,12 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     fontSize: fontSize.xs,
-    fontWeight: "700",
+    fontWeight: "500",
     letterSpacing: 1.2,
   },
   title: {
     fontSize: fontSize.xxl,
-    fontWeight: "700",
+    fontWeight: "500",
   },
   breakdownCard: {
     gap: spacing.md,
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
   },
   breakdownTitle: {
     fontSize: fontSize.lg,
-    fontWeight: "700",
+    fontWeight: "500",
   },
   breakdownList: {
     gap: spacing.md,
@@ -356,11 +356,11 @@ const styles = StyleSheet.create({
   },
   categoryName: {
     fontSize: fontSize.sm,
-    fontWeight: "700",
+    fontWeight: "500",
   },
   categoryAmount: {
     fontSize: fontSize.sm,
-    fontWeight: "700",
+    fontWeight: "500",
   },
   breakdownBottom: {
     flexDirection: "row",

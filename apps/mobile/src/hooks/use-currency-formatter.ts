@@ -9,7 +9,7 @@ type FormatCurrencyOptions = {
 
 export function useCurrencyFormatter() {
   const userPreferencesQuery = useUserPreferencesQuery();
-  const currency = userPreferencesQuery.data?.currency ?? "EUR";
+  const currency = userPreferencesQuery.data?.currency ?? "€";
 
   return useMemo(
     () => ({

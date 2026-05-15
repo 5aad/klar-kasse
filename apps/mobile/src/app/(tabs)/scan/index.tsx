@@ -2,9 +2,10 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
@@ -33,7 +34,7 @@ export default function ScanHomeScreen() {
       style={[styles.screen, { backgroundColor: themeColors.background }]}
       edges={["top"]}
     >
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.content,
           { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
@@ -95,7 +96,7 @@ export default function ScanHomeScreen() {
             </Pressable>
           ))}
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
@@ -113,12 +114,12 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     fontSize: fontSize.xs,
-    fontWeight: "800",
+    fontWeight: "600",
     letterSpacing: 1.4,
   },
   title: {
     fontSize: fontSize.xxl,
-    fontWeight: "700",
+    fontWeight: "500",
   },
   subtitle: {
     fontSize: fontSize.md,
@@ -149,7 +150,7 @@ const styles = StyleSheet.create({
   },
   actionTitle: {
     fontSize: fontSize.lg,
-    fontWeight: "800",
+    fontWeight: "600",
   },
   actionSubtitle: {
     fontSize: fontSize.md,

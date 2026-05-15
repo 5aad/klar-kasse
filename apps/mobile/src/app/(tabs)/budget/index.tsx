@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import {
   Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -16,6 +15,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
 import { NewCategoryModal } from "@/components/budget/new-category-modal";
 import { EmptyStateCard } from "@/components/shared/empty-state-card";
+import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import {
@@ -98,7 +98,7 @@ export default function BudgetScreen() {
       style={[styles.screen, { backgroundColor: themeColors.background }]}
       edges={["top"]}
     >
-      <ScrollView
+      <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.content,
           { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
@@ -259,7 +259,7 @@ export default function BudgetScreen() {
             />
           )}
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
       <NewCategoryModal
         visible={isNewCategoryModalVisible}
         onClose={() => setIsNewCategoryModalVisible(false)}
