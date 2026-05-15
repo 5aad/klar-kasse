@@ -1,8 +1,9 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { colors, fontSize, radius, spacing } from "@repo/theme";
 import { Tabs } from "expo-router";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
@@ -48,6 +49,7 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
   const themeColors = useThemeColors();
   const resolvedTheme = useResolvedTheme();
   const { bottom } = useSafeAreaInsets();
+  const tabBarBottom = Math.max(bottom, spacing.md);
   const { t } = useTranslation();
   const regularTabs = tabs.filter((tab) => tab.name !== "scan");
   const isDark = resolvedTheme === "dark";
@@ -66,6 +68,43 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
     ? descriptors[activeRoute.key]?.options
     : undefined;
   const activeLabel = activeRouteOptions?.title ?? t(activeTab.titleKey);
+  const collapseProgress = useRef(
+    new Animated.Value(isMinimized ? 1 : 0),
+  ).current;
+  const fullBarOpacity = collapseProgress.interpolate({
+    inputRange: [0, 0.8, 1],
+    outputRange: [1, 0.2, 0],
+  });
+  const fullBarScaleX = collapseProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 0.62],
+  });
+  const fullBarTranslateX = collapseProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -82],
+  });
+  const compactBarOpacity = collapseProgress.interpolate({
+    inputRange: [0, 0.45, 1],
+    outputRange: [0, 0, 1],
+  });
+  const compactBarScale = collapseProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.86, 1],
+  });
+  const compactBarTranslateX = collapseProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [56, 0],
+  });
+
+  useEffect(() => {
+    Animated.spring(collapseProgress, {
+      toValue: isMinimized ? 1 : 0,
+      damping: 15,
+      mass: 0.75,
+      stiffness: 185,
+      useNativeDriver: true,
+    }).start();
+  }, [collapseProgress, isMinimized]);
 
   function navigateToRoute(routeName: string) {
     const routeIndex = state.routes.findIndex(
@@ -89,140 +128,172 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
   return (
     <View
       pointerEvents="box-none"
-      style={[styles.tabBarWrap, { paddingBottom: Math.max(bottom, spacing.md) }]}
+      style={[styles.tabBarWrap, { height: 68 + tabBarBottom }]}
     >
-      {isMinimized ? (
-        <>
-          <Pressable
-            accessibilityLabel={activeLabel}
-            accessibilityRole="button"
-            style={[
-              styles.compactButton,
-              {
-                backgroundColor: dockBackground,
-                borderColor: dockBorderColor,
-                boxShadow: isDark
-                  ? "0 12px 22px rgba(0, 0, 0, 0.55)"
-                  : "0 10px 18px rgba(0, 0, 0, 0.22)",
-              },
-            ]}
-            onPress={() => setIsMinimized(false)}
-          >
-            <MaterialCommunityIcons
-              color={inactiveIconColor}
-              name={activeTab.icon}
-              size={28}
-            />
-          </Pressable>
-          <View style={styles.compactSpacer} />
-          <Pressable
-            accessibilityRole="button"
-            style={[
-              styles.compactButton,
-              {
-                backgroundColor:
-                  state.index === scanRouteIndex
-                    ? themeColors.primary
-                    : dockBackground,
-                borderColor: dockBorderColor,
-                boxShadow: isDark
-                  ? "0 12px 22px rgba(0, 0, 0, 0.55)"
-                  : "0 10px 18px rgba(0, 0, 0, 0.22)",
-              },
-            ]}
-            onPress={() => navigateToRoute("scan")}
-          >
-            <MaterialCommunityIcons
-              color={
+      <Animated.View
+        pointerEvents={isMinimized ? "none" : "auto"}
+        style={[
+          styles.fullTabBar,
+          {
+            bottom: tabBarBottom,
+            opacity: fullBarOpacity,
+            transform: [
+              { translateX: fullBarTranslateX },
+              { scaleX: fullBarScaleX },
+            ],
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.tabPill,
+            {
+              backgroundColor: dockBackground,
+              borderColor: dockBorderColor,
+              boxShadow: isDark
+                ? "0 12px 22px rgba(0, 0, 0, 0.55)"
+                : "0 10px 18px rgba(0, 0, 0, 0.22)",
+            },
+          ]}
+        >
+          {regularTabs.map((tab) => {
+            const routeIndex = state.routes.findIndex(
+              (route: { name: string }) => route.name === tab.name,
+            );
+            const route = state.routes[routeIndex];
+            const isFocused = state.index === routeIndex;
+            const options = route ? descriptors[route.key]?.options : undefined;
+            const label = options?.title ?? t(tab.titleKey);
+
+            return (
+              <Pressable
+                key={tab.name}
+                accessibilityRole="button"
+                accessibilityState={isFocused ? { selected: true } : undefined}
+                style={[
+                  styles.tabButton,
+                  tab.name === regularTabs[0].name && styles.firstTabButton,
+                  tab.name === regularTabs.at(-1)?.name && styles.lastTabButton,
+                  isFocused && {
+                    backgroundColor: themeColors.surface,
+                  },
+                ]}
+                onPress={() => navigateToRoute(tab.name)}
+              >
+                <MaterialCommunityIcons
+                  color={isFocused ? themeColors.text : inactiveIconColor}
+                  name={tab.icon}
+                  size={23}
+                />
+                {isFocused ? (
+                  <Text
+                    style={[styles.tabLabel, { color: themeColors.text }]}
+                    numberOfLines={1}
+                  >
+                    {label}
+                  </Text>
+                ) : null}
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={
+            state.index === scanRouteIndex ? { selected: true } : undefined
+          }
+          style={[
+            styles.scanButton,
+            {
+              backgroundColor: dockBackground,
+              borderColor: dockBorderColor,
+              boxShadow: isDark
+                ? "0 12px 22px rgba(0, 0, 0, 0.55)"
+                : "0 10px 18px rgba(0, 0, 0, 0.22)",
+            },
+            state.index === scanRouteIndex && {
+              backgroundColor: themeColors.primary,
+            },
+          ]}
+          onPress={() => navigateToRoute("scan")}
+        >
+          <MaterialCommunityIcons
+            color={
+              state.index === scanRouteIndex
+                ? themeColors.primaryText
+                : inactiveIconColor
+            }
+            name="line-scan"
+            size={34}
+          />
+        </Pressable>
+      </Animated.View>
+
+      <Animated.View
+        pointerEvents={isMinimized ? "auto" : "none"}
+        style={[
+          styles.compactTabBar,
+          {
+            bottom: tabBarBottom,
+            opacity: compactBarOpacity,
+            transform: [
+              { translateX: compactBarTranslateX },
+              { scale: compactBarScale },
+            ],
+          },
+        ]}
+      >
+        <Pressable
+          accessibilityLabel={activeLabel}
+          accessibilityRole="button"
+          style={[
+            styles.compactButton,
+            {
+              backgroundColor: dockBackground,
+              borderColor: dockBorderColor,
+              boxShadow: isDark
+                ? "0 12px 22px rgba(0, 0, 0, 0.55)"
+                : "0 10px 18px rgba(0, 0, 0, 0.22)",
+            },
+          ]}
+          onPress={() => setIsMinimized(false)}
+        >
+          <MaterialCommunityIcons
+            color={inactiveIconColor}
+            name={activeTab.icon}
+            size={28}
+          />
+        </Pressable>
+        <View style={styles.compactSpacer} />
+        <Pressable
+          accessibilityRole="button"
+          style={[
+            styles.compactButton,
+            {
+              backgroundColor:
                 state.index === scanRouteIndex
-                  ? themeColors.primaryText
-                  : inactiveIconColor
-              }
-              name="line-scan"
-              size={34}
-            />
-          </Pressable>
-        </>
-      ) : (
-        <>
-      <View
-        style={[
-          styles.tabPill,
-          {
-            backgroundColor: dockBackground,
-            borderColor: dockBorderColor,
-            boxShadow: isDark
-              ? "0 12px 22px rgba(0, 0, 0, 0.55)"
-              : "0 10px 18px rgba(0, 0, 0, 0.22)",
-          },
-        ]}
-      >
-        {regularTabs.map((tab) => {
-          const routeIndex = state.routes.findIndex(
-            (route: { name: string }) => route.name === tab.name,
-          );
-          const route = state.routes[routeIndex];
-          const isFocused = state.index === routeIndex;
-          const options = route ? descriptors[route.key]?.options : undefined;
-          const label = options?.title ?? t(tab.titleKey);
-
-          return (
-            <Pressable
-              key={tab.name}
-              accessibilityRole="button"
-              accessibilityState={isFocused ? { selected: true } : undefined}
-              style={[
-                styles.tabButton,
-                tab.name === regularTabs[0].name && styles.firstTabButton,
-                tab.name === regularTabs.at(-1)?.name && styles.lastTabButton,
-                isFocused && {
-                  backgroundColor: themeColors.surface,
-                },
-              ]}
-              onPress={() => navigateToRoute(tab.name)}
-            >
-              <MaterialCommunityIcons
-                color={isFocused ? themeColors.text : inactiveIconColor}
-                name={tab.icon}
-                size={23}
-              />
-              {isFocused ? (
-                <Text
-                  style={[styles.tabLabel, { color: themeColors.text }]}
-                  numberOfLines={1}
-                >
-                  {label}
-                </Text>
-              ) : null}
-            </Pressable>
-          );
-        })}
-      </View>
-
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={state.index === scanRouteIndex ? { selected: true } : undefined}
-        style={[
-          styles.scanButton,
-          {
-            backgroundColor: dockBackground,
-            borderColor: dockBorderColor,
-            boxShadow: isDark
-              ? "0 12px 22px rgba(0, 0, 0, 0.55)"
-              : "0 10px 18px rgba(0, 0, 0, 0.22)",
-          },
-          state.index === scanRouteIndex && { backgroundColor: themeColors.primary },
-        ]}
-        onPress={() => navigateToRoute("scan")}
-      >
-        <MaterialCommunityIcons
-          color={state.index === scanRouteIndex ? themeColors.primaryText : inactiveIconColor}
-          name="line-scan"
-          size={34}
-        />
-      </Pressable>
-        </>
-      )}
+                  ? themeColors.primary
+                  : dockBackground,
+              borderColor: dockBorderColor,
+              boxShadow: isDark
+                ? "0 12px 22px rgba(0, 0, 0, 0.55)"
+                : "0 10px 18px rgba(0, 0, 0, 0.22)",
+            },
+          ]}
+          onPress={() => navigateToRoute("scan")}
+        >
+          <MaterialCommunityIcons
+            color={
+              state.index === scanRouteIndex
+                ? themeColors.primaryText
+                : inactiveIconColor
+            }
+            name="line-scan"
+            size={34}
+          />
+        </Pressable>
+      </Animated.View>
     </View>
   );
 }
@@ -264,6 +335,22 @@ const styles = StyleSheet.create({
     right: spacing.md,
     bottom: 0,
     left: spacing.md,
+    minHeight: 84,
+  },
+  fullTabBar: {
+    position: "absolute",
+    right: 0,
+    bottom: 0,
+    left: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  compactTabBar: {
+    position: "absolute",
+    right: 0,
+    bottom: 0,
+    left: 0,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
