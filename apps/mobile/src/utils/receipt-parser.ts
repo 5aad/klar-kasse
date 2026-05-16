@@ -25,7 +25,8 @@ export type ReceiptParseResult = {
 };
 
 const EURO_SYMBOL = "(?:\\u20ac|EUR)";
-const MONEY_AMOUNT = "\\d{1,3}(?:\\.\\d{3})*,\\d{2}|\\d+,\\d{2}";
+const MONEY_AMOUNT =
+  "\\d{1,3}(?:\\.\\d{3})*,\\d{2}(?!\\d)|\\d{1,4}[,.]\\d{2}(?!\\d)";
 const MONEY_AMOUNT_RE = new RegExp(MONEY_AMOUNT);
 const PRICE_WITH_EURO = new RegExp(`(${MONEY_AMOUNT})\\s*${EURO_SYMBOL}`, "gi");
 const PRICE_LINE_WITH_EURO = new RegExp(
@@ -46,12 +47,15 @@ const QUANTITY_ITEM_LINE = new RegExp(
 );
 
 function parseGermanMoney(value: string): number {
-  return Number(
-    value
-      .replace(/[^\d,.-]/g, "")
-      .replace(/\./g, "")
-      .replace(",", "."),
-  );
+  const cleaned = value.replace(/[^\d,.-]/g, "");
+  const lastComma = cleaned.lastIndexOf(",");
+  const lastDot = cleaned.lastIndexOf(".");
+
+  if (lastDot > lastComma) {
+    return Number(cleaned.replace(/,/g, ""));
+  }
+
+  return Number(cleaned.replace(/\./g, "").replace(",", "."));
 }
 
 function round2(value: number) {
@@ -61,9 +65,14 @@ function round2(value: number) {
 function normalizeOcrText(text: string): string {
   return text
     .replace(/L.DL/gi, "LIDL")
+    .replace(/\bLDL\b/gi, "LIDL")
+    .replace(/\bLid[I1]\b/gi, "LIDL")
+    .replace(/\bV[1I]SA\b/gi, "VISA")
+    .replace(/\bCntactless\b/gi, "Contactless")
     .replace(/kontakt\s+los/gi, "kontaktlos")
     .replace(/Ã¢â€šÂ¬/g, "\u20ac")
     .replace(/(\d),\s+(\d)/g, "$1,$2")
+    .replace(/(\d)\.\s+(\d)/g, "$1.$2")
     .replace(/\s+\u20ac/g, " \u20ac")
     .replace(/\u20ac\s*\/\s*kg/gi, "\u20ac/kg");
 }
@@ -94,6 +103,34 @@ function getMoneyAmounts(line: string): number[] {
   );
 }
 
+function isPlausibleReceiptAmount(amount: number) {
+  return Number.isFinite(amount) && amount > 0 && amount < 1000;
+}
+
+function hasTotalKeyword(line: string) {
+  return /\b(summe|total|gesamt|zu\s+zahlen|betrag|einkaufswert|brutto)\b/i.test(
+    line,
+  );
+}
+
+function hasPaymentKeyword(line: string) {
+  return /\b(visa|mastercard|karte|kreditkarte|bar[-\s]?zahlung|bezahlung|tender)\b/i.test(
+    line,
+  );
+}
+
+function isTaxOrMetaAmountLine(line: string) {
+  return /\b(mwst|mhst|mst|ust|steuer|netto|exkl|inkl|satz|vat|aid|mid|tid|trace|beleg|terminal|signatur|serial|seriennr|start|ende|endtime|starttime)\b/i.test(
+    line,
+  );
+}
+
+function isDateLikeLine(line: string) {
+  return /\b[0-3OD]\d\s*[.,\-/]\s*[01]\d\s*[.,\-/]\s*(?:20)?[0-9bB]{2}\b|\b\d{1,2}\s*[.,\-/]\s*\d{1,2}\s*[.,\-/]\s*\d{2,4}\b|\b\d{4}\s*-\s*\d{2}\s*-\s*\d{2}\b|\b\d{1,2}\.\d{2},\s*\d{1,2}:\d{2}\b|\b\d{1,2}\s+\d{1,2}\s+20\d{2}\b/.test(
+    line,
+  );
+}
+
 function findAmountAfterLabel(lines: string[], labelPattern: RegExp) {
   const labelIndex = lines.findIndex((line) => labelPattern.test(line));
 
@@ -115,46 +152,180 @@ function findAmountAfterLabel(lines: string[], labelPattern: RegExp) {
 }
 
 function parseStoreName(normalizedText: string) {
-  if (/\bLIDL\b/i.test(normalizedText)) return "LIDL";
+  if (/Zam\s*Zam\s+Halal\s+Food/i.test(normalizedText)) {
+    return "Zam Zam Halal Food";
+  }
+  if (/ZA[-\s]?RA\s+Markt|Zara\s+Market/i.test(normalizedText)) {
+    return "ZA-RA Markt";
+  }
+  if (/ROSSMANN|Rossnann|rOSsnann|Dirk\s+Rossmann/i.test(normalizedText)) {
+    return "ROSSMANN";
+  }
+  if (/WOOLWORTH|Woolworth|Hool\s*worth/i.test(normalizedText)) {
+    return "Woolworth";
+  }
+  if (/\bREWE\b/i.test(normalizedText)) return "REWE";
+  if (/\bLIDL\b|LIDL\s+Plus|Lade\s+dir\s+die\s+LIDL/i.test(normalizedText)) {
+    return "LIDL";
+  }
+  if (/dm-drogerie\s+markt|\bdm\b|Balea|PAYBACK/i.test(normalizedText)) {
+    return "dm-drogerie markt";
+  }
+  if (/Action\s+Deutschland|\bJACTION\b|\bACTION\b/i.test(normalizedText)) {
+    return "Action";
+  }
+  if (
+    /Ocean\s+Indien|NDIEN|World\s+of\s*Seafood|Werld\s+of\s*Seafod/i.test(
+      normalizedText,
+    )
+  ) {
+    return "Ocean Indien";
+  }
   if (/NORMA/i.test(normalizedText)) return "NORMA";
 
   return "";
 }
 
-function parseReceiptDate(normalizedText: string, store: string) {
-  if (store === "LIDL") {
-    const dateMatch = normalizedText.match(/\b(\d{2}\.\d{2}\.\d{4})\b/);
+function normalizeDatePart(value: string) {
+  return value
+    .replace(/[Oo]/g, "0")
+    .replace(/[Il]/g, "1")
+    .replace(/[bB]/g, "6")
+    .replace(/[Dd]/g, "0");
+}
 
-    return dateMatch?.[1] ?? "";
+function toReceiptDate(dayValue: string, monthValue: string, yearValue: string) {
+  const day = Number(normalizeDatePart(dayValue));
+  const month = Number(normalizeDatePart(monthValue));
+  const rawYear = normalizeDatePart(yearValue);
+  const year = rawYear.length === 2 ? 2000 + Number(rawYear) : Number(rawYear);
+  const date = new Date(year, month - 1, day);
+
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
   }
 
-  const dateMatch = normalizedText.match(/\bDatum\s+(\d{2}\.\d{2}\.\d{2})/i);
+  return [
+    String(day).padStart(2, "0"),
+    String(month).padStart(2, "0"),
+    String(year),
+  ].join(".");
+}
 
-  return dateMatch?.[1] ?? "";
+function parseReceiptDate(normalizedText: string, _store: string) {
+  const europeanDateMatches = [
+    ...normalizedText.matchAll(
+      /\b([0-3OD]\d)\s*[.,\-/]\s*([01]\d)\s*[.,\-/]\s*((?:20)?[0-9bB]{2})\b/g,
+    ),
+  ];
+
+  for (const match of europeanDateMatches) {
+    const date = toReceiptDate(match[1], match[2], match[3]);
+    if (date) return date;
+  }
+
+  const isoDateMatch = normalizedText.match(
+    /\b(20\d{2})\s*-\s*(\d{2})\s*-\s*(\d{2})(?=\D|$)/,
+  );
+
+  if (isoDateMatch) {
+    return (
+      toReceiptDate(isoDateMatch[3], isoDateMatch[2], isoDateMatch[1]) ?? ""
+    );
+  }
+
+  const spacedDateMatch = normalizedText.match(
+    /\b([0-3]?\d)\s+([01]?\d)\s+(20\d{2})\b/,
+  );
+
+  if (spacedDateMatch) {
+    return (
+      toReceiptDate(spacedDateMatch[1], spacedDateMatch[2], spacedDateMatch[3]) ??
+      ""
+    );
+  }
+
+  return "";
+}
+
+function parsePaymentMethod(normalizedText: string) {
+  if (/master\s*card|mastercard/i.test(normalizedText)) return "Mastercard";
+  if (/visa|v1sa/i.test(normalizedText)) return "Visa";
+  if (
+    /ec[-\s]?cash|bankkarte|debit|girocard|maestro|ec[-\s]?karte/i.test(
+      normalizedText,
+    )
+  ) {
+    return "Debit";
+  }
+  if (
+    /kreditkarte|karte|contactless|kontaktlos|bezahlung/i.test(normalizedText)
+  ) {
+    return "Debit";
+  }
+  if (/bar[-\s]?zahlung|\bbar\b|\bcash\b/i.test(normalizedText)) return "Cash";
+
+  return "";
 }
 
 function parseTotalAmount(
   normalizedText: string,
   lines: string[],
-  store: string,
+  _store: string,
   fallbackTotal = 0,
 ) {
-  if (store === "LIDL") {
-    const paymentTotal = findAmountAfterLabel(lines, /zahlung\s+erfolgt/i);
-    const sumTotal = findAmountAfterLabel(lines, /^summe\b/i);
-    const betragTotal = findAmountAfterLabel(lines, /^betrag\b/i);
+  const scoredAmounts = lines.flatMap((line, index) => {
+    const context = [
+      lines[index - 2] ?? "",
+      lines[index - 1] ?? "",
+      line,
+      lines[index + 1] ?? "",
+    ].join(" ");
 
-    return paymentTotal ?? sumTotal ?? betragTotal ?? fallbackTotal;
-  }
+    return getMoneyAmounts(line)
+      .filter(isPlausibleReceiptAmount)
+      .map((amount) => {
+        let score = amount;
 
-  const eurTotalMatch = normalizedText.match(
-    new RegExp(`EUR\\s*(${MONEY_AMOUNT})`, "i"),
-  );
-  const totals = [...normalizedText.matchAll(PRICE_WITH_EURO)].map((match) =>
-    parseGermanMoney(match[1]),
-  );
+        if (hasTotalKeyword(line)) score += 120;
+        if (hasTotalKeyword(context)) score += 80;
+        if (hasPaymentKeyword(line)) score += 80;
+        if (hasPaymentKeyword(context)) score += 45;
+        if (/^\s*-/.test(line)) score -= 90;
+        if (isTaxOrMetaAmountLine(line)) score -= 120;
+        if (isDateLikeLine(line)) score -= 80;
+        if (/%/.test(line) || /\b[ABX]\s*$/i.test(line)) score -= 45;
 
-  if (eurTotalMatch) return parseGermanMoney(eurTotalMatch[1]);
+        return { amount, score };
+      });
+  });
+  const totals = [...normalizedText.matchAll(PRICE_WITH_EURO)]
+    .map((match) => parseGermanMoney(match[1]))
+    .filter(isPlausibleReceiptAmount);
+  const cleanAmounts = lines.flatMap((line) => {
+    if (
+      /^\s*-/.test(line) ||
+      /%/.test(line) ||
+      /\b[ABX]\s*$/i.test(line) ||
+      isTaxOrMetaAmountLine(line) ||
+      isDateLikeLine(line)
+    ) {
+      return [];
+    }
+
+    return getMoneyAmounts(line).filter(isPlausibleReceiptAmount);
+  });
+  const bestScoredAmount = scoredAmounts.sort(
+    (left, right) => right.score - left.score || right.amount - left.amount,
+  )[0]?.amount;
+  const maxCleanAmount = cleanAmounts.length ? Math.max(...cleanAmounts) : null;
+
+  if (maxCleanAmount) return maxCleanAmount;
+  if (bestScoredAmount) return bestScoredAmount;
   if (totals.length) return Math.max(...totals);
 
   return fallbackTotal;
@@ -243,7 +414,7 @@ function parseLidlReceipt(
     result.total,
   );
 
-  if (/visa/i.test(normalizedText)) result.paymentMethod = "Visa";
+  result.paymentMethod = parsePaymentMethod(normalizedText);
 
   const cardMatch = normalizedText.match(/#\D*(\d{4})\b/);
   if (cardMatch) result.cardLast4 = cardMatch[1];
@@ -332,7 +503,7 @@ export function parseNormaReceipt(rawText: string): ReceiptParseResult {
     result.total,
   );
 
-  if (/visa/i.test(normalizedText)) result.paymentMethod = "Visa";
+  result.paymentMethod = parsePaymentMethod(normalizedText);
 
   const cardMatch = normalizedText.match(/#{2,}\s?(\d{4})/);
   if (cardMatch) result.cardLast4 = cardMatch[1];
@@ -441,9 +612,7 @@ export function parseNormaReceipt(rawText: string): ReceiptParseResult {
     );
 
     result.vat = buildVatFromItems(result.items);
-    if (!eurTotalMatch && itemsTotal > result.total) {
-      result.total = itemsTotal;
-    }
+    if (result.total === 0 && itemsTotal > 0) result.total = itemsTotal;
   }
   if (result.total === 0 && result.items.length) {
     result.total = round2(

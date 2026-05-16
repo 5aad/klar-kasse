@@ -148,6 +148,8 @@
       "permission": {
         "action": "Kamera erlauben",
         "body": "Erlaube den Kamerazugriff, um Belege zu scannen.",
+        "settingsAction": "Einstellungen oeffnen",
+        "settingsBody": "Der Kamerazugriff ist blockiert. Oeffne die Einstellungen und aktiviere die Kameraberechtigung fuer Klar Kasse.",
         "title": "Kamerazugriff"
       },
       "subtitle": "Platziere den Beleg im Rahmen.",

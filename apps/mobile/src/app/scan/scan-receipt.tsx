@@ -13,6 +13,7 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
+  Linking,
   Pressable,
   StyleSheet,
   Text,
@@ -60,6 +61,21 @@ export default function ScanReceiptScreen() {
   const handleCameraLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
     setCameraSize({ width, height });
+  };
+
+  const handleCameraPermissionPress = async () => {
+    setErrorMessage(null);
+
+    if (permission && !permission.canAskAgain) {
+      await Linking.openSettings();
+      return;
+    }
+
+    const result = await requestPermission();
+
+    if (!result.granted && !result.canAskAgain) {
+      setErrorMessage(t("scan.camera.permission.settingsBody"));
+    }
   };
 
   const captureReceipt = async () => {
@@ -183,12 +199,17 @@ export default function ScanReceiptScreen() {
         <Text style={[styles.body, { color: themeColors.mutedText }]}>
           {t("scan.camera.permission.body")}
         </Text>
+        {!permission.canAskAgain ? (
+          <Text style={[styles.body, { color: themeColors.mutedText }]}>
+            {t("scan.camera.permission.settingsBody")}
+          </Text>
+        ) : null}
         <Pressable
           style={[
             styles.primaryButton,
             { backgroundColor: themeColors.primary },
           ]}
-          onPress={requestPermission}
+          onPress={handleCameraPermissionPress}
         >
           <Text
             style={[
@@ -196,9 +217,18 @@ export default function ScanReceiptScreen() {
               { color: themeColors.primaryText },
             ]}
           >
-            {t("scan.camera.permission.action")}
+            {t(
+              permission.canAskAgain
+                ? "scan.camera.permission.action"
+                : "scan.camera.permission.settingsAction",
+            )}
           </Text>
         </Pressable>
+        {errorMessage ? (
+          <Text style={[styles.error, { color: themeColors.primary }]}>
+            {errorMessage}
+          </Text>
+        ) : null}
       </View>
     );
   }

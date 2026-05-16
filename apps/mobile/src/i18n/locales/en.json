@@ -148,6 +148,8 @@
       "permission": {
         "action": "Allow camera",
         "body": "Allow camera access to scan receipts.",
+        "settingsAction": "Open settings",
+        "settingsBody": "Camera access is blocked. Open Settings and turn on camera permission for Klar Kasse.",
         "title": "Camera access"
       },
       "subtitle": "Place the receipt inside the frame.",

@@ -27,6 +27,7 @@ const syncColumns = {
 export const deviceInfo = sqliteTable("device_info", {
   id: text("id").primaryKey(),
   deviceId: text("device_id").notNull(),
+  deviceName: text("device_name"),
   installationId: text("installation_id").notNull(),
   platform: text("platform"),
   appVersion: text("app_version"),
@@ -39,6 +40,32 @@ export const deviceInfo = sqliteTable("device_info", {
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`),
 });
+
+export const appActivityEvents = sqliteTable(
+  "app_activity_events",
+  {
+    id: text("id").primaryKey(),
+    installationId: text("installation_id").notNull(),
+    deviceId: text("device_id").notNull(),
+    deviceName: text("device_name"),
+    platform: text("platform"),
+    appVersion: text("app_version"),
+    openedAt: text("opened_at").notNull(),
+    syncedAt: text("synced_at"),
+    syncStatus: text("sync_status").notNull().default("pending"),
+    syncError: text("sync_error"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("app_activity_events_sync_status_idx").on(table.syncStatus),
+    index("app_activity_events_opened_at_idx").on(table.openedAt),
+  ],
+);
 
 export const users = sqliteTable(
   "users",
@@ -145,6 +172,24 @@ export const receiptVat = sqliteTable(
   ],
 );
 
+export const receiptParserHints = sqliteTable(
+  "receipt_parser_hints",
+  {
+    id: text("id").primaryKey(),
+    pattern: text("pattern").notNull(),
+    store: text("store").notNull(),
+    sampleHeader: text("sample_header"),
+    useCount: integer("use_count").notNull().default(1),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [uniqueIndex("receipt_parser_hints_pattern_idx").on(table.pattern)],
+);
+
 export const monthlyBudgets = sqliteTable(
   "monthly_budgets",
   {
@@ -212,6 +257,8 @@ export const syncOutbox = sqliteTable(
 
 export type Category = typeof categories.$inferSelect;
 export type NewCategory = typeof categories.$inferInsert;
+export type AppActivityEvent = typeof appActivityEvents.$inferSelect;
+export type NewAppActivityEvent = typeof appActivityEvents.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Receipt = typeof receipts.$inferSelect;
@@ -220,6 +267,8 @@ export type ReceiptItem = typeof receiptItems.$inferSelect;
 export type NewReceiptItem = typeof receiptItems.$inferInsert;
 export type ReceiptVat = typeof receiptVat.$inferSelect;
 export type NewReceiptVat = typeof receiptVat.$inferInsert;
+export type ReceiptParserHint = typeof receiptParserHints.$inferSelect;
+export type NewReceiptParserHint = typeof receiptParserHints.$inferInsert;
 export type MonthlyBudget = typeof monthlyBudgets.$inferSelect;
 export type NewMonthlyBudget = typeof monthlyBudgets.$inferInsert;
 export type CategoryBudget = typeof categoryBudgets.$inferSelect;
