@@ -11,11 +11,27 @@ export function initializeDatabase() {
     CREATE TABLE IF NOT EXISTS device_info (
       id TEXT PRIMARY KEY NOT NULL,
       device_id TEXT NOT NULL,
+      device_name TEXT,
       installation_id TEXT NOT NULL,
       platform TEXT,
       app_version TEXT,
       last_sync_cursor TEXT,
       last_synced_at TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS app_activity_events (
+      id TEXT PRIMARY KEY NOT NULL,
+      installation_id TEXT NOT NULL,
+      device_id TEXT NOT NULL,
+      device_name TEXT,
+      platform TEXT,
+      app_version TEXT,
+      opened_at TEXT NOT NULL,
+      synced_at TEXT,
+      sync_status TEXT NOT NULL DEFAULT 'pending',
+      sync_error TEXT,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
@@ -179,6 +195,8 @@ export function initializeDatabase() {
     );
 
     CREATE INDEX IF NOT EXISTS categories_sync_status_idx ON categories(sync_status);
+    CREATE INDEX IF NOT EXISTS app_activity_events_sync_status_idx ON app_activity_events(sync_status);
+    CREATE INDEX IF NOT EXISTS app_activity_events_opened_at_idx ON app_activity_events(opened_at);
     CREATE UNIQUE INDEX IF NOT EXISTS categories_remote_id_idx ON categories(remote_id) WHERE remote_id IS NOT NULL;
     CREATE INDEX IF NOT EXISTS users_sync_status_idx ON users(sync_status);
     CREATE UNIQUE INDEX IF NOT EXISTS users_remote_id_idx ON users(remote_id) WHERE remote_id IS NOT NULL;
@@ -210,6 +228,22 @@ export function initializeDatabase() {
   );
   if (receiptColumns.some((column) => column.name === "time_text")) {
     sqlite.execSync("ALTER TABLE receipts DROP COLUMN time_text;");
+  }
+
+  const deviceInfoColumns = sqlite.getAllSync<{ name: string }>(
+    "PRAGMA table_info(device_info)",
+  );
+  if (!deviceInfoColumns.some((column) => column.name === "device_name")) {
+    sqlite.execSync("ALTER TABLE device_info ADD COLUMN device_name TEXT;");
+  }
+
+  const activityColumns = sqlite.getAllSync<{ name: string }>(
+    "PRAGMA table_info(app_activity_events)",
+  );
+  if (!activityColumns.some((column) => column.name === "device_name")) {
+    sqlite.execSync(
+      "ALTER TABLE app_activity_events ADD COLUMN device_name TEXT;",
+    );
   }
 
   sqlite.execSync("UPDATE users SET name = 'set your name' WHERE name = 'Tom Hillson';");
