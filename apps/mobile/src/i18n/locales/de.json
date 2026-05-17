@@ -141,6 +141,7 @@
       "errors": {
         "capture": "Der Beleg konnte nicht aufgenommen werden. {{message}}",
         "galleryPermission": "Erlaube den Zugriff auf die Fotomediathek, um einen Beleg auszuwaehlen.",
+        "nativeUnavailable": "Der Dokumentenscanner ist in Expo Go nicht verfuegbar. Nutze einen Development Build, um Belege zu scannen.",
         "noScan": "Es wurde kein Belegbild zurueckgegeben. Versuche es erneut.",
         "open": "Der Beleg konnte nicht geoeffnet werden. {{message}}",
         "tryAgain": "Versuche es erneut."

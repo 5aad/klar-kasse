@@ -11,18 +11,37 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TurboModuleRegistry,
   View,
+  type TurboModule,
 } from "react-native";
-import DocumentScanner, {
-  ResponseType,
-  ScanDocumentResponseStatus,
-} from "react-native-document-scanner-plugin";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useReceiptScanStore } from "@/stores/receipt-scan-store";
 
 const OUTPUT_WIDTH = 1200;
+const RESPONSE_TYPE_IMAGE_FILE_PATH = "imageFilePath";
+const SCAN_STATUS_CANCEL = "cancel";
+
+type ScanDocumentOptions = {
+  croppedImageQuality?: number;
+  maxNumDocuments?: number;
+  responseType?: typeof RESPONSE_TYPE_IMAGE_FILE_PATH;
+};
+
+type ScanDocumentResponse = {
+  scannedImages?: string[];
+  status?: "success" | typeof SCAN_STATUS_CANCEL;
+};
+
+type NativeDocumentScannerModule = TurboModule & {
+  scanDocument(options: ScanDocumentOptions): Promise<ScanDocumentResponse>;
+};
+
+const documentScanner = TurboModuleRegistry.get<NativeDocumentScannerModule>(
+  "DocumentScanner",
+);
 
 export default function ScanReceiptScreen() {
   const themeColors = useThemeColors();
@@ -38,13 +57,18 @@ export default function ScanReceiptScreen() {
     setErrorMessage(null);
 
     try {
-      const result = await DocumentScanner.scanDocument({
+      if (!documentScanner) {
+        setErrorMessage(t("scan.camera.errors.nativeUnavailable"));
+        return;
+      }
+
+      const result = await documentScanner.scanDocument({
         croppedImageQuality: 100,
         maxNumDocuments: 1,
-        responseType: ResponseType.ImageFilePath,
+        responseType: RESPONSE_TYPE_IMAGE_FILE_PATH,
       });
 
-      if (result.status === ScanDocumentResponseStatus.Cancel) {
+      if (result.status === SCAN_STATUS_CANCEL) {
         router.back();
         return;
       }

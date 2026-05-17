@@ -141,6 +141,7 @@
       "errors": {
         "capture": "Could not capture the receipt. {{message}}",
         "galleryPermission": "Allow photo library access to choose a receipt.",
+        "nativeUnavailable": "The document scanner is not available in Expo Go. Use a development build to scan receipts.",
         "noScan": "No receipt image was returned. Try again.",
         "open": "Could not open the receipt. {{message}}",
         "tryAgain": "Try again."
