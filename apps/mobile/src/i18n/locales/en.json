@@ -3,6 +3,7 @@
     "cancel": "Cancel",
     "currencyAmount": "{{currency}} {{amount}}",
     "save": "Save",
+    "saving": "Saving...",
     "submit": "Submit"
   },
   "tabs": {
@@ -140,10 +141,10 @@
       "errors": {
         "capture": "Could not capture the receipt. {{message}}",
         "galleryPermission": "Allow photo library access to choose a receipt.",
+        "noScan": "No receipt image was returned. Try again.",
         "open": "Could not open the receipt. {{message}}",
         "tryAgain": "Try again."
       },
-      "galleryAccessibility": "Choose receipt from gallery",
       "instruction": "Place the receipt inside the frame",
       "permission": {
         "action": "Allow camera",
@@ -152,7 +153,7 @@
         "settingsBody": "Camera access is blocked. Open Settings and turn on camera permission for Klar Kasse.",
         "title": "Camera access"
       },
-      "subtitle": "Place the receipt inside the frame.",
+      "subtitle": "The scanner will detect and crop the receipt automatically.",
       "title": "Scan Receipt"
     },
     "home": {

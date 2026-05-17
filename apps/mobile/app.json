@@ -3,7 +3,7 @@
     "name": "Klar Kasse",
     "slug": "klar-kasse",
     "scheme": "KlarKasse",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon-light.png",
     "userInterfaceStyle": "automatic",
@@ -39,10 +39,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.CAMERA"
       ],
       "package": "de.klasrkasse.app"
     },
@@ -58,7 +55,7 @@
         }
       ],
       [
-        "expo-camera",
+        "react-native-document-scanner-plugin",
         {
           "cameraPermission": "Allow Klar Kasse to scan receipts."
         }

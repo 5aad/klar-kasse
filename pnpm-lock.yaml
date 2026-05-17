@@ -44,21 +44,15 @@ importers:
       expo:
         specifier: ~54.0.33
         version: 54.0.34(@babel/core@7.29.0)(@expo/metro-runtime@6.1.2)(expo-router@6.0.23)(react-native@0.81.5)(react@19.1.0)(typescript@5.9.3)
-      expo-camera:
-        specifier: ^17.0.10
-        version: 17.0.10(expo@54.0.34)(react-native-web@0.21.2)(react-native@0.81.5)(react@19.1.0)
+      expo-file-system:
+        specifier: ~19.0.22
+        version: 19.0.22(expo@54.0.34)(react-native@0.81.5)
       expo-image:
         specifier: ^3.0.11
         version: 3.0.11(expo@54.0.34)(react-native-web@0.21.2)(react-native@0.81.5)(react@19.1.0)
       expo-image-manipulator:
         specifier: ^14.0.8
         version: 14.0.8(expo@54.0.34)
-      expo-image-picker:
-        specifier: ~17.0.10
-        version: 17.0.11(expo@54.0.34)
-      expo-file-system:
-        specifier: ~19.0.22
-        version: 19.0.22(expo@54.0.34)(react-native@0.81.5)
       expo-linear-gradient:
         specifier: 15.0.8
         version: 15.0.8(expo@54.0.34)(react-native@0.81.5)(react@19.1.0)
@@ -98,12 +92,15 @@ importers:
       react-native:
         specifier: 0.81.5
         version: 0.81.5(@babel/core@7.29.0)(@react-native/metro-config@0.85.3)(@types/react@19.1.17)(react@19.1.0)
+      react-native-document-scanner-plugin:
+        specifier: ^2.0.4
+        version: 2.0.4(react-native@0.81.5)(react@19.1.0)
       react-native-executorch:
         specifier: ^0.8.3
         version: 0.8.4(react-native@0.81.5)(react@19.1.0)
       react-native-executorch-expo-resource-fetcher:
         specifier: ^0.8.0
-        version: 0.8.0(expo-asset@55.0.17)(expo-file-system@55.0.19)(expo@54.0.34)(react-native-executorch@0.8.4)(react-native@0.81.5)
+        version: 0.8.0(expo-asset@55.0.17)(expo-file-system@19.0.22)(expo@54.0.34)(react-native-executorch@0.8.4)(react-native@0.81.5)
       react-native-gesture-handler:
         specifier: ~2.28.0
         version: 2.28.0(react-native@0.81.5)(react@19.1.0)
@@ -4720,24 +4717,6 @@ packages:
       - typescript
     dev: false
 
-  /expo-camera@17.0.10(expo@54.0.34)(react-native-web@0.21.2)(react-native@0.81.5)(react@19.1.0):
-    resolution: {integrity: sha512-w1RBw83mAGVk4BPPwNrCZyFop0VLiVSRE3c2V9onWbdFwonpRhzmB4drygG8YOUTl1H3wQvALJHyMPTbgsK1Jg==}
-    peerDependencies:
-      expo: '*'
-      react: '*'
-      react-native: '*'
-      react-native-web: '*'
-    peerDependenciesMeta:
-      react-native-web:
-        optional: true
-    dependencies:
-      expo: 54.0.34(@babel/core@7.29.0)(@expo/metro-runtime@6.1.2)(expo-router@6.0.23)(react-native@0.81.5)(react@19.1.0)(typescript@5.9.3)
-      invariant: 2.2.4
-      react: 19.1.0
-      react-native: 0.81.5(@babel/core@7.29.0)(@react-native/metro-config@0.85.3)(@types/react@19.1.17)(react@19.1.0)
-      react-native-web: 0.21.2(react-dom@19.1.0)(react@19.1.0)
-    dev: false
-
   /expo-constants@18.0.13(expo@54.0.34)(react-native@0.81.5):
     resolution: {integrity: sha512-FnZn12E1dRYKDHlAdIyNFhBurKTS3F9CrfrBDJI5m3D7U17KBHMQ6JEfYlSj7LG7t+Ulr+IKaj58L1k5gBwTcQ==}
     peerDependencies:
@@ -4771,16 +4750,6 @@ packages:
 
   /expo-file-system@19.0.22(expo@54.0.34)(react-native@0.81.5):
     resolution: {integrity: sha512-l9pgahSc7sJD0bP9vBNeXvZjy8QKDpVHVxWmei/ESQOrzmoj5BidziqLVsyZdxsi+PfdbTtttLTAmddH/JafYA==}
-    peerDependencies:
-      expo: '*'
-      react-native: '*'
-    dependencies:
-      expo: 54.0.34(@babel/core@7.29.0)(@expo/metro-runtime@6.1.2)(expo-router@6.0.23)(react-native@0.81.5)(react@19.1.0)(typescript@5.9.3)
-      react-native: 0.81.5(@babel/core@7.29.0)(@react-native/metro-config@0.85.3)(@types/react@19.1.17)(react@19.1.0)
-    dev: false
-
-  /expo-file-system@55.0.19(expo@54.0.34)(react-native@0.81.5):
-    resolution: {integrity: sha512-c4smCbMqELLI3YQrGpw21MwZIREXM2e53vQD/+KWQcae1q+hgw8J2TroEqcQ/jVOtFpZYVvyVfgu4HDKNEKmNw==}
     peerDependencies:
       expo: '*'
       react-native: '*'
@@ -4825,15 +4794,6 @@ packages:
 
   /expo-image-manipulator@14.0.8(expo@54.0.34):
     resolution: {integrity: sha512-sXsXjm7rIxLWZe0j2A41J/Ph53PpFJRdyzJ3EQ/qetxLUvS2m3K1sP5xy37px43qCf0l79N/i6XgFgenFV36/Q==}
-    peerDependencies:
-      expo: '*'
-    dependencies:
-      expo: 54.0.34(@babel/core@7.29.0)(@expo/metro-runtime@6.1.2)(expo-router@6.0.23)(react-native@0.81.5)(react@19.1.0)(typescript@5.9.3)
-      expo-image-loader: 6.0.0(expo@54.0.34)
-    dev: false
-
-  /expo-image-picker@17.0.11(expo@54.0.34):
-    resolution: {integrity: sha512-/apkoyukDvsCHHb9fzP+F34A1uQqSzUtYH/2P/xJACNEwq+mwEXjXvVU8bzlJq6ih0Qo1+tpVivIa7B9kYSwOQ==}
     peerDependencies:
       expo: '*'
     dependencies:
@@ -7164,7 +7124,17 @@ packages:
     resolution: {integrity: sha512-XjBR15BhXuylgWGuslhDKqlSayuqvqBX91BP8pauG8kd1zY8kotkNWbXksTCNRarse4kuGbe2kIY05ARtwNIvw==}
     dev: false
 
-  /react-native-executorch-expo-resource-fetcher@0.8.0(expo-asset@55.0.17)(expo-file-system@55.0.19)(expo@54.0.34)(react-native-executorch@0.8.4)(react-native@0.81.5):
+  /react-native-document-scanner-plugin@2.0.4(react-native@0.81.5)(react@19.1.0):
+    resolution: {integrity: sha512-Y+tEP8qqgIseYw2T9NisT7+vaXJCM1QMj6KUqplNBQ3C+XivDwtyzp2vg03kH6Bjhg+ZxHzuEyu96ltBOax0iw==}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+    dependencies:
+      react: 19.1.0
+      react-native: 0.81.5(@babel/core@7.29.0)(@react-native/metro-config@0.85.3)(@types/react@19.1.17)(react@19.1.0)
+    dev: false
+
+  /react-native-executorch-expo-resource-fetcher@0.8.0(expo-asset@55.0.17)(expo-file-system@19.0.22)(expo@54.0.34)(react-native-executorch@0.8.4)(react-native@0.81.5):
     resolution: {integrity: sha512-vdAne2FBL0nCQ2c2yHTSt8Uttm0Klmo/K7tirSVlKxgVtli4cmsfl+UpR5giaNtlRZ3ImMAMXNW34j0fItmRfQ==}
     peerDependencies:
       expo: '>=54.0.0'
@@ -7175,7 +7145,7 @@ packages:
     dependencies:
       expo: 54.0.34(@babel/core@7.29.0)(@expo/metro-runtime@6.1.2)(expo-router@6.0.23)(react-native@0.81.5)(react@19.1.0)(typescript@5.9.3)
       expo-asset: 55.0.17(expo@54.0.34)(react-native@0.81.5)(react@19.1.0)(typescript@5.9.3)
-      expo-file-system: 55.0.19(expo@54.0.34)(react-native@0.81.5)
+      expo-file-system: 19.0.22(expo@54.0.34)(react-native@0.81.5)
       react-native: 0.81.5(@babel/core@7.29.0)(@react-native/metro-config@0.85.3)(@types/react@19.1.17)(react@19.1.0)
       react-native-executorch: 0.8.4(react-native@0.81.5)(react@19.1.0)
     dev: false

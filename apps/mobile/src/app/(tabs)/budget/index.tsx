@@ -17,7 +17,7 @@ import { NewCategoryModal } from "@/components/budget/new-category-modal";
 import { EmptyStateCard } from "@/components/shared/empty-state-card";
 import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
-import { useThemeColors } from "@/hooks/use-theme-colors";
+import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
 import {
   useCategoriesQuery,
   useDeleteCategoryMutation,
@@ -277,12 +277,14 @@ function ProgressBar({
   progress: number;
   trackColor: string;
 }) {
+  const clampedProgress = Math.max(0, Math.min(progress, 1));
+
   return (
     <View style={[styles.progressTrack, { backgroundColor: trackColor }]}>
       <View
         style={[
           styles.progressFill,
-          { width: `${progress * 100}%`, backgroundColor: fillColor },
+          { width: `${clampedProgress * 100}%`, backgroundColor: fillColor },
         ]}
       />
     </View>
@@ -297,11 +299,18 @@ function CategoryBudgetCard({
   onDelete?: (id: string) => void;
 }) {
   const themeColors = useThemeColors();
+  const resolvedTheme = useResolvedTheme();
   const { t } = useTranslation();
   const { formatCurrency } = useCurrencyFormatter();
   const remaining = budget.limit - budget.spent;
   const progress = budget.limit > 0 ? budget.spent / budget.limit : 0;
   const isAlert = Boolean(budget.alert);
+  const isDarkMode = resolvedTheme === "dark";
+  const progressFillColor =
+    isAlert || isDarkMode ? themeColors.primary : themeColors.text;
+  const progressTrackColor = isDarkMode
+    ? themeColors.background
+    : themeColors.mutedText;
 
   return (
     <View
@@ -408,9 +417,9 @@ function CategoryBudgetCard({
         </Text>
       </View>
       <ProgressBar
-        fillColor={isAlert ? themeColors.primary : themeColors.text}
+        fillColor={progressFillColor}
         progress={progress}
-        trackColor={themeColors.mutedText}
+        trackColor={progressTrackColor}
       />
 
       {budget.alert ? (

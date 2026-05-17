@@ -36,6 +36,24 @@ export function initializeDatabase() {
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS support_tickets (
+      id TEXT PRIMARY KEY NOT NULL,
+      installation_id TEXT NOT NULL,
+      device_id TEXT NOT NULL,
+      device_name TEXT,
+      platform TEXT,
+      app_version TEXT,
+      name TEXT,
+      email TEXT,
+      message TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'open',
+      synced_at TEXT,
+      sync_status TEXT NOT NULL DEFAULT 'pending',
+      sync_error TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY NOT NULL,
       name TEXT NOT NULL DEFAULT 'set your name',
@@ -197,6 +215,8 @@ export function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS categories_sync_status_idx ON categories(sync_status);
     CREATE INDEX IF NOT EXISTS app_activity_events_sync_status_idx ON app_activity_events(sync_status);
     CREATE INDEX IF NOT EXISTS app_activity_events_opened_at_idx ON app_activity_events(opened_at);
+    CREATE INDEX IF NOT EXISTS support_tickets_sync_status_idx ON support_tickets(sync_status);
+    CREATE INDEX IF NOT EXISTS support_tickets_created_at_idx ON support_tickets(created_at);
     CREATE UNIQUE INDEX IF NOT EXISTS categories_remote_id_idx ON categories(remote_id) WHERE remote_id IS NOT NULL;
     CREATE INDEX IF NOT EXISTS users_sync_status_idx ON users(sync_status);
     CREATE UNIQUE INDEX IF NOT EXISTS users_remote_id_idx ON users(remote_id) WHERE remote_id IS NOT NULL;

@@ -3,6 +3,7 @@
     "cancel": "Abbrechen",
     "currencyAmount": "{{currency}} {{amount}}",
     "save": "Speichern",
+    "saving": "Speichern...",
     "submit": "Senden"
   },
   "tabs": {
@@ -140,10 +141,10 @@
       "errors": {
         "capture": "Der Beleg konnte nicht aufgenommen werden. {{message}}",
         "galleryPermission": "Erlaube den Zugriff auf die Fotomediathek, um einen Beleg auszuwaehlen.",
+        "noScan": "Es wurde kein Belegbild zurueckgegeben. Versuche es erneut.",
         "open": "Der Beleg konnte nicht geoeffnet werden. {{message}}",
         "tryAgain": "Versuche es erneut."
       },
-      "galleryAccessibility": "Beleg aus Galerie auswaehlen",
       "instruction": "Platziere den Beleg im Rahmen",
       "permission": {
         "action": "Kamera erlauben",
@@ -152,7 +153,7 @@
         "settingsBody": "Der Kamerazugriff ist blockiert. Oeffne die Einstellungen und aktiviere die Kameraberechtigung fuer Klar Kasse.",
         "title": "Kamerazugriff"
       },
-      "subtitle": "Platziere den Beleg im Rahmen.",
+      "subtitle": "Der Scanner erkennt und schneidet den Beleg automatisch zu.",
       "title": "Beleg scannen"
     },
     "home": {
