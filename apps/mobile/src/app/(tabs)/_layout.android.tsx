@@ -3,7 +3,13 @@ import { colors, fontSize, radius, spacing } from "@repo/theme";
 import { Tabs } from "expo-router";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Animated, Pressable, StyleSheet, View } from "react-native";
+import {
+  Animated,
+  Pressable,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
@@ -26,6 +32,7 @@ type RegularTabButtonProps = {
   themeColors: ReturnType<typeof useThemeColors>;
   isFirst: boolean;
   isLast: boolean;
+  showLabel: boolean;
 };
 
 function RegularTabButton({
@@ -35,13 +42,16 @@ function RegularTabButton({
   isLast,
   label,
   onPress,
+  showLabel,
   tab,
   themeColors,
 }: RegularTabButtonProps) {
   const selectedProgress = useRef(
     new Animated.Value(isFocused ? 1 : 0),
   ).current;
-  const targetLabelWidth = Math.min(Math.max(label.length * 7.5, 42), 82);
+  const targetLabelWidth = showLabel
+    ? Math.min(Math.max(label.length * 7.5, 42), 82)
+    : 0;
   const labelWidth = selectedProgress.interpolate({
     inputRange: [0, 1],
     outputRange: [0, targetLabelWidth],
@@ -64,8 +74,9 @@ function RegularTabButton({
       accessibilityState={isFocused ? { selected: true } : undefined}
       style={[
         styles.tabButton,
-        isFirst && styles.firstTabButton,
-        isLast && styles.lastTabButton,
+        !showLabel && styles.compactTabButton,
+        showLabel && isFirst && styles.firstTabButton,
+        showLabel && isLast && styles.lastTabButton,
       ]}
       onPress={onPress}
     >
@@ -86,6 +97,7 @@ function RegularTabButton({
       />
       <Animated.Text
         numberOfLines={1}
+        maxFontSizeMultiplier={1.15}
         style={[
           styles.tabLabel,
           {
@@ -132,6 +144,7 @@ const tabs: TabConfig[] = [
 function FloatingTabBar({ descriptors, navigation, state }: any) {
   const themeColors = useThemeColors();
   const resolvedTheme = useResolvedTheme();
+  const { fontScale, width } = useWindowDimensions();
   const { bottom } = useSafeAreaInsets();
   const tabBarBottom = Math.max(bottom, spacing.md);
   const { t } = useTranslation();
@@ -142,6 +155,7 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
   const dockBackground = isDark ? "#050505" : colors.text;
   const dockBorderColor = isDark ? "#343434" : "transparent";
   const inactiveIconColor = isDark ? "#F4F1EA" : colors.primaryText;
+  const useCompactTabs = width < 390 || fontScale > 1.12;
   const scanRouteIndex = state.routes.findIndex(
     (route: { name: string }) => route.name === "scan",
   );
@@ -218,6 +232,7 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
         pointerEvents={isMinimized ? "none" : "auto"}
         style={[
           styles.fullTabBar,
+          useCompactTabs && styles.fullTabBarCompact,
           {
             bottom: tabBarBottom,
             opacity: fullBarOpacity,
@@ -231,6 +246,7 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
         <View
           style={[
             styles.tabPill,
+            useCompactTabs && styles.tabPillCompact,
             {
               backgroundColor: dockBackground,
               borderColor: dockBorderColor,
@@ -257,6 +273,7 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
                 isFocused={isFocused}
                 isLast={tab.name === regularTabs.at(-1)?.name}
                 label={label}
+                showLabel={!useCompactTabs}
                 tab={tab}
                 themeColors={themeColors}
                 onPress={() => navigateToRoute(tab.name)}
@@ -272,6 +289,7 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
           }
           style={[
             styles.scanButton,
+            useCompactTabs && styles.scanButtonCompact,
             {
               backgroundColor: dockBackground,
               borderColor: dockBorderColor,
@@ -292,7 +310,7 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
                 : inactiveIconColor
             }
             name="line-scan"
-            size={34}
+            size={useCompactTabs ? 30 : 34}
           />
         </Pressable>
       </Animated.View>
@@ -301,6 +319,7 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
         pointerEvents={isMinimized ? "auto" : "none"}
         style={[
           styles.compactTabBar,
+          useCompactTabs && styles.fullTabBarCompact,
           {
             bottom: tabBarBottom,
             opacity: compactBarOpacity,
@@ -316,6 +335,7 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
           accessibilityRole="button"
           style={[
             styles.compactButton,
+            useCompactTabs && styles.compactButtonSmall,
             {
               backgroundColor: dockBackground,
               borderColor: dockBorderColor,
@@ -329,7 +349,7 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
           <MaterialCommunityIcons
             color={inactiveIconColor}
             name={activeTab.icon}
-            size={28}
+            size={useCompactTabs ? 25 : 28}
           />
         </Pressable>
         <View style={styles.compactSpacer} />
@@ -337,6 +357,7 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
           accessibilityRole="button"
           style={[
             styles.compactButton,
+            useCompactTabs && styles.compactButtonSmall,
             {
               backgroundColor:
                 state.index === scanRouteIndex
@@ -357,7 +378,7 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
                 : inactiveIconColor
             }
             name="line-scan"
-            size={34}
+            size={useCompactTabs ? 30 : 34}
           />
         </Pressable>
       </Animated.View>
@@ -413,6 +434,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.sm,
   },
+  fullTabBarCompact: {
+    gap: spacing.xs,
+  },
   compactTabBar: {
     position: "absolute",
     right: 0,
@@ -432,6 +456,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 4,
   },
+  tabPillCompact: {
+    minHeight: 56,
+  },
   tabButton: {
     minWidth: 44,
     height: 56,
@@ -442,6 +469,13 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: spacing.sm,
     overflow: "hidden",
+  },
+  compactTabButton: {
+    flex: 1,
+    minWidth: 0,
+    height: 48,
+    gap: 0,
+    paddingHorizontal: spacing.xs,
   },
   activeTabBackground: {
     position: "absolute",
@@ -470,6 +504,11 @@ const styles = StyleSheet.create({
     borderRadius: 34,
     borderWidth: 1,
   },
+  scanButtonCompact: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+  },
   compactButton: {
     width: 64,
     height: 64,
@@ -477,6 +516,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 32,
     borderWidth: 1,
+  },
+  compactButtonSmall: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
   },
   compactSpacer: {
     flex: 1,
