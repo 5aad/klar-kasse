@@ -9,6 +9,7 @@ import { AppState, useColorScheme } from "react-native";
 
 import { initializeDatabase } from "@/db";
 import { recordAppOpened, syncPendingAppActivity } from "@/api/app-activity";
+import { syncPendingSupportTickets } from "@/api/support-tickets";
 import { getUserPreferences } from "@/api/users";
 import { queryClient } from "@/lib/query-client";
 
@@ -23,7 +24,9 @@ export default function RootLayout() {
   useEffect(() => {
     initializeDatabase();
     recordAppOpened()
-      .then(() => syncPendingAppActivity())
+      .then(() =>
+        Promise.all([syncPendingAppActivity(), syncPendingSupportTickets()]),
+      )
       .catch(() => undefined);
     getUserPreferences()
       .then((preferences) => {
@@ -39,7 +42,9 @@ export default function RootLayout() {
       if (state !== "active") return;
 
       recordAppOpened()
-        .then(() => syncPendingAppActivity())
+        .then(() =>
+          Promise.all([syncPendingAppActivity(), syncPendingSupportTickets()]),
+        )
         .catch(() => undefined);
     });
 

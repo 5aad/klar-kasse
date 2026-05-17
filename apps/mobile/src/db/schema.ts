@@ -67,6 +67,35 @@ export const appActivityEvents = sqliteTable(
   ],
 );
 
+export const supportTickets = sqliteTable(
+  "support_tickets",
+  {
+    id: text("id").primaryKey(),
+    installationId: text("installation_id").notNull(),
+    deviceId: text("device_id").notNull(),
+    deviceName: text("device_name"),
+    platform: text("platform"),
+    appVersion: text("app_version"),
+    name: text("name"),
+    email: text("email"),
+    message: text("message").notNull(),
+    status: text("status").notNull().default("open"),
+    syncedAt: text("synced_at"),
+    syncStatus: text("sync_status").notNull().default("pending"),
+    syncError: text("sync_error"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("support_tickets_sync_status_idx").on(table.syncStatus),
+    index("support_tickets_created_at_idx").on(table.createdAt),
+  ],
+);
+
 export const users = sqliteTable(
   "users",
   {
@@ -259,6 +288,8 @@ export type Category = typeof categories.$inferSelect;
 export type NewCategory = typeof categories.$inferInsert;
 export type AppActivityEvent = typeof appActivityEvents.$inferSelect;
 export type NewAppActivityEvent = typeof appActivityEvents.$inferInsert;
+export type SupportTicket = typeof supportTickets.$inferSelect;
+export type NewSupportTicket = typeof supportTickets.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Receipt = typeof receipts.$inferSelect;

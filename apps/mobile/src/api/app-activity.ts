@@ -55,7 +55,7 @@ function logActivitySync(message: string, data?: unknown) {
   }
 }
 
-function ensureDeviceInfo() {
+export function ensureDeviceInfo() {
   initializeDatabase();
   const deviceName = getDeviceName();
 

@@ -3,6 +3,7 @@
     "cancel": "Abbrechen",
     "currencyAmount": "{{currency}} {{amount}}",
     "save": "Speichern",
+    "saving": "Speichern...",
     "submit": "Senden"
   },
   "tabs": {

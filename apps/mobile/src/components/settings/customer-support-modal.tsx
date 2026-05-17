@@ -1,8 +1,10 @@
 import { fontSize, spacing } from "@repo/theme";
 import { BaseModal } from "@repo/ui";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
+import { submitSupportTicket } from "@/api/support-tickets";
 import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
 
 type Props = {
@@ -14,6 +16,30 @@ export function CustomerSupportModal({ onClose, visible }: Props) {
   const themeColors = useThemeColors();
   const resolvedTheme = useResolvedTheme();
   const { t } = useTranslation();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const submitTicket = async () => {
+    if (!message.trim() || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setStatusMessage(null);
+
+    try {
+      await submitSupportTicket({ email, message, name });
+      setName("");
+      setEmail("");
+      setMessage("");
+      onClose();
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : String(error));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <BaseModal
@@ -38,6 +64,8 @@ export function CustomerSupportModal({ onClose, visible }: Props) {
             {t("settings.customerSupport.name")}
           </Text>
           <TextInput
+            value={name}
+            onChangeText={setName}
             placeholder={t("settings.customerSupport.namePlaceholder")}
             placeholderTextColor={themeColors.mutedText}
             style={[
@@ -58,6 +86,8 @@ export function CustomerSupportModal({ onClose, visible }: Props) {
           <TextInput
             autoCapitalize="none"
             keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
             placeholder="you@example.com"
             placeholderTextColor={themeColors.mutedText}
             style={[
@@ -77,6 +107,8 @@ export function CustomerSupportModal({ onClose, visible }: Props) {
           </Text>
           <TextInput
             multiline
+            value={message}
+            onChangeText={setMessage}
             placeholder={t("settings.customerSupport.messagePlaceholder")}
             placeholderTextColor={themeColors.mutedText}
             style={[
@@ -93,8 +125,18 @@ export function CustomerSupportModal({ onClose, visible }: Props) {
         </View>
       </View>
 
+      {statusMessage ? (
+        <Text style={[styles.statusText, { color: themeColors.primary }]}>
+          {statusMessage}
+        </Text>
+      ) : null}
+
       <View style={styles.modalActions}>
-        <Pressable style={styles.cancelButton} onPress={onClose}>
+        <Pressable
+          style={styles.cancelButton}
+          disabled={isSubmitting}
+          onPress={onClose}
+        >
           <Text style={[styles.cancelText, { color: themeColors.primary }]}>
             {t("common.cancel")}
           </Text>
@@ -103,11 +145,13 @@ export function CustomerSupportModal({ onClose, visible }: Props) {
           style={[
             styles.submitButton,
             { backgroundColor: themeColors.primary },
+            (!message.trim() || isSubmitting) && styles.disabled,
           ]}
-          onPress={onClose}
+          disabled={!message.trim() || isSubmitting}
+          onPress={submitTicket}
         >
           <Text style={[styles.submitText, { color: themeColors.primaryText }]}>
-            {t("common.submit")}
+            {isSubmitting ? t("common.saving") : t("common.submit")}
           </Text>
         </Pressable>
       </View>
@@ -159,6 +203,11 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     marginTop: spacing.lg,
   },
+  statusText: {
+    marginTop: spacing.md,
+    fontSize: fontSize.sm,
+    fontWeight: "700",
+  },
   cancelButton: {
     minHeight: 46,
     alignItems: "center",
@@ -179,5 +228,8 @@ const styles = StyleSheet.create({
   submitText: {
     fontSize: fontSize.md,
     fontWeight: "700",
+  },
+  disabled: {
+    opacity: 0.55,
   },
 });
