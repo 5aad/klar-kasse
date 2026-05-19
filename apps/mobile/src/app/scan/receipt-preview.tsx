@@ -107,7 +107,7 @@ export default function CapturedReceiptMlKitScreen() {
           parseNormaReceipt(result.text),
         );
 
-        console.log("ML Kit OCR Result:", result.text);
+        console.log("ML Kit OCR Result:", result.blocks);
         console.log("Receipt parser result:", parsedReceipt);
 
         if (!isMounted) return;

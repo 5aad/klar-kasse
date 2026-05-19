@@ -77,6 +77,12 @@ export default function SettingsScreen() {
           themeColors={themeColors}
           onPress={() => setIsSupportModalVisible(true)}
         />
+        <SettingsRow
+          icon="code-json"
+          label="Receipt JSON Cleaner"
+          themeColors={themeColors}
+          onPress={() => router.push("/settings/receipt-json-cleaner")}
+        />
       </View>
 
       <CustomerSupportModal

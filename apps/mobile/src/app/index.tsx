@@ -4,12 +4,12 @@ import { StyleSheet, View } from "react-native";
 
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { getIsOnboardingDone } from "@/utils/onboarding-storage";
-// import { initExecutorch } from "react-native-executorch";
-// import { ExpoResourceFetcher } from "react-native-executorch-expo-resource-fetcher";
+import { initExecutorch } from "react-native-executorch";
+import { ExpoResourceFetcher } from "react-native-executorch-expo-resource-fetcher";
 export default function Index() {
   const themeColors = useThemeColors();
 
-  // initExecutorch({ resourceFetcher: ExpoResourceFetcher });
+  initExecutorch({ resourceFetcher: ExpoResourceFetcher });
   useEffect(() => {
     let isMounted = true;
 
