@@ -269,6 +269,11 @@
       "archiveMeta": "{{currency}} {{budget}} budget, {{categories}} categories, {{receipts}} receipts",
       "emptyBody": "Set a monthly budget to see export and delete options here.",
       "emptyTitle": "No monthly data yet",
+      "exportAccessibility": "Export {{month}} {{year}} data",
+      "exportErrorBody": "Try again or choose a different folder.",
+      "exportErrorTitle": "Could not export data",
+      "exportSuccessBody": "{{fileName}} was saved to the folder you selected.",
+      "exportSuccessTitle": "Export complete",
       "subtitle": "Export or delete monthly spending records.",
       "title": "Your Data"
     }

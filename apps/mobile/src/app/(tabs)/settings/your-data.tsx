@@ -1,19 +1,28 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
+import { useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   FlatList,
+  Platform,
   Pressable,
   RefreshControl,
+  Share,
   StyleSheet,
   Text,
   View,
   type ListRenderItem,
 } from "react-native";
 import { useTranslation } from "react-i18next";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
 import { EmptyStateCard } from "@/components/shared/empty-state-card";
+import { exportMonthlyData } from "@/api/data-export";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import {
@@ -48,6 +57,9 @@ export default function YourDataScreen() {
   const { bottom } = useSafeAreaInsets();
   const { i18n, t } = useTranslation();
   const { currency } = useCurrencyFormatter();
+  const [exportingMonthKey, setExportingMonthKey] = useState<string | null>(
+    null,
+  );
   const monthlyBudgetsQuery = useMonthlyBudgetsQuery();
   const deleteMonthlyBudgetMutation = useDeleteMonthlyBudgetMutation();
   const archives: DataArchive[] =
@@ -65,6 +77,41 @@ export default function YourDataScreen() {
         categoryBudgetCount: budget.categoryBudgetCount,
       };
     }) ?? [];
+
+  async function handleExportMonthlyData(item: DataArchive) {
+    setExportingMonthKey(item.monthKey);
+
+    try {
+      const result = await exportMonthlyData(item.monthKey);
+
+      if (!result) return;
+
+      if (result.savedToUserDirectory) {
+        Alert.alert(
+          t("settings.yourData.exportSuccessTitle"),
+          t("settings.yourData.exportSuccessBody", {
+            fileName: result.fileName,
+          }),
+        );
+
+        return;
+      }
+
+      await Share.share({
+        title: result.fileName,
+        message: Platform.OS === "ios" ? undefined : result.uri,
+        url: result.uri,
+      });
+    } catch (error) {
+      console.warn("Monthly data export failed:", error);
+      Alert.alert(
+        t("settings.yourData.exportErrorTitle"),
+        t("settings.yourData.exportErrorBody"),
+      );
+    } finally {
+      setExportingMonthKey(null);
+    }
+  }
 
   const renderArchiveItem: ListRenderItem<DataArchive> = ({ item }) => (
     <View
@@ -101,12 +148,23 @@ export default function YourDataScreen() {
       <View style={styles.actions}>
         <Pressable
           style={[styles.iconButton, { backgroundColor: themeColors.primary }]}
+          accessibilityLabel={t("settings.yourData.exportAccessibility", {
+            month: item.month,
+            year: item.year,
+          })}
+          accessibilityRole="button"
+          disabled={exportingMonthKey === item.monthKey}
+          onPress={() => handleExportMonthlyData(item)}
         >
-          <MaterialCommunityIcons
-            color={themeColors.primaryText}
-            name="export-variant"
-            size={20}
-          />
+          {exportingMonthKey === item.monthKey ? (
+            <ActivityIndicator color={themeColors.primaryText} size="small" />
+          ) : (
+            <MaterialCommunityIcons
+              color={themeColors.primaryText}
+              name="export-variant"
+              size={20}
+            />
+          )}
         </Pressable>
         <Pressable
           style={[styles.iconButton, { backgroundColor: themeColors.surface }]}

@@ -269,6 +269,11 @@
       "archiveMeta": "{{currency}} {{budget}} Budget, {{categories}} Kategorien, {{receipts}} Belege",
       "emptyBody": "Lege ein Monatsbudget fest, um Export- und Loeschoptionen hier zu sehen.",
       "emptyTitle": "Noch keine Monatsdaten",
+      "exportAccessibility": "Daten fuer {{month}} {{year}} exportieren",
+      "exportErrorBody": "Versuche es erneut oder waehle einen anderen Ordner.",
+      "exportErrorTitle": "Daten konnten nicht exportiert werden",
+      "exportSuccessBody": "{{fileName}} wurde im ausgewaehlten Ordner gespeichert.",
+      "exportSuccessTitle": "Export abgeschlossen",
       "subtitle": "Exportiere oder loesche monatliche Ausgabenaufzeichnungen.",
       "title": "Deine Daten"
     }
