@@ -28,6 +28,7 @@ import { useCategoriesQuery } from "@/queries/categories";
 import { usePostReceiptMutation } from "@/queries/receipts";
 import { useReceiptScanStore } from "@/stores/receipt-scan-store";
 import { formatDateInput, formatDateTextInput } from "@/utils/date-input";
+import { parseReceiptBlocks } from "@/utils/receipt-block-parser";
 import {
   parseNormaReceipt,
   type ReceiptParseResult,
@@ -103,11 +104,14 @@ export default function CapturedReceiptMlKitScreen() {
           croppedImage.uri,
           TextRecognitionScript.LATIN,
         );
+        const parserResult = result.blocks?.length
+          ? parseReceiptBlocks(result.blocks)
+          : parseNormaReceipt(result.text);
         const parsedReceipt = await applyReceiptParserHints(
-          parseNormaReceipt(result.text),
+          parserResult,
         );
 
-        console.log("ML Kit OCR Result:", result.text);
+        console.log("ML Kit OCR Result:", result.blocks);
         console.log("Receipt parser result:", parsedReceipt);
 
         if (!isMounted) return;
