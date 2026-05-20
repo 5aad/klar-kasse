@@ -47,9 +47,30 @@
     "transactionList": {
       "emptyBody": "Scan a receipt or add one manually to see it here.",
       "emptyTitle": "No receipts yet",
+      "openReceipt": "Open {{title}} receipt",
       "title": "Receipt List",
       "viewAll": "View all"
     }
+  },
+  "receiptDetail": {
+    "emptyBody": "This receipt may have been deleted or is no longer available.",
+    "emptyTitle": "Receipt not found",
+    "fallback": "Not set",
+    "fields": {
+      "address": "Address",
+      "category": "Category",
+      "note": "Note",
+      "payment": "Payment"
+    },
+    "items": "Items",
+    "netTax": "Net {{net}} | Tax {{tax}}",
+    "noItems": "No item details saved for this receipt.",
+    "quantity": "Qty {{quantity}}",
+    "subtotal": "Subtotal",
+    "subtitle": "Receipt details",
+    "title": "Receipt",
+    "total": "Total",
+    "vat": "VAT"
   },
   "budget": {
     "category": {

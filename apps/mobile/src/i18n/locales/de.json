@@ -47,9 +47,30 @@
     "transactionList": {
       "emptyBody": "Scanne einen Beleg oder fuege ihn manuell hinzu, um ihn hier zu sehen.",
       "emptyTitle": "Noch keine Belege",
+      "openReceipt": "Beleg von {{title}} oeffnen",
       "title": "Belegliste",
       "viewAll": "Alle anzeigen"
     }
+  },
+  "receiptDetail": {
+    "emptyBody": "Dieser Beleg wurde moeglicherweise geloescht oder ist nicht mehr verfuegbar.",
+    "emptyTitle": "Beleg nicht gefunden",
+    "fallback": "Nicht festgelegt",
+    "fields": {
+      "address": "Adresse",
+      "category": "Kategorie",
+      "note": "Notiz",
+      "payment": "Zahlung"
+    },
+    "items": "Artikel",
+    "netTax": "Netto {{net}} | Steuer {{tax}}",
+    "noItems": "Fuer diesen Beleg sind keine Artikeldetails gespeichert.",
+    "quantity": "Menge {{quantity}}",
+    "subtotal": "Zwischensumme",
+    "subtitle": "Belegdetails",
+    "title": "Beleg",
+    "total": "Gesamt",
+    "vat": "MwSt."
   },
   "budget": {
     "category": {
