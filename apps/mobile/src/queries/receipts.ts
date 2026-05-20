@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  deleteReceipt,
   getReceipt,
   getReceipts,
   postReceipt,
@@ -40,6 +41,26 @@ export function usePostReceiptMutation() {
 
       if (receipt) {
         queryClient.setQueryData(receiptQueryKeys.detail(receipt.id), receipt);
+      }
+    },
+  });
+}
+
+export function useDeleteReceiptMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteReceipt(id),
+    onSuccess: (receipt) => {
+      queryClient.invalidateQueries({ queryKey: receiptQueryKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["monthly-budget"] });
+      queryClient.invalidateQueries({ queryKey: ["monthly-budgets"] });
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+
+      if (receipt) {
+        queryClient.removeQueries({
+          queryKey: receiptQueryKeys.detail(receipt.id),
+        });
       }
     },
   });

@@ -216,6 +216,7 @@ const styles = StyleSheet.create({
   },
   iconGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.sm,
   },
   iconButton: {

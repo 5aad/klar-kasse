@@ -47,9 +47,35 @@
     "transactionList": {
       "emptyBody": "Scan a receipt or add one manually to see it here.",
       "emptyTitle": "No receipts yet",
+      "openReceipt": "Open {{title}} receipt",
       "title": "Receipt List",
       "viewAll": "View all"
     }
+  },
+  "receiptDetail": {
+    "deleteAction": "Delete receipt",
+    "deleteBody": "Delete the {{store}} receipt? This will remove it from your spending records.",
+    "deleteConfirm": "Delete",
+    "deleteTitle": "Delete receipt",
+    "deleting": "Deleting...",
+    "emptyBody": "This receipt may have been deleted or is no longer available.",
+    "emptyTitle": "Receipt not found",
+    "fallback": "Not set",
+    "fields": {
+      "address": "Address",
+      "category": "Category",
+      "note": "Note",
+      "payment": "Payment"
+    },
+    "items": "Items",
+    "netTax": "Net {{net}} | Tax {{tax}}",
+    "noItems": "No item details saved for this receipt.",
+    "quantity": "Qty {{quantity}}",
+    "subtotal": "Subtotal",
+    "subtitle": "Receipt details",
+    "title": "Receipt",
+    "total": "Total",
+    "vat": "VAT"
   },
   "budget": {
     "category": {
@@ -141,6 +167,7 @@
       "errors": {
         "capture": "Could not capture the receipt. {{message}}",
         "galleryPermission": "Allow photo library access to choose a receipt.",
+        "nativeUnavailable": "The document scanner is not available in Expo Go. Use a development build to scan receipts.",
         "noScan": "No receipt image was returned. Try again.",
         "open": "Could not open the receipt. {{message}}",
         "tryAgain": "Try again."
@@ -268,6 +295,11 @@
       "archiveMeta": "{{currency}} {{budget}} budget, {{categories}} categories, {{receipts}} receipts",
       "emptyBody": "Set a monthly budget to see export and delete options here.",
       "emptyTitle": "No monthly data yet",
+      "exportAccessibility": "Export {{month}} {{year}} data",
+      "exportErrorBody": "Try again or choose a different folder.",
+      "exportErrorTitle": "Could not export data",
+      "exportSuccessBody": "{{fileName}} was saved to the folder you selected.",
+      "exportSuccessTitle": "Export complete",
       "subtitle": "Export or delete monthly spending records.",
       "title": "Your Data"
     }

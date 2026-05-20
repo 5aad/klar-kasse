@@ -22,16 +22,14 @@ type Props = {
   title?: string;
 };
 
-export function TransactionList({
-  actionLabel,
-  items = [],
-  title,
-}: Props) {
+export function TransactionList({ actionLabel, items = [], title }: Props) {
   const themeColors = useThemeColors();
   const resolvedTheme = useResolvedTheme();
   const { t } = useTranslation();
   const resolvedActionLabel =
-    actionLabel === undefined ? t("dashboard.transactionList.viewAll") : actionLabel;
+    actionLabel === undefined
+      ? t("dashboard.transactionList.viewAll")
+      : actionLabel;
   const resolvedTitle = title ?? t("dashboard.transactionList.title");
   const iconBackground =
     resolvedTheme === "dark" ? themeColors.text : themeColors.text;
@@ -45,9 +43,7 @@ export function TransactionList({
           {resolvedTitle}
         </Text>
         {resolvedActionLabel ? (
-          <Pressable
-            onPress={() => router.push("/(dashboard)/search")}
-          >
+          <Pressable onPress={() => router.push("/(dashboard)/search")}>
             <Text style={[styles.viewAll, { color: themeColors.primary }]}>
               {resolvedActionLabel}
             </Text>
@@ -58,9 +54,19 @@ export function TransactionList({
       <View style={styles.list}>
         {items.length ? (
           items.map((transaction) => (
-            <View
+            <Pressable
               key={transaction.id ?? `${transaction.title}-${transaction.date}`}
               style={styles.row}
+              accessibilityLabel={t("dashboard.transactionList.openReceipt", {
+                title: transaction.title,
+              })}
+              accessibilityRole={transaction.id ? "button" : undefined}
+              disabled={!transaction.id}
+              onPress={() => {
+                if (!transaction.id) return;
+
+                router.push(`/(dashboard)/receipt/${transaction.id}`);
+              }}
             >
               <View
                 style={[styles.iconBox, { backgroundColor: iconBackground }]}
@@ -90,13 +96,13 @@ export function TransactionList({
                 style={[
                   styles.amount,
                   {
-                    color: themeColors.text
+                    color: themeColors.text,
                   },
                 ]}
               >
                 {transaction.amount}
               </Text>
-            </View>
+            </Pressable>
           ))
         ) : (
           <EmptyStateCard

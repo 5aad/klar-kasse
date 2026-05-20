@@ -116,15 +116,14 @@ export async function postReceipt(input: PostReceiptInput) {
   const now = new Date().toISOString();
   const receiptId = createLocalId("receipt");
   const monthKey = getMonthKeyFromDateText(input.date) ?? getCurrentMonthKey();
-  const category =
-    input.category
-      ? db
-          .select()
-          .from(categories)
-          .where(eq(categories.name, input.category))
-          .all()
-          .find((row) => !row.deletedAt)
-      : null;
+  const category = input.category
+    ? db
+        .select()
+        .from(categories)
+        .where(eq(categories.name, input.category))
+        .all()
+        .find((row) => !row.deletedAt)
+    : null;
   const receiptRows = [
     {
       id: receiptId,
@@ -225,9 +224,7 @@ export async function postReceipt(input: PostReceiptInput) {
           spentAmount: nextMonthlySpent,
           syncStatus: "pending",
           syncAction:
-            existingMonthlyBudget.syncAction === "create"
-              ? "create"
-              : "update",
+            existingMonthlyBudget.syncAction === "create" ? "create" : "update",
           updatedAt: now,
         })
         .where(eq(monthlyBudgets.id, existingMonthlyBudget.id))
@@ -342,11 +339,7 @@ export async function postReceipt(input: PostReceiptInput) {
 export async function getReceipt(id: string) {
   initializeDatabase();
 
-  const receipt = db
-    .select()
-    .from(receipts)
-    .where(eq(receipts.id, id))
-    .get();
+  const receipt = db.select().from(receipts).where(eq(receipts.id, id)).get();
 
   if (!receipt || receipt.deletedAt) return null;
 
@@ -362,6 +355,166 @@ export async function getReceipt(id: string) {
     .all();
 
   return toReceiptWithDetails(receipt, items, vat);
+}
+
+export async function deleteReceipt(id: string) {
+  initializeDatabase();
+
+  const receipt = db.select().from(receipts).where(eq(receipts.id, id)).get();
+
+  if (!receipt || receipt.deletedAt) return null;
+
+  const now = new Date().toISOString();
+  const monthKey =
+    getMonthKeyFromDateText(receipt.dateText) ??
+    getMonthKeyFromDateText(receipt.createdAt) ??
+    getCurrentMonthKey();
+  const category = receipt.categoryId
+    ? db
+        .select()
+        .from(categories)
+        .where(eq(categories.id, receipt.categoryId))
+        .get()
+    : receipt.categoryName
+      ? db
+          .select()
+          .from(categories)
+          .where(eq(categories.name, receipt.categoryName))
+          .all()
+          .find((row) => !row.deletedAt)
+      : null;
+  const existingMonthlyBudget =
+    db
+      .select()
+      .from(monthlyBudgets)
+      .where(eq(monthlyBudgets.monthKey, monthKey))
+      .get() ?? null;
+
+  db.transaction((tx) => {
+    tx.update(receiptItems)
+      .set({
+        deletedAt: now,
+        syncStatus: "pending",
+        syncAction: "delete",
+        updatedAt: now,
+      })
+      .where(eq(receiptItems.receiptId, receipt.id))
+      .run();
+
+    tx.update(receiptVat)
+      .set({
+        deletedAt: now,
+        syncStatus: "pending",
+        syncAction: "delete",
+        updatedAt: now,
+      })
+      .where(eq(receiptVat.receiptId, receipt.id))
+      .run();
+
+    tx.update(receipts)
+      .set({
+        deletedAt: now,
+        syncStatus: "pending",
+        syncAction: receipt.syncAction === "create" ? "create" : "delete",
+        updatedAt: now,
+      })
+      .where(eq(receipts.id, receipt.id))
+      .run();
+
+    tx.insert(syncOutbox)
+      .values({
+        id: createLocalId("sync"),
+        entityType: "receipt",
+        entityId: receipt.id,
+        operation: "delete",
+        payloadJson: JSON.stringify({ id: receipt.id, monthKey }),
+        status: "pending",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
+
+    if (!existingMonthlyBudget || existingMonthlyBudget.deletedAt) return;
+
+    const nextMonthlySpent = roundMoney(
+      Math.max(existingMonthlyBudget.spentAmount - receipt.total, 0),
+    );
+
+    tx.update(monthlyBudgets)
+      .set({
+        spentAmount: nextMonthlySpent,
+        syncStatus: "pending",
+        syncAction:
+          existingMonthlyBudget.syncAction === "create" ? "create" : "update",
+        updatedAt: now,
+      })
+      .where(eq(monthlyBudgets.id, existingMonthlyBudget.id))
+      .run();
+
+    tx.insert(syncOutbox)
+      .values({
+        id: createLocalId("sync"),
+        entityType: "monthly_budget",
+        entityId: existingMonthlyBudget.id,
+        operation: "update",
+        payloadJson: JSON.stringify({
+          monthKey,
+          spentAmount: nextMonthlySpent,
+        }),
+        status: "pending",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
+
+    if (!category || category.deletedAt) return;
+
+    const existingCategoryBudget =
+      tx
+        .select()
+        .from(categoryBudgets)
+        .where(eq(categoryBudgets.monthlyBudgetId, existingMonthlyBudget.id))
+        .all()
+        .find((row) => row.categoryId === category.id && !row.deletedAt) ??
+      null;
+
+    if (!existingCategoryBudget) return;
+
+    const nextCategorySpent = roundMoney(
+      Math.max(existingCategoryBudget.spentAmount - receipt.total, 0),
+    );
+
+    tx.update(categoryBudgets)
+      .set({
+        spentAmount: nextCategorySpent,
+        syncStatus: "pending",
+        syncAction:
+          existingCategoryBudget.syncAction === "create" ? "create" : "update",
+        updatedAt: now,
+      })
+      .where(eq(categoryBudgets.id, existingCategoryBudget.id))
+      .run();
+
+    tx.insert(syncOutbox)
+      .values({
+        id: createLocalId("sync"),
+        entityType: "category_budget",
+        entityId: existingCategoryBudget.id,
+        operation: "update",
+        payloadJson: JSON.stringify({
+          categoryId: category.id,
+          monthKey,
+          monthlyBudgetId: existingMonthlyBudget.id,
+          spentAmount: nextCategorySpent,
+        }),
+        status: "pending",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
+  });
+
+  return { id: receipt.id, monthKey };
 }
 
 export async function getReceipts() {

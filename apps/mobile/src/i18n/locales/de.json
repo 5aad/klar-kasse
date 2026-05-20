@@ -47,9 +47,35 @@
     "transactionList": {
       "emptyBody": "Scanne einen Beleg oder fuege ihn manuell hinzu, um ihn hier zu sehen.",
       "emptyTitle": "Noch keine Belege",
+      "openReceipt": "Beleg von {{title}} oeffnen",
       "title": "Belegliste",
       "viewAll": "Alle anzeigen"
     }
+  },
+  "receiptDetail": {
+    "deleteAction": "Beleg loeschen",
+    "deleteBody": "Beleg von {{store}} loeschen? Er wird aus deinen Ausgaben entfernt.",
+    "deleteConfirm": "Loeschen",
+    "deleteTitle": "Beleg loeschen",
+    "deleting": "Wird geloescht...",
+    "emptyBody": "Dieser Beleg wurde moeglicherweise geloescht oder ist nicht mehr verfuegbar.",
+    "emptyTitle": "Beleg nicht gefunden",
+    "fallback": "Nicht festgelegt",
+    "fields": {
+      "address": "Adresse",
+      "category": "Kategorie",
+      "note": "Notiz",
+      "payment": "Zahlung"
+    },
+    "items": "Artikel",
+    "netTax": "Netto {{net}} | Steuer {{tax}}",
+    "noItems": "Fuer diesen Beleg sind keine Artikeldetails gespeichert.",
+    "quantity": "Menge {{quantity}}",
+    "subtotal": "Zwischensumme",
+    "subtitle": "Belegdetails",
+    "title": "Beleg",
+    "total": "Gesamt",
+    "vat": "MwSt."
   },
   "budget": {
     "category": {
@@ -141,6 +167,7 @@
       "errors": {
         "capture": "Der Beleg konnte nicht aufgenommen werden. {{message}}",
         "galleryPermission": "Erlaube den Zugriff auf die Fotomediathek, um einen Beleg auszuwaehlen.",
+        "nativeUnavailable": "Der Dokumentenscanner ist in Expo Go nicht verfuegbar. Nutze einen Development Build, um Belege zu scannen.",
         "noScan": "Es wurde kein Belegbild zurueckgegeben. Versuche es erneut.",
         "open": "Der Beleg konnte nicht geoeffnet werden. {{message}}",
         "tryAgain": "Versuche es erneut."
@@ -268,6 +295,11 @@
       "archiveMeta": "{{currency}} {{budget}} Budget, {{categories}} Kategorien, {{receipts}} Belege",
       "emptyBody": "Lege ein Monatsbudget fest, um Export- und Loeschoptionen hier zu sehen.",
       "emptyTitle": "Noch keine Monatsdaten",
+      "exportAccessibility": "Daten fuer {{month}} {{year}} exportieren",
+      "exportErrorBody": "Versuche es erneut oder waehle einen anderen Ordner.",
+      "exportErrorTitle": "Daten konnten nicht exportiert werden",
+      "exportSuccessBody": "{{fileName}} wurde im ausgewaehlten Ordner gespeichert.",
+      "exportSuccessTitle": "Export abgeschlossen",
       "subtitle": "Exportiere oder loesche monatliche Ausgabenaufzeichnungen.",
       "title": "Deine Daten"
     }
