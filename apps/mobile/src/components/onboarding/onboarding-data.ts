@@ -33,4 +33,11 @@ export const onboardingPages: OnboardingPage[] = [
     body: "Review activity, understand patterns, and stay aware of what is left for the month.",
     icon: "chart-donut",
   },
+  {
+    key: "setup",
+    eyebrow: "Setup",
+    title: "Make Klar Kasse yours.",
+    body: "Choose a profile image, add your name, and set this month's budget before you start.",
+    icon: "account-heart-outline",
+  },
 ];
