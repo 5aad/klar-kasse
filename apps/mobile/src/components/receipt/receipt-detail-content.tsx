@@ -1,9 +1,12 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
+import { router } from "expo-router";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
+  Alert,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,7 +21,7 @@ import { EmptyStateCard } from "@/components/shared/empty-state-card";
 import { ScreenHeader } from "@/components/shared/screen-header";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { useThemeColors } from "@/hooks/use-theme-colors";
-import { useReceiptQuery } from "@/queries/receipts";
+import { useDeleteReceiptMutation, useReceiptQuery } from "@/queries/receipts";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 type Props = {
@@ -31,6 +34,7 @@ export function ReceiptDetailContent({ receiptId }: Props) {
   const { t } = useTranslation();
   const { formatCurrency } = useCurrencyFormatter();
   const receiptQuery = useReceiptQuery(receiptId);
+  const deleteReceiptMutation = useDeleteReceiptMutation();
   const receipt = receiptQuery.data;
   const itemTotal = useMemo(() => {
     if (!receipt) return 0;
@@ -38,6 +42,27 @@ export function ReceiptDetailContent({ receiptId }: Props) {
 
     return receipt.items.reduce((total, item) => total + item.price, 0);
   }, [receipt]);
+
+  function confirmDeleteReceipt() {
+    if (!receipt) return;
+
+    Alert.alert(
+      t("receiptDetail.deleteTitle"),
+      t("receiptDetail.deleteBody", { store: receipt.store }),
+      [
+        { style: "cancel", text: t("common.cancel") },
+        {
+          style: "destructive",
+          text: t("receiptDetail.deleteConfirm"),
+          onPress: () => {
+            deleteReceiptMutation.mutate(receipt.id, {
+              onSuccess: () => router.back(),
+            });
+          },
+        },
+      ],
+    );
+  }
 
   return (
     <SafeAreaView
@@ -62,176 +87,224 @@ export function ReceiptDetailContent({ receiptId }: Props) {
             <ActivityIndicator color={themeColors.primary} size="large" />
           </View>
         ) : receipt ? (
-          <View
-            style={[
-              styles.receiptPaper,
-              {
-                backgroundColor: themeColors.surface,
-                borderColor: themeColors.border,
-              },
-            ]}
-          >
-            <View style={styles.receiptHeader}>
-              <View
-                style={[
-                  styles.receiptIcon,
-                  { backgroundColor: themeColors.text },
-                ]}
-              >
-                <MaterialCommunityIcons
-                  color={themeColors.background}
-                  name="receipt-text-outline"
-                  size={30}
-                />
-              </View>
-              <View style={styles.receiptHeaderCopy}>
-                <Text
-                  selectable
-                  style={[styles.store, { color: themeColors.text }]}
-                >
-                  {receipt.store}
-                </Text>
-                <Text
-                  selectable
-                  style={[styles.muted, { color: themeColors.mutedText }]}
-                >
-                  {receipt.dateText ?? receipt.createdAt}
-                </Text>
-              </View>
-            </View>
-
+          <>
             <View
-              style={[styles.divider, { borderColor: themeColors.border }]}
-            />
-
-            <View style={styles.metaGrid}>
-              <DetailValue
-                label={t("receiptDetail.fields.category")}
-                value={receipt.categoryName ?? t("receiptDetail.fallback")}
-              />
-              <DetailValue
-                label={t("receiptDetail.fields.payment")}
-                value={
-                  [receipt.paymentMethod, receipt.cardLast4]
-                    .filter(Boolean)
-                    .join(" ") || t("receiptDetail.fallback")
-                }
-              />
-              {receipt.address.length ? (
-                <DetailValue
-                  label={t("receiptDetail.fields.address")}
-                  value={receipt.address.join(", ")}
-                />
-              ) : null}
-              {receipt.note ? (
-                <DetailValue
-                  label={t("receiptDetail.fields.note")}
-                  value={receipt.note}
-                />
-              ) : null}
-            </View>
-
-            <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: themeColors.text }]}>
-                {t("receiptDetail.items")}
-              </Text>
-              {receipt.items.length ? (
-                receipt.items.map((item) => (
-                  <View key={item.id} style={styles.lineItem}>
-                    <View style={styles.lineCopy}>
-                      <Text
-                        selectable
-                        style={[styles.lineTitle, { color: themeColors.text }]}
-                      >
-                        {item.name}
-                      </Text>
-                      <Text
-                        selectable
-                        style={[styles.muted, { color: themeColors.mutedText }]}
-                      >
-                        {[
-                          item.quantity
-                            ? t("receiptDetail.quantity", {
-                                quantity: item.quantity,
-                              })
-                            : null,
-                          item.unitPrice
-                            ? formatCurrency(item.unitPrice)
-                            : null,
-                          item.vatCode,
-                        ]
-                          .filter(Boolean)
-                          .join(" | ")}
-                      </Text>
-                    </View>
-                    <Text
-                      selectable
-                      style={[styles.lineAmount, { color: themeColors.text }]}
-                    >
-                      {formatCurrency(item.price)}
-                    </Text>
-                  </View>
-                ))
-              ) : (
-                <Text
-                  selectable
-                  style={[styles.muted, { color: themeColors.mutedText }]}
-                >
-                  {t("receiptDetail.noItems")}
-                </Text>
-              )}
-            </View>
-
-            {receipt.vat.length ? (
-              <>
+              style={[
+                styles.receiptPaper,
+                {
+                  backgroundColor: themeColors.surface,
+                  borderColor: themeColors.border,
+                },
+              ]}
+            >
+              <View style={styles.receiptHeader}>
                 <View
-                  style={[styles.divider, { borderColor: themeColors.border }]}
-                />
-                <View style={styles.section}>
+                  style={[
+                    styles.receiptIcon,
+                    { backgroundColor: themeColors.text },
+                  ]}
+                >
+                  <MaterialCommunityIcons
+                    color={themeColors.background}
+                    name="receipt-text-outline"
+                    size={30}
+                  />
+                </View>
+                <View style={styles.receiptHeaderCopy}>
                   <Text
-                    style={[styles.sectionTitle, { color: themeColors.text }]}
+                    selectable
+                    style={[styles.store, { color: themeColors.text }]}
                   >
-                    {t("receiptDetail.vat")}
+                    {receipt.store}
                   </Text>
-                  {receipt.vat.map((vatLine) => (
-                    <View key={vatLine.id} style={styles.taxRow}>
+                  <Text
+                    selectable
+                    style={[styles.muted, { color: themeColors.mutedText }]}
+                  >
+                    {receipt.dateText ?? receipt.createdAt}
+                  </Text>
+                </View>
+              </View>
+
+              <View
+                style={[styles.divider, { borderColor: themeColors.border }]}
+              />
+
+              <View style={styles.metaGrid}>
+                <DetailValue
+                  label={t("receiptDetail.fields.category")}
+                  value={receipt.categoryName ?? t("receiptDetail.fallback")}
+                />
+                <DetailValue
+                  label={t("receiptDetail.fields.payment")}
+                  value={
+                    [receipt.paymentMethod, receipt.cardLast4]
+                      .filter(Boolean)
+                      .join(" ") || t("receiptDetail.fallback")
+                  }
+                />
+                {receipt.address.length ? (
+                  <DetailValue
+                    label={t("receiptDetail.fields.address")}
+                    value={receipt.address.join(", ")}
+                  />
+                ) : null}
+                {receipt.note ? (
+                  <DetailValue
+                    label={t("receiptDetail.fields.note")}
+                    value={receipt.note}
+                  />
+                ) : null}
+              </View>
+
+              <View style={styles.section}>
+                <Text
+                  style={[styles.sectionTitle, { color: themeColors.text }]}
+                >
+                  {t("receiptDetail.items")}
+                </Text>
+                {receipt.items.length ? (
+                  receipt.items.map((item) => (
+                    <View key={item.id} style={styles.lineItem}>
+                      <View style={styles.lineCopy}>
+                        <Text
+                          selectable
+                          style={[
+                            styles.lineTitle,
+                            { color: themeColors.text },
+                          ]}
+                        >
+                          {item.name}
+                        </Text>
+                        <Text
+                          selectable
+                          style={[
+                            styles.muted,
+                            { color: themeColors.mutedText },
+                          ]}
+                        >
+                          {[
+                            item.quantity
+                              ? t("receiptDetail.quantity", {
+                                  quantity: item.quantity,
+                                })
+                              : null,
+                            item.unitPrice
+                              ? formatCurrency(item.unitPrice)
+                              : null,
+                            item.vatCode,
+                          ]
+                            .filter(Boolean)
+                            .join(" | ")}
+                        </Text>
+                      </View>
                       <Text
                         selectable
-                        style={[styles.muted, { color: themeColors.mutedText }]}
+                        style={[styles.lineAmount, { color: themeColors.text }]}
                       >
-                        {vatLine.rate}%
-                      </Text>
-                      <Text
-                        selectable
-                        style={[styles.muted, { color: themeColors.mutedText }]}
-                      >
-                        {t("receiptDetail.netTax", {
-                          net: formatCurrency(vatLine.net),
-                          tax: formatCurrency(vatLine.tax),
-                        })}
+                        {formatCurrency(item.price)}
                       </Text>
                     </View>
-                  ))}
-                </View>
-              </>
-            ) : null}
+                  ))
+                ) : (
+                  <Text
+                    selectable
+                    style={[styles.muted, { color: themeColors.mutedText }]}
+                  >
+                    {t("receiptDetail.noItems")}
+                  </Text>
+                )}
+              </View>
 
-            <View
-              style={[styles.divider, { borderColor: themeColors.border }]}
-            />
+              {receipt.vat.length ? (
+                <>
+                  <View
+                    style={[
+                      styles.divider,
+                      { borderColor: themeColors.border },
+                    ]}
+                  />
+                  <View style={styles.section}>
+                    <Text
+                      style={[styles.sectionTitle, { color: themeColors.text }]}
+                    >
+                      {t("receiptDetail.vat")}
+                    </Text>
+                    {receipt.vat.map((vatLine) => (
+                      <View key={vatLine.id} style={styles.taxRow}>
+                        <Text
+                          selectable
+                          style={[
+                            styles.muted,
+                            { color: themeColors.mutedText },
+                          ]}
+                        >
+                          {vatLine.rate}%
+                        </Text>
+                        <Text
+                          selectable
+                          style={[
+                            styles.muted,
+                            { color: themeColors.mutedText },
+                          ]}
+                        >
+                          {t("receiptDetail.netTax", {
+                            net: formatCurrency(vatLine.net),
+                            tax: formatCurrency(vatLine.tax),
+                          })}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </>
+              ) : null}
 
-            <View style={styles.totalRows}>
-              <SummaryRow
-                label={t("receiptDetail.subtotal")}
-                value={formatCurrency(itemTotal)}
+              <View
+                style={[styles.divider, { borderColor: themeColors.border }]}
               />
-              <SummaryRow
-                emphasized
-                label={t("receiptDetail.total")}
-                value={formatCurrency(receipt.total)}
-              />
+
+              <View style={styles.totalRows}>
+                <SummaryRow
+                  label={t("receiptDetail.subtotal")}
+                  value={formatCurrency(itemTotal)}
+                />
+                <SummaryRow
+                  emphasized
+                  label={t("receiptDetail.total")}
+                  value={formatCurrency(receipt.total)}
+                />
+              </View>
             </View>
-          </View>
+
+            <Pressable
+              accessibilityRole="button"
+              disabled={deleteReceiptMutation.isPending}
+              style={[
+                styles.deleteButton,
+                {
+                  backgroundColor: themeColors.surface,
+                  borderColor: themeColors.primary,
+                },
+                deleteReceiptMutation.isPending && styles.disabled,
+              ]}
+              onPress={confirmDeleteReceipt}
+            >
+              {deleteReceiptMutation.isPending ? (
+                <ActivityIndicator color={themeColors.primary} size="small" />
+              ) : (
+                <MaterialCommunityIcons
+                  color={themeColors.primary}
+                  name="trash-can-outline"
+                  size={20}
+                />
+              )}
+              <Text style={[styles.deleteText, { color: themeColors.primary }]}>
+                {deleteReceiptMutation.isPending
+                  ? t("receiptDetail.deleting")
+                  : t("receiptDetail.deleteAction")}
+              </Text>
+            </Pressable>
+          </>
         ) : (
           <EmptyStateCard
             body={t("receiptDetail.emptyBody")}
@@ -415,5 +488,22 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xl,
     fontWeight: "900",
     fontVariant: ["tabular-nums"],
+  },
+  deleteButton: {
+    minHeight: 54,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+  },
+  deleteText: {
+    fontSize: fontSize.md,
+    fontWeight: "800",
+  },
+  disabled: {
+    opacity: 0.55,
   },
 });

@@ -53,6 +53,11 @@
     }
   },
   "receiptDetail": {
+    "deleteAction": "Delete receipt",
+    "deleteBody": "Delete the {{store}} receipt? This will remove it from your spending records.",
+    "deleteConfirm": "Delete",
+    "deleteTitle": "Delete receipt",
+    "deleting": "Deleting...",
     "emptyBody": "This receipt may have been deleted or is no longer available.",
     "emptyTitle": "Receipt not found",
     "fallback": "Not set",

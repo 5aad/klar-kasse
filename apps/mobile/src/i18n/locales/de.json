@@ -53,6 +53,11 @@
     }
   },
   "receiptDetail": {
+    "deleteAction": "Beleg loeschen",
+    "deleteBody": "Beleg von {{store}} loeschen? Er wird aus deinen Ausgaben entfernt.",
+    "deleteConfirm": "Loeschen",
+    "deleteTitle": "Beleg loeschen",
+    "deleting": "Wird geloescht...",
     "emptyBody": "Dieser Beleg wurde moeglicherweise geloescht oder ist nicht mehr verfuegbar.",
     "emptyTitle": "Beleg nicht gefunden",
     "fallback": "Nicht festgelegt",
