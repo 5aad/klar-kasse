@@ -25,7 +25,8 @@
       },
       "android": {
         "credentialsSource": "remote",
-        "buildType": "app-bundle",
+        "gradleCommand": ":app:bundleRelease -PreactNativeArchitectures=arm64-v8a",
+        "applicationArchivePath": "android/app/build/outputs/bundle/release/*.aab",
         "autoIncrement": true
       },
       "channel": "production"
@@ -36,7 +37,8 @@
         "EXPO_PUBLIC_IS_STORE_BUILD": "false"
       },
       "android": {
-        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease -PreactNativeArchitectures=arm64-v8a",
+        "applicationArchivePath": "android/app/build/outputs/apk/release/*.apk",
         "autoIncrement": true
       },
       "channel": "production"
