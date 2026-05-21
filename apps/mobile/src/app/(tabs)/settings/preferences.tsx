@@ -11,7 +11,10 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { AvatarCarousel } from "@/components/settings/avatar-carousel";
 import { ScreenHeader } from "@/components/shared/screen-header";
@@ -100,7 +103,9 @@ export default function PreferencesScreen() {
         : getPotentialAvatarImageUrls();
       const downloadedUrls =
         await getDownloadedAvatarImageUrls(avatarUrlsToCheck);
-      const visibleAvatarUrls = hasRemoteAvatars ? nextAvatarUrls : downloadedUrls;
+      const visibleAvatarUrls = hasRemoteAvatars
+        ? nextAvatarUrls
+        : downloadedUrls;
 
       setAvailableAvatarUrls(visibleAvatarUrls);
       setDownloadedAvatarUrls(downloadedUrls);
@@ -249,52 +254,6 @@ export default function PreferencesScreen() {
 
         <View style={styles.section}>
           <Text style={[styles.label, { color: themeColors.text }]}>
-            {t("settings.preferences.appTheme")}
-          </Text>
-          <View style={styles.themeList}>
-            {themeOptions.map((option) => {
-              const isSelected = selectedTheme === option.key;
-
-              return (
-                <Pressable
-                  key={option.key}
-                  style={[
-                    styles.themeOption,
-                    {
-                      backgroundColor: themeColors.surface,
-                      borderColor: themeColors.text,
-                    },
-                    isSelected && styles.themeOptionSelected,
-                  ]}
-                  onPress={() => selectTheme(option.key as ThemePreference)}
-                >
-                  <MaterialCommunityIcons
-                    color={isSelected ? colors.primary : themeColors.text}
-                    name={option.icon}
-                    size={25}
-                  />
-                  <Text
-                    style={[
-                      styles.themeText,
-                      { color: themeColors.text },
-                      isSelected && styles.themeTextSelected,
-                    ]}
-                  >
-                    {t(option.labelKey)}
-                  </Text>
-                  <MaterialCommunityIcons
-                    color={isSelected ? colors.primary : themeColors.mutedText}
-                    name={isSelected ? "radiobox-marked" : "radiobox-blank"}
-                    size={24}
-                  />
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.label, { color: themeColors.text }]}>
             {t("settings.preferences.currency")}
           </Text>
           <View
@@ -342,6 +301,51 @@ export default function PreferencesScreen() {
           </View>
         </View>
 
+        <View style={styles.section}>
+          <Text style={[styles.label, { color: themeColors.text }]}>
+            {t("settings.preferences.appTheme")}
+          </Text>
+          <View style={styles.themeList}>
+            {themeOptions.map((option) => {
+              const isSelected = selectedTheme === option.key;
+
+              return (
+                <Pressable
+                  key={option.key}
+                  style={[
+                    styles.themeOption,
+                    {
+                      backgroundColor: themeColors.surface,
+                      borderColor: themeColors.text,
+                    },
+                    isSelected && styles.themeOptionSelected,
+                  ]}
+                  onPress={() => selectTheme(option.key as ThemePreference)}
+                >
+                  <MaterialCommunityIcons
+                    color={isSelected ? colors.primary : themeColors.text}
+                    name={option.icon}
+                    size={25}
+                  />
+                  <Text
+                    style={[
+                      styles.themeText,
+                      { color: themeColors.text },
+                      isSelected && styles.themeTextSelected,
+                    ]}
+                  >
+                    {t(option.labelKey)}
+                  </Text>
+                  <MaterialCommunityIcons
+                    color={isSelected ? colors.primary : themeColors.mutedText}
+                    name={isSelected ? "radiobox-marked" : "radiobox-blank"}
+                    size={24}
+                  />
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
       </KeyboardAwareScrollView>
     </SafeAreaView>
   );
