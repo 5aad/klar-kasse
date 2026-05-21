@@ -3,11 +3,10 @@ title: Terms of Use
 permalink: /terms-of-use/
 ---
 
-# Terms of Use
-
-<p align="center">
-  <img src="../assets/logo.png" alt="Klar Kasse logo" width="96" height="96">
-</p>
+<div style="display: flex; align-items: center; gap: 16px;">
+  <img src="assets/logo.png" alt="Klar Kasse logo" width="72" height="72">
+  <h1>Terms of Use</h1>
+</div>
 
 Effective May 21, 2026
 

@@ -3,11 +3,10 @@ title: Klar Kasse
 permalink: /
 ---
 
-# Klar Kasse
-
-<p align="center">
-  <img src="assets/logo.png" alt="Klar Kasse logo" width="96" height="96">
-</p>
+<div style="display: flex; align-items: center; gap: 16px;">
+  <img src="assets/logo.png" alt="Klar Kasse logo" width="72" height="72">
+  <h1>Klar Kasse</h1>
+</div>
 
 Legal documents for Klar Kasse.
 
