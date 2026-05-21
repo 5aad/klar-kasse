@@ -5,6 +5,10 @@ permalink: /privacy-policy/
 
 # Privacy Policy
 
+<p align="center">
+  <img src="../assets/logo.png" alt="Klar Kasse logo" width="96" height="96">
+</p>
+
 Effective May 21, 2026
 
 Klar Kasse helps you scan receipts, enter expenses, and track budgets. This Privacy Policy explains what data the app uses and how it is handled.

@@ -5,6 +5,10 @@ permalink: /terms-of-use/
 
 # Terms of Use
 
+<p align="center">
+  <img src="../assets/logo.png" alt="Klar Kasse logo" width="96" height="96">
+</p>
+
 Effective May 21, 2026
 
 Klar Kasse is a budgeting and receipt tracking tool developed by saad16. By using Klar Kasse, you agree to these Terms of Use.
