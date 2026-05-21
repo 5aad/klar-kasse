@@ -264,10 +264,22 @@
       "german": "Deutsch",
       "title": "Sprache"
     },
+    "legal": {
+      "privacyPolicy": {
+        "subtitle": "Wie Klar Kasse App-Daten verarbeitet.",
+        "title": "Datenschutzrichtlinie"
+      },
+      "termsOfUse": {
+        "subtitle": "Wichtige Bedingungen fuer die Nutzung von Klar Kasse.",
+        "title": "Nutzungsbedingungen"
+      }
+    },
     "menu": {
       "customerSupport": "Kundensupport",
       "language": "Sprache",
+      "privacyPolicy": "Datenschutzrichtlinie",
       "preferences": "Einstellungen",
+      "termsOfUse": "Nutzungsbedingungen",
       "yourData": "Deine Daten"
     },
     "preferences": {

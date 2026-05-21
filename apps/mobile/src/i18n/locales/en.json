@@ -264,10 +264,22 @@
       "german": "Deutsch",
       "title": "Language"
     },
+    "legal": {
+      "privacyPolicy": {
+        "subtitle": "How Klar Kasse handles app data.",
+        "title": "Privacy Policy"
+      },
+      "termsOfUse": {
+        "subtitle": "Important terms for using Klar Kasse.",
+        "title": "Terms of Use"
+      }
+    },
     "menu": {
       "customerSupport": "Customer Support",
       "language": "Language",
+      "privacyPolicy": "Privacy Policy",
       "preferences": "Preferences",
+      "termsOfUse": "Terms of Use",
       "yourData": "Your Data"
     },
     "preferences": {
