@@ -4,8 +4,11 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { CustomerSupportModal } from "@/components/settings/customer-support-modal";
 import { LanguageModal } from "@/components/settings/language-modal";
@@ -32,52 +35,72 @@ export default function SettingsScreen() {
         styles.screen,
         {
           backgroundColor: themeColors.background,
-          paddingBottom: getTabScreenBottomPadding(bottom, 0),
         },
       ]}
     >
-      <View style={styles.profile}>
-        <View style={styles.avatarWrap}>
-          <Image
-          contentFit="cover"
-            source={{
-              uri: userPreferencesQuery.data?.profileImageUri ?? PROFILE_IMAGE,
-            }}
-            style={styles.avatar}
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: getTabScreenBottomPadding(bottom, spacing.xl) },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.profile}>
+          <View style={styles.avatarWrap}>
+            <Image
+              contentFit="cover"
+              source={{
+                uri:
+                  userPreferencesQuery.data?.profileImageUri ?? PROFILE_IMAGE,
+              }}
+              style={styles.avatar}
+            />
+          </View>
+          <Text style={[styles.name, { color: themeColors.text }]}>
+            {userPreferencesQuery.data?.name ?? "set your name"}
+          </Text>
+          {/* <Text style={styles.email}>Tomhill@mail.com</Text> */}
+        </View>
+
+        <View style={styles.menu}>
+          <SettingsRow
+            icon="cog-outline"
+            label={t("settings.menu.preferences")}
+            themeColors={themeColors}
+            onPress={() => router.push("/settings/preferences")}
+          />
+          <SettingsRow
+            icon="database-outline"
+            label={t("settings.menu.yourData")}
+            themeColors={themeColors}
+            onPress={() => router.push("/settings/your-data")}
+          />
+          <SettingsRow
+            icon="translate"
+            label={t("settings.menu.language")}
+            themeColors={themeColors}
+            onPress={() => setIsLanguageModalVisible(true)}
+          />
+          <SettingsRow
+            icon="shield-lock-outline"
+            label={t("settings.menu.privacyPolicy")}
+            themeColors={themeColors}
+            onPress={() => router.push("/settings/privacy-policy")}
+          />
+          <SettingsRow
+            icon="file-document-outline"
+            label={t("settings.menu.termsOfUse")}
+            themeColors={themeColors}
+            onPress={() => router.push("/settings/terms-of-use")}
+          />
+          <SettingsRow
+            icon="help-circle-outline"
+            label={t("settings.menu.customerSupport")}
+            themeColors={themeColors}
+            onPress={() => setIsSupportModalVisible(true)}
           />
         </View>
-        <Text style={[styles.name, { color: themeColors.text }]}>
-          {userPreferencesQuery.data?.name ?? "set your name"}
-        </Text>
-        {/* <Text style={styles.email}>Tomhill@mail.com</Text> */}
-      </View>
-
-      <View style={styles.menu}>
-        <SettingsRow
-          icon="cog-outline"
-          label={t("settings.menu.preferences")}
-          themeColors={themeColors}
-          onPress={() => router.push("/settings/preferences")}
-        />
-        <SettingsRow
-          icon="database-outline"
-          label={t("settings.menu.yourData")}
-          themeColors={themeColors}
-          onPress={() => router.push("/settings/your-data")}
-        />
-        <SettingsRow
-          icon="translate"
-          label={t("settings.menu.language")}
-          themeColors={themeColors}
-          onPress={() => setIsLanguageModalVisible(true)}
-        />
-        <SettingsRow
-          icon="help-circle-outline"
-          label={t("settings.menu.customerSupport")}
-          themeColors={themeColors}
-          onPress={() => setIsSupportModalVisible(true)}
-        />
-      </View>
+      </ScrollView>
 
       <CustomerSupportModal
         visible={isSupportModalVisible}
@@ -127,6 +150,8 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  content: {
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.xl,
   },
