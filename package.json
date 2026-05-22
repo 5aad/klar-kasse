@@ -14,6 +14,11 @@
     "prettier": "^3.2.5",
     "turbo": "^2.9.6"
   },
+  "pnpm": {
+    "patchedDependencies": {
+      "expo-updates@29.0.16": "patches/expo-updates@29.0.16.patch"
+    }
+  },
   "packageManager": "pnpm@8.15.6",
   "name": "with-vite"
 }

@@ -38,9 +38,7 @@
         "backgroundColor": "#ffffff"
       },
       "predictiveBackGestureEnabled": false,
-      "permissions": [
-        "android.permission.CAMERA"
-      ],
+      "permissions": ["android.permission.CAMERA"],
       "package": "de.klasrkasse.app"
     },
     "web": {
@@ -73,7 +71,9 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/9e01ae7e-6ae7-4cbd-b730-95e9fd76fd18"
+      "url": "https://u.expo.dev/9e01ae7e-6ae7-4cbd-b730-95e9fd76fd18",
+      "fallbackToCacheTimeout": 0,
+      "checkAutomatically": "ON_LOAD"
     }
   }
 }
