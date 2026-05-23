@@ -5,7 +5,9 @@ import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   type GestureResponderEvent,
+  KeyboardAvoidingView,
   PanResponder,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -106,129 +108,140 @@ export default function EditBudgetScreen() {
       style={[styles.screen, { backgroundColor: themeColors.background }]}
       edges={["top"]}
     >
-      <KeyboardAwareScrollView
-        contentContainerStyle={[
-          styles.content,
-          {
-            alignSelf: "center",
-            maxWidth: adaptive.maxFormWidth,
-            paddingBottom: getTabScreenBottomPadding(bottom, 42),
-            paddingHorizontal: adaptive.gutter,
-            width: "100%",
-          },
-        ]}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardAvoidingView}
       >
-        <ScreenHeader
-          title={t("budget.edit.title")}
-          subtitle={t("budget.edit.subtitle")}
-        />
-
-        <View
-          style={[styles.currentCard, { backgroundColor: themeColors.surface }]}
+        <KeyboardAwareScrollView
+          contentContainerStyle={[
+            styles.content,
+            {
+              alignSelf: "center",
+              maxWidth: adaptive.maxFormWidth,
+              paddingBottom: getTabScreenBottomPadding(bottom, 42),
+              paddingHorizontal: adaptive.gutter,
+              width: "100%",
+            },
+          ]}
+          showsVerticalScrollIndicator={false}
         >
+          <ScreenHeader
+            title={t("budget.edit.title")}
+            subtitle={t("budget.edit.subtitle")}
+          />
+
           <View
             style={[
-              styles.currentAccent,
-              { backgroundColor: themeColors.primary },
+              styles.currentCard,
+              { backgroundColor: themeColors.surface },
             ]}
-          />
-          <View style={styles.currentHeader}>
-            <View style={styles.currentCopy}>
-              <Text style={[styles.eyebrow, { color: themeColors.primary }]}>
-                {t("budget.edit.currentAllocation")}
-              </Text>
-              <TextInput
-                value={categoryName}
-                onChangeText={setCategoryName}
-                placeholder={t("budget.edit.categoryNamePlaceholder")}
-                placeholderTextColor={themeColors.mutedText}
-                style={[styles.titleInput, { color: themeColors.text }]}
-              />
-              <Text style={[styles.subtitle, { color: themeColors.mutedText }]}>
-                {formatType(type)}
-              </Text>
-            </View>
+          >
             <View
               style={[
-                styles.iconBox,
-                { backgroundColor: `${themeColors.primary}26` },
+                styles.currentAccent,
+                { backgroundColor: themeColors.primary },
               ]}
-            >
-              <MaterialCommunityIcons
-                color={themeColors.primary}
-                name={icon}
-                size={34}
-              />
-            </View>
-          </View>
-
-          <View style={styles.statRow}>
-            <View
-              style={[
-                styles.statBox,
-                { backgroundColor: themeColors.background },
-              ]}
-            >
-              <Text
-                style={[styles.statLabel, { color: themeColors.mutedText }]}
-              >
-                {t("budget.edit.used")}
-              </Text>
-              <Text style={[styles.statValue, { color: themeColors.text }]}>
-                {formatCurrency(spent)}
-              </Text>
-            </View>
-            <View
-              style={[
-                styles.statBox,
-                { backgroundColor: themeColors.background },
-              ]}
-            >
-              <Text
-                style={[styles.statLabel, { color: themeColors.mutedText }]}
-              >
-                {t("budget.edit.currentLimit")}
-              </Text>
-              <Text style={[styles.statValue, { color: themeColors.text }]}>
-                {formatCurrency(limit)}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionLabel, { color: themeColors.mutedText }]}>
-            {t("budget.edit.newMonthlyLimit")}
-          </Text>
-          <TextInput
-            keyboardType="decimal-pad"
-            style={[
-              styles.amountInput,
-              {
-                backgroundColor: themeColors.surface,
-                borderColor: themeColors.text,
-                color: themeColors.text,
-              },
-            ]}
-            value={`${currency} ${limitValue}`}
-            onChangeText={(value) =>
-              setLimitValue(value.replace(/[^\d.]/g, ""))
-            }
-          />
-          <View style={styles.infoRow}>
-            <MaterialCommunityIcons
-              color={themeColors.mutedText}
-              name="information"
-              size={16}
             />
-            <Text style={[styles.infoText, { color: themeColors.mutedText }]}>
-              {t("budget.edit.limitInfo")}
-            </Text>
-          </View>
-        </View>
+            <View style={styles.currentHeader}>
+              <View style={styles.currentCopy}>
+                <Text style={[styles.eyebrow, { color: themeColors.primary }]}>
+                  {t("budget.edit.currentAllocation")}
+                </Text>
+                <TextInput
+                  value={categoryName}
+                  onChangeText={setCategoryName}
+                  placeholder={t("budget.edit.categoryNamePlaceholder")}
+                  placeholderTextColor={themeColors.mutedText}
+                  style={[styles.titleInput, { color: themeColors.text }]}
+                />
+                <Text
+                  style={[styles.subtitle, { color: themeColors.mutedText }]}
+                >
+                  {formatType(type)}
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.iconBox,
+                  { backgroundColor: `${themeColors.primary}26` },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  color={themeColors.primary}
+                  name={icon}
+                  size={34}
+                />
+              </View>
+            </View>
 
-        {/* <View style={styles.section}>
+            <View style={styles.statRow}>
+              <View
+                style={[
+                  styles.statBox,
+                  { backgroundColor: themeColors.background },
+                ]}
+              >
+                <Text
+                  style={[styles.statLabel, { color: themeColors.mutedText }]}
+                >
+                  {t("budget.edit.used")}
+                </Text>
+                <Text style={[styles.statValue, { color: themeColors.text }]}>
+                  {formatCurrency(spent)}
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.statBox,
+                  { backgroundColor: themeColors.background },
+                ]}
+              >
+                <Text
+                  style={[styles.statLabel, { color: themeColors.mutedText }]}
+                >
+                  {t("budget.edit.currentLimit")}
+                </Text>
+                <Text style={[styles.statValue, { color: themeColors.text }]}>
+                  {formatCurrency(limit)}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text
+              style={[styles.sectionLabel, { color: themeColors.mutedText }]}
+            >
+              {t("budget.edit.newMonthlyLimit")}
+            </Text>
+            <TextInput
+              keyboardType="decimal-pad"
+              style={[
+                styles.amountInput,
+                {
+                  backgroundColor: themeColors.surface,
+                  borderColor: themeColors.text,
+                  color: themeColors.text,
+                },
+              ]}
+              value={`${currency} ${limitValue}`}
+              onChangeText={(value) =>
+                setLimitValue(value.replace(/[^\d.]/g, ""))
+              }
+            />
+            <View style={styles.infoRow}>
+              <MaterialCommunityIcons
+                color={themeColors.mutedText}
+                name="information"
+                size={16}
+              />
+              <Text style={[styles.infoText, { color: themeColors.mutedText }]}>
+                {t("budget.edit.limitInfo")}
+              </Text>
+            </View>
+          </View>
+
+          {/* <View style={styles.section}>
           <View style={styles.proportionHeader}>
             <Text
               style={[styles.sectionLabel, { color: themeColors.mutedText }]}
@@ -286,33 +299,36 @@ export default function EditBudgetScreen() {
           </View>
         </View> */}
 
-        <Pressable
-          style={[
-            styles.saveButton,
-            { backgroundColor: themeColors.primary },
-            editCategoryMutation.isPending && styles.disabled,
-          ]}
-          disabled={editCategoryMutation.isPending}
-          onPress={saveChanges}
-        >
-          <MaterialCommunityIcons
-            color={themeColors.primaryText}
-            name="content-save-outline"
-            size={20}
-          />
-          <Text style={[styles.saveText, { color: themeColors.primaryText }]}>
-            {editCategoryMutation.isPending
-              ? t("budget.edit.saving")
-              : t("budget.edit.saveChanges")}
-          </Text>
-        </Pressable>
+          <Pressable
+            style={[
+              styles.saveButton,
+              { backgroundColor: themeColors.primary },
+              editCategoryMutation.isPending && styles.disabled,
+            ]}
+            disabled={editCategoryMutation.isPending}
+            onPress={saveChanges}
+          >
+            <MaterialCommunityIcons
+              color={themeColors.primaryText}
+              name="content-save-outline"
+              size={20}
+            />
+            <Text style={[styles.saveText, { color: themeColors.primaryText }]}>
+              {editCategoryMutation.isPending
+                ? t("budget.edit.saving")
+                : t("budget.edit.saveChanges")}
+            </Text>
+          </Pressable>
 
-        <Pressable style={styles.discardButton} onPress={() => router.back()}>
-          <Text style={[styles.discardText, { color: themeColors.mutedText }]}>
-            {t("budget.edit.discardEdits")}
-          </Text>
-        </Pressable>
-      </KeyboardAwareScrollView>
+          <Pressable style={styles.discardButton} onPress={() => router.back()}>
+            <Text
+              style={[styles.discardText, { color: themeColors.mutedText }]}
+            >
+              {t("budget.edit.discardEdits")}
+            </Text>
+          </Pressable>
+        </KeyboardAwareScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -323,6 +339,9 @@ function formatType(type: string) {
 
 const styles = StyleSheet.create({
   screen: {
+    flex: 1,
+  },
+  keyboardAvoidingView: {
     flex: 1,
   },
   content: {

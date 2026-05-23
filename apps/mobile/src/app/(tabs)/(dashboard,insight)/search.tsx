@@ -4,6 +4,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -268,152 +270,160 @@ export default function SearchScreen() {
       style={[styles.screen, { backgroundColor: themeColors.background }]}
       edges={["top"]}
     >
-      <KeyboardAwareScrollView
-        contentContainerStyle={[
-          styles.content,
-          {
-            alignSelf: "center",
-            maxWidth: adaptive.maxContentWidth,
-            paddingBottom: getTabScreenBottomPadding(bottom, 36),
-            paddingHorizontal: adaptive.gutter,
-            width: "100%",
-          },
-        ]}
-        refreshControl={
-          <RefreshControl
-            refreshing={
-              categoriesQuery.isRefetching || receiptsQuery.isRefetching
-            }
-            tintColor={themeColors.primary}
-            colors={[themeColors.primary]}
-            progressBackgroundColor={themeColors.surface}
-            onRefresh={refreshSearch}
-          />
-        }
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardAvoidingView}
       >
-        <ScreenHeader
-          title={t("dashboard.search.title")}
-          subtitle={t("dashboard.search.subtitle")}
-        />
-
-        <MonthSelector
-          selectedMonth={selectedMonth}
-          onChange={setSearchMonth}
-        />
-
-        <View
-          style={[
-            styles.searchGrid,
-            adaptive.isMedium && styles.searchGridWide,
+        <KeyboardAwareScrollView
+          contentContainerStyle={[
+            styles.content,
+            {
+              alignSelf: "center",
+              maxWidth: adaptive.maxContentWidth,
+              paddingBottom: getTabScreenBottomPadding(bottom, 36),
+              paddingHorizontal: adaptive.gutter,
+              width: "100%",
+            },
           ]}
+          refreshControl={
+            <RefreshControl
+              refreshing={
+                categoriesQuery.isRefetching || receiptsQuery.isRefetching
+              }
+              tintColor={themeColors.primary}
+              colors={[themeColors.primary]}
+              progressBackgroundColor={themeColors.surface}
+              onRefresh={refreshSearch}
+            />
+          }
+          showsVerticalScrollIndicator={false}
         >
+          <ScreenHeader
+            title={t("dashboard.search.title")}
+            subtitle={t("dashboard.search.subtitle")}
+          />
+
+          <MonthSelector
+            selectedMonth={selectedMonth}
+            onChange={setSearchMonth}
+          />
+
           <View
-            style={[styles.panel, { backgroundColor: themeColors.surface }]}
+            style={[
+              styles.searchGrid,
+              adaptive.isMedium && styles.searchGridWide,
+            ]}
           >
-            <Text style={[styles.panelLabel, { color: themeColors.text }]}>
-              {t("dashboard.search.activity")}
-            </Text>
-            <View style={styles.searchRow}>
-              <MaterialCommunityIcons
-                color={themeColors.primary}
-                name="magnify"
-                size={22}
-              />
-              <TextInput
-                value={searchQuery}
-                onChangeText={setSearchParam}
-                placeholder={t("dashboard.search.placeholder")}
-                placeholderTextColor={themeColors.mutedText}
-                style={[styles.searchInput, { color: themeColors.text }]}
-              />
+            <View
+              style={[styles.panel, { backgroundColor: themeColors.surface }]}
+            >
+              <Text style={[styles.panelLabel, { color: themeColors.text }]}>
+                {t("dashboard.search.activity")}
+              </Text>
+              <View style={styles.searchRow}>
+                <MaterialCommunityIcons
+                  color={themeColors.primary}
+                  name="magnify"
+                  size={22}
+                />
+                <TextInput
+                  value={searchQuery}
+                  onChangeText={setSearchParam}
+                  placeholder={t("dashboard.search.placeholder")}
+                  placeholderTextColor={themeColors.mutedText}
+                  style={[styles.searchInput, { color: themeColors.text }]}
+                />
+              </View>
             </View>
-          </View>
 
-          <View
-            style={[styles.panel, { backgroundColor: themeColors.surface }]}
-          >
-            <Text style={[styles.panelLabel, { color: themeColors.text }]}>
-              {t("dashboard.search.categoryFilter")}
-            </Text>
-            <View style={styles.filterRow}>
-              {filters.map((filter) => {
-                const isActive = activeFilter === filter.key;
+            <View
+              style={[styles.panel, { backgroundColor: themeColors.surface }]}
+            >
+              <Text style={[styles.panelLabel, { color: themeColors.text }]}>
+                {t("dashboard.search.categoryFilter")}
+              </Text>
+              <View style={styles.filterRow}>
+                {filters.map((filter) => {
+                  const isActive = activeFilter === filter.key;
 
-                return (
-                  <Pressable
-                    key={filter.key}
-                    style={[
-                      styles.filterChip,
-                      {
-                        backgroundColor: isActive
-                          ? themeColors.primary
-                          : themeColors.background,
-                      },
-                    ]}
-                    onPress={() => setCategoryFilter(filter.key)}
-                  >
-                    <Text
+                  return (
+                    <Pressable
+                      key={filter.key}
                       style={[
-                        styles.filterText,
+                        styles.filterChip,
                         {
-                          color: isActive
-                            ? themeColors.primaryText
-                            : themeColors.text,
+                          backgroundColor: isActive
+                            ? themeColors.primary
+                            : themeColors.background,
                         },
                       ]}
+                      onPress={() => setCategoryFilter(filter.key)}
                     >
-                      {filter.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+                      <Text
+                        style={[
+                          styles.filterText,
+                          {
+                            color: isActive
+                              ? themeColors.primaryText
+                              : themeColors.text,
+                          },
+                        ]}
+                      >
+                        {filter.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
             </View>
           </View>
-        </View>
 
-        {receiptSections.length ? (
-          receiptSections.map((section) => (
+          {receiptSections.length ? (
+            receiptSections.map((section) => (
+              <TransactionList
+                actionLabel={null}
+                items={section.items}
+                key={section.title}
+                title={section.title}
+              />
+            ))
+          ) : (
             <TransactionList
               actionLabel={null}
-              items={section.items}
-              key={section.title}
-              title={section.title}
+              items={[]}
+              title={t("dashboard.transactionList.title")}
             />
-          ))
-        ) : (
-          <TransactionList
-            actionLabel={null}
-            items={[]}
-            title={t("dashboard.transactionList.title")}
-          />
-        )}
+          )}
 
-        {hasMoreReceipts ? (
-          <Pressable
-            style={[
-              styles.olderButton,
-              { backgroundColor: themeColors.surface },
-            ]}
-            onPress={loadNextPage}
-          >
-            <Text style={[styles.olderText, { color: themeColors.text }]}>
-              {t("dashboard.search.exploreOlder")}
-            </Text>
-            <MaterialCommunityIcons
-              color={themeColors.text}
-              name="chevron-down"
-              size={18}
-            />
-          </Pressable>
-        ) : null}
-      </KeyboardAwareScrollView>
+          {hasMoreReceipts ? (
+            <Pressable
+              style={[
+                styles.olderButton,
+                { backgroundColor: themeColors.surface },
+              ]}
+              onPress={loadNextPage}
+            >
+              <Text style={[styles.olderText, { color: themeColors.text }]}>
+                {t("dashboard.search.exploreOlder")}
+              </Text>
+              <MaterialCommunityIcons
+                color={themeColors.text}
+                name="chevron-down"
+                size={18}
+              />
+            </Pressable>
+          ) : null}
+        </KeyboardAwareScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
+    flex: 1,
+  },
+  keyboardAvoidingView: {
     flex: 1,
   },
   content: {
