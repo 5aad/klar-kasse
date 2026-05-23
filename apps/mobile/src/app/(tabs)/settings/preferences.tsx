@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -185,176 +187,183 @@ export default function PreferencesScreen() {
       style={[styles.screen, { backgroundColor: themeColors.background }]}
       edges={["top"]}
     >
-      <KeyboardAwareScrollView
-        contentContainerStyle={[
-          styles.content,
-          {
-            alignSelf: "center",
-            maxWidth: adaptive.maxFormWidth,
-            paddingBottom: getTabScreenBottomPadding(bottom, 36),
-            paddingHorizontal: adaptive.gutter,
-            width: "100%",
-          },
-        ]}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardAvoidingView}
       >
-        <ScreenHeader
-          title={t("settings.preferences.title")}
-          subtitle={t("settings.preferences.subtitle")}
-        />
-
-        <View style={styles.section}>
-          <Text style={[styles.label, { color: themeColors.text }]}>
-            {t("settings.preferences.displayName")}
-          </Text>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            onBlur={saveName}
-            placeholder={t("settings.preferences.namePlaceholder")}
-            placeholderTextColor={themeColors.mutedText}
-            style={[
-              styles.input,
-              {
-                backgroundColor: themeColors.surface,
-                borderColor: themeColors.text,
-                color: themeColors.text,
-              },
-            ]}
+        <KeyboardAwareScrollView
+          contentContainerStyle={[
+            styles.content,
+            {
+              alignSelf: "center",
+              maxWidth: adaptive.maxFormWidth,
+              paddingBottom: getTabScreenBottomPadding(bottom, 36),
+              paddingHorizontal: adaptive.gutter,
+              width: "100%",
+            },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <ScreenHeader
+            title={t("settings.preferences.title")}
+            subtitle={t("settings.preferences.subtitle")}
           />
-        </View>
 
-        <View style={styles.section}>
-          <View style={styles.sectionLabelRow}>
+          <View style={styles.section}>
             <Text style={[styles.label, { color: themeColors.text }]}>
-              {t("settings.preferences.profileImage")}
+              {t("settings.preferences.displayName")}
             </Text>
-            <Pressable
-              accessibilityLabel={t("settings.preferences.refreshAvatars")}
-              accessibilityRole="button"
-              style={[
-                styles.refreshButton,
-                { backgroundColor: themeColors.surface },
-              ]}
-              disabled={isRefreshingAvatars}
-              onPress={refreshAvatarList}
-            >
-              {isRefreshingAvatars ? (
-                <ActivityIndicator color={themeColors.text} size="small" />
-              ) : (
-                <MaterialCommunityIcons
-                  color={themeColors.text}
-                  name="refresh"
-                  size={18}
-                />
-              )}
-            </Pressable>
-          </View>
-          <AvatarCarousel
-            avatarUrls={availableAvatarUrls}
-            downloadedAvatarUrls={downloadedAvatarUrls}
-            downloadingAvatarUrl={downloadingAvatarUrl}
-            previewRefreshKey={avatarPreviewRefreshKey}
-            profileImageUri={profileImageUri}
-            onSelectAvatar={selectAvatar}
-          />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.label, { color: themeColors.text }]}>
-            {t("settings.preferences.currency")}
-          </Text>
-          <View
-            style={[
-              styles.preferenceField,
-              {
-                backgroundColor: themeColors.surface,
-                borderColor: themeColors.text,
-              },
-            ]}
-          >
-            <View style={styles.preferenceCopy}>
-              <Text
-                style={[styles.preferenceTitle, { color: themeColors.text }]}
-              >
-                {t("settings.preferences.currencyCode")}
-              </Text>
-              <Text
-                style={[
-                  styles.preferenceDescription,
-                  { color: themeColors.mutedText },
-                ]}
-              >
-                {t("settings.preferences.currencyDescription")}
-              </Text>
-            </View>
             <TextInput
-              autoCapitalize="characters"
-              maxLength={6}
-              value={currency}
-              onChangeText={(value) =>
-                setCurrency(value.replace(/\s+/g, " ").toUpperCase())
-              }
-              onBlur={saveCurrency}
-              placeholder={t("settings.preferences.currencyPlaceholder")}
+              value={name}
+              onChangeText={setName}
+              onBlur={saveName}
+              placeholder={t("settings.preferences.namePlaceholder")}
               placeholderTextColor={themeColors.mutedText}
               style={[
-                styles.preferenceInput,
+                styles.input,
                 {
-                  borderColor: themeColors.mutedText,
+                  backgroundColor: themeColors.surface,
+                  borderColor: themeColors.text,
                   color: themeColors.text,
                 },
               ]}
             />
           </View>
-        </View>
 
-        <View style={styles.section}>
-          <Text style={[styles.label, { color: themeColors.text }]}>
-            {t("settings.preferences.appTheme")}
-          </Text>
-          <View style={styles.themeList}>
-            {themeOptions.map((option) => {
-              const isSelected = selectedTheme === option.key;
-
-              return (
-                <Pressable
-                  key={option.key}
-                  style={[
-                    styles.themeOption,
-                    {
-                      backgroundColor: themeColors.surface,
-                      borderColor: themeColors.text,
-                    },
-                    isSelected && styles.themeOptionSelected,
-                  ]}
-                  onPress={() => selectTheme(option.key as ThemePreference)}
-                >
+          <View style={styles.section}>
+            <View style={styles.sectionLabelRow}>
+              <Text style={[styles.label, { color: themeColors.text }]}>
+                {t("settings.preferences.profileImage")}
+              </Text>
+              <Pressable
+                accessibilityLabel={t("settings.preferences.refreshAvatars")}
+                accessibilityRole="button"
+                style={[
+                  styles.refreshButton,
+                  { backgroundColor: themeColors.surface },
+                ]}
+                disabled={isRefreshingAvatars}
+                onPress={refreshAvatarList}
+              >
+                {isRefreshingAvatars ? (
+                  <ActivityIndicator color={themeColors.text} size="small" />
+                ) : (
                   <MaterialCommunityIcons
-                    color={isSelected ? colors.primary : themeColors.text}
-                    name={option.icon}
-                    size={25}
+                    color={themeColors.text}
+                    name="refresh"
+                    size={18}
                   />
-                  <Text
-                    style={[
-                      styles.themeText,
-                      { color: themeColors.text },
-                      isSelected && styles.themeTextSelected,
-                    ]}
-                  >
-                    {t(option.labelKey)}
-                  </Text>
-                  <MaterialCommunityIcons
-                    color={isSelected ? colors.primary : themeColors.mutedText}
-                    name={isSelected ? "radiobox-marked" : "radiobox-blank"}
-                    size={24}
-                  />
-                </Pressable>
-              );
-            })}
+                )}
+              </Pressable>
+            </View>
+            <AvatarCarousel
+              avatarUrls={availableAvatarUrls}
+              downloadedAvatarUrls={downloadedAvatarUrls}
+              downloadingAvatarUrl={downloadingAvatarUrl}
+              previewRefreshKey={avatarPreviewRefreshKey}
+              profileImageUri={profileImageUri}
+              onSelectAvatar={selectAvatar}
+            />
           </View>
-        </View>
-      </KeyboardAwareScrollView>
+
+          <View style={styles.section}>
+            <Text style={[styles.label, { color: themeColors.text }]}>
+              {t("settings.preferences.currency")}
+            </Text>
+            <View
+              style={[
+                styles.preferenceField,
+                {
+                  backgroundColor: themeColors.surface,
+                  borderColor: themeColors.text,
+                },
+              ]}
+            >
+              <View style={styles.preferenceCopy}>
+                <Text
+                  style={[styles.preferenceTitle, { color: themeColors.text }]}
+                >
+                  {t("settings.preferences.currencyCode")}
+                </Text>
+                <Text
+                  style={[
+                    styles.preferenceDescription,
+                    { color: themeColors.mutedText },
+                  ]}
+                >
+                  {t("settings.preferences.currencyDescription")}
+                </Text>
+              </View>
+              <TextInput
+                autoCapitalize="characters"
+                maxLength={6}
+                value={currency}
+                onChangeText={(value) =>
+                  setCurrency(value.replace(/\s+/g, " ").toUpperCase())
+                }
+                onBlur={saveCurrency}
+                placeholder={t("settings.preferences.currencyPlaceholder")}
+                placeholderTextColor={themeColors.mutedText}
+                style={[
+                  styles.preferenceInput,
+                  {
+                    borderColor: themeColors.mutedText,
+                    color: themeColors.text,
+                  },
+                ]}
+              />
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={[styles.label, { color: themeColors.text }]}>
+              {t("settings.preferences.appTheme")}
+            </Text>
+            <View style={styles.themeList}>
+              {themeOptions.map((option) => {
+                const isSelected = selectedTheme === option.key;
+
+                return (
+                  <Pressable
+                    key={option.key}
+                    style={[
+                      styles.themeOption,
+                      {
+                        backgroundColor: themeColors.surface,
+                        borderColor: themeColors.text,
+                      },
+                      isSelected && styles.themeOptionSelected,
+                    ]}
+                    onPress={() => selectTheme(option.key as ThemePreference)}
+                  >
+                    <MaterialCommunityIcons
+                      color={isSelected ? colors.primary : themeColors.text}
+                      name={option.icon}
+                      size={25}
+                    />
+                    <Text
+                      style={[
+                        styles.themeText,
+                        { color: themeColors.text },
+                        isSelected && styles.themeTextSelected,
+                      ]}
+                    >
+                      {t(option.labelKey)}
+                    </Text>
+                    <MaterialCommunityIcons
+                      color={
+                        isSelected ? colors.primary : themeColors.mutedText
+                      }
+                      name={isSelected ? "radiobox-marked" : "radiobox-blank"}
+                      size={24}
+                    />
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        </KeyboardAwareScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -363,6 +372,9 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
   },
   content: {
     gap: spacing.xl,

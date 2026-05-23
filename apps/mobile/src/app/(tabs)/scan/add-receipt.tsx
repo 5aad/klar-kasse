@@ -4,6 +4,8 @@ import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -135,90 +137,94 @@ export default function AddReceiptScreen() {
       style={[styles.screen, { backgroundColor: themeColors.background }]}
       edges={["top"]}
     >
-      <KeyboardAwareScrollView
-        contentContainerStyle={[
-          styles.content,
-          {
-            alignSelf: "center",
-            maxWidth: adaptive.maxFormWidth,
-            paddingBottom: getTabScreenBottomPadding(bottom, 42),
-            paddingHorizontal: adaptive.gutter,
-            width: "100%",
-          },
-        ]}
-        refreshControl={
-          <RefreshControl
-            refreshing={categoriesQuery.isRefetching}
-            tintColor={themeColors.primary}
-            colors={[themeColors.primary]}
-            progressBackgroundColor={themeColors.surface}
-            onRefresh={categoriesQuery.refetch}
-          />
-        }
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardAvoidingView}
       >
-        <ScreenHeader
-          title={t("scan.add.title")}
-          subtitle={t("scan.add.subtitle")}
-        />
-
-        <View style={styles.quickGrid}>
-          <ManualField
-            label={t("scan.add.fields.merchant")}
-            placeholder={t("scan.add.placeholders.merchant")}
-            value={store}
-            onChangeText={setStore}
-          />
-          <View
-            style={[
-              styles.twoColumnRow,
-              adaptive.isMedium && styles.twoColumnRowWide,
-            ]}
-          >
-            <ManualField
-              compact
-              keyboardType="number-pad"
-              label={t("scan.add.fields.date")}
-              placeholder={t("scan.add.placeholders.date")}
-              value={date}
-              onChangeText={(value) => setDate(formatDateTextInput(value))}
+        <KeyboardAwareScrollView
+          contentContainerStyle={[
+            styles.content,
+            {
+              alignSelf: "center",
+              maxWidth: adaptive.maxFormWidth,
+              paddingBottom: getTabScreenBottomPadding(bottom, 42),
+              paddingHorizontal: adaptive.gutter,
+              width: "100%",
+            },
+          ]}
+          refreshControl={
+            <RefreshControl
+              refreshing={categoriesQuery.isRefetching}
+              tintColor={themeColors.primary}
+              colors={[themeColors.primary]}
+              progressBackgroundColor={themeColors.surface}
+              onRefresh={categoriesQuery.refetch}
             />
+          }
+          showsVerticalScrollIndicator={false}
+        >
+          <ScreenHeader
+            title={t("scan.add.title")}
+            subtitle={t("scan.add.subtitle")}
+          />
+
+          <View style={styles.quickGrid}>
             <ManualField
-              compact
-              label={t("scan.preview.fields.amount", { currency })}
-              keyboardType="decimal-pad"
-              placeholder={t("scan.preview.placeholders.amount")}
-              value={displayedTotal}
-              onChangeText={setTotal}
+              label={t("scan.add.fields.merchant")}
+              placeholder={t("scan.add.placeholders.merchant")}
+              value={store}
+              onChangeText={setStore}
+            />
+            <View
+              style={[
+                styles.twoColumnRow,
+                adaptive.isMedium && styles.twoColumnRowWide,
+              ]}
+            >
+              <ManualField
+                compact
+                keyboardType="number-pad"
+                label={t("scan.add.fields.date")}
+                placeholder={t("scan.add.placeholders.date")}
+                value={date}
+                onChangeText={(value) => setDate(formatDateTextInput(value))}
+              />
+              <ManualField
+                compact
+                label={t("scan.preview.fields.amount", { currency })}
+                keyboardType="decimal-pad"
+                placeholder={t("scan.preview.placeholders.amount")}
+                value={displayedTotal}
+                onChangeText={setTotal}
+              />
+            </View>
+            <ManualField
+              label={t("scan.preview.fields.note")}
+              multiline
+              placeholder={t("scan.preview.placeholders.note")}
+              value={note}
+              onChangeText={setNote}
             />
           </View>
-          <ManualField
-            label={t("scan.preview.fields.note")}
-            multiline
-            placeholder={t("scan.preview.placeholders.note")}
-            value={note}
-            onChangeText={setNote}
+
+          <ChoiceGroup
+            label={t("scan.add.fields.category")}
+            emptyText={t("scan.add.emptyCategories")}
+            options={categoryOptions}
+            value={category}
+            onChange={setCategory}
           />
-        </View>
 
-        <ChoiceGroup
-          label={t("scan.add.fields.category")}
-          emptyText={t("scan.add.emptyCategories")}
-          options={categoryOptions}
-          value={category}
-          onChange={setCategory}
-        />
+          <ChoiceGroup
+            label={t("scan.add.fields.payment")}
+            emptyText={t("scan.add.emptyPaymentMethods")}
+            options={paymentMethods}
+            value={paymentMethod}
+            onChange={setPaymentMethod}
+            getOptionLabel={(option) => t(paymentMethodLabels[option])}
+          />
 
-        <ChoiceGroup
-          label={t("scan.add.fields.payment")}
-          emptyText={t("scan.add.emptyPaymentMethods")}
-          options={paymentMethods}
-          value={paymentMethod}
-          onChange={setPaymentMethod}
-          getOptionLabel={(option) => t(paymentMethodLabels[option])}
-        />
-
-        {/* <View style={styles.sectionHeader}>
+          {/* <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: themeColors.text }]}>
             {t("scan.add.items.title")}
           </Text>
@@ -284,23 +290,29 @@ export default function AddReceiptScreen() {
           ))}
         </View> */}
 
-        <Pressable
-          style={[styles.saveButton, { backgroundColor: themeColors.primary }]}
-          disabled={postReceiptMutation.isPending}
-          onPress={saveManualReceipt}
-        >
-          <MaterialCommunityIcons
-            color={themeColors.primaryText}
-            name={postReceiptMutation.isPending ? "timer-sand" : "check-circle"}
-            size={20}
-          />
-          <Text style={[styles.saveText, { color: themeColors.primaryText }]}>
-            {postReceiptMutation.isPending
-              ? t("scan.add.saving")
-              : t("scan.add.saveReceipt")}
-          </Text>
-        </Pressable>
-      </KeyboardAwareScrollView>
+          <Pressable
+            style={[
+              styles.saveButton,
+              { backgroundColor: themeColors.primary },
+            ]}
+            disabled={postReceiptMutation.isPending}
+            onPress={saveManualReceipt}
+          >
+            <MaterialCommunityIcons
+              color={themeColors.primaryText}
+              name={
+                postReceiptMutation.isPending ? "timer-sand" : "check-circle"
+              }
+              size={20}
+            />
+            <Text style={[styles.saveText, { color: themeColors.primaryText }]}>
+              {postReceiptMutation.isPending
+                ? t("scan.add.saving")
+                : t("scan.add.saveReceipt")}
+            </Text>
+          </Pressable>
+        </KeyboardAwareScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -421,6 +433,9 @@ function ChoiceGroup<TValue extends string>({
 
 const styles = StyleSheet.create({
   screen: {
+    flex: 1,
+  },
+  keyboardAvoidingView: {
     flex: 1,
   },
   content: {
