@@ -5,15 +5,15 @@
     "scheme": "klarkasse",
     "version": "1.1.0",
     "orientation": "portrait",
-    "icon": "./assets/icon-light.png",
+    "icon": "./assets/splash-light-icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/icon-light.png",
+      "image": "./assets/splash-light-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff",
       "dark": {
-        "image": "./assets/icon-dark.png",
+        "image": "./assets/splash-dark-icon.png",
         "resizeMode": "contain",
         "backgroundColor": "#101010"
       }
@@ -22,9 +22,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "de.klasrkasse.app",
       "icon": {
-        "light": "./assets/icon-light.png",
-        "dark": "./assets/icon-dark.png",
-        "tinted": "./assets/icon-dark.png"
+        "light": "./assets/ios-light.png",
+        "dark": "./assets/ios-dark.png",
+        "tinted": "./assets/ios-tinted.png"
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -34,7 +34,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon-light.png",
+        "foregroundImage": "./assets/adaptive-icon-light.png",
         "backgroundColor": "#ffffff"
       },
       "predictiveBackGestureEnabled": false,
