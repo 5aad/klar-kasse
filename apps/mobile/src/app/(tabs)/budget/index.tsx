@@ -11,12 +11,16 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { NewCategoryModal } from "@/components/budget/new-category-modal";
 import { EmptyStateCard } from "@/components/shared/empty-state-card";
 import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
+import { useAdaptiveLayout } from "@/hooks/use-adaptive-layout";
 import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
 import {
   useCategoriesQuery,
@@ -46,6 +50,7 @@ function isValidIcon(
 
 export default function BudgetScreen() {
   const themeColors = useThemeColors();
+  const adaptive = useAdaptiveLayout();
   const { bottom } = useSafeAreaInsets();
   const { i18n, t } = useTranslation();
   const { currency, formatCurrency } = useCurrencyFormatter();
@@ -101,7 +106,13 @@ export default function BudgetScreen() {
       <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
+          {
+            alignSelf: "center",
+            maxWidth: adaptive.maxContentWidth,
+            paddingBottom: getTabScreenBottomPadding(bottom, 36),
+            paddingHorizontal: adaptive.gutter,
+            width: "100%",
+          },
         ]}
         refreshControl={
           <RefreshControl
@@ -242,14 +253,25 @@ export default function BudgetScreen() {
           </Pressable>
         </View>
 
-        <View style={styles.categoryList}>
+        <View
+          style={[
+            styles.categoryList,
+            categoryBudgets.length > 0 &&
+              adaptive.isMedium &&
+              styles.categoryListGrid,
+          ]}
+        >
           {categoryBudgets.length ? (
             categoryBudgets.map((budget) => (
-              <CategoryBudgetCard
+              <View
                 key={budget.id}
-                budget={budget}
-                onDelete={(id) => deleteCategoryMutation.mutate(id)}
-              />
+                style={adaptive.isMedium && styles.categoryCardWrap}
+              >
+                <CategoryBudgetCard
+                  budget={budget}
+                  onDelete={(id) => deleteCategoryMutation.mutate(id)}
+                />
+              </View>
             ))
           ) : (
             <EmptyStateCard
@@ -574,6 +596,15 @@ const styles = StyleSheet.create({
   },
   categoryList: {
     gap: spacing.md,
+  },
+  categoryListGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  categoryCardWrap: {
+    width: "48%",
+    minWidth: 300,
+    flexGrow: 1,
   },
   categoryCard: {
     gap: spacing.md,

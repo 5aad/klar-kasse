@@ -3,9 +3,13 @@ import { fontSize, radius, spacing } from "@repo/theme";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
+import { useAdaptiveLayout } from "@/hooks/use-adaptive-layout";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
@@ -26,6 +30,7 @@ const actions = [
 
 export default function ScanHomeScreen() {
   const themeColors = useThemeColors();
+  const adaptive = useAdaptiveLayout();
   const { bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
 
@@ -37,7 +42,13 @@ export default function ScanHomeScreen() {
       <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
+          {
+            alignSelf: "center",
+            maxWidth: adaptive.maxFormWidth,
+            paddingBottom: getTabScreenBottomPadding(bottom, 36),
+            paddingHorizontal: adaptive.gutter,
+            width: "100%",
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -53,12 +64,18 @@ export default function ScanHomeScreen() {
           </Text>
         </View>
 
-        <View style={styles.actionList}>
+        <View
+          style={[
+            styles.actionList,
+            adaptive.isMedium && styles.actionListGrid,
+          ]}
+        >
           {actions.map((action) => (
             <Pressable
               key={action.route}
               style={[
                 styles.actionCard,
+                adaptive.isMedium && styles.actionCardWide,
                 { backgroundColor: themeColors.surface },
               ]}
               onPress={() => router.navigate(action.route)}
@@ -129,6 +146,10 @@ const styles = StyleSheet.create({
   actionList: {
     gap: spacing.md,
   },
+  actionListGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
   actionCard: {
     minHeight: 96,
     flexDirection: "row",
@@ -136,6 +157,11 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     borderRadius: radius.lg,
     padding: spacing.lg,
+  },
+  actionCardWide: {
+    width: "48%",
+    minWidth: 280,
+    flexGrow: 1,
   },
   actionIcon: {
     width: 56,

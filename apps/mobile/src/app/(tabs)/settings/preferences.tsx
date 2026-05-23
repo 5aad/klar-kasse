@@ -18,6 +18,7 @@ import {
 
 import { AvatarCarousel } from "@/components/settings/avatar-carousel";
 import { ScreenHeader } from "@/components/shared/screen-header";
+import { useAdaptiveLayout } from "@/hooks/use-adaptive-layout";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import {
   useSaveUserPreferencesMutation,
@@ -54,6 +55,7 @@ const themeOptions = [
 
 export default function PreferencesScreen() {
   const themeColors = useThemeColors();
+  const adaptive = useAdaptiveLayout();
   const { bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
   const [name, setName] = useState("set your name");
@@ -186,7 +188,13 @@ export default function PreferencesScreen() {
       <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
+          {
+            alignSelf: "center",
+            maxWidth: adaptive.maxFormWidth,
+            paddingBottom: getTabScreenBottomPadding(bottom, 36),
+            paddingHorizontal: adaptive.gutter,
+            width: "100%",
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >

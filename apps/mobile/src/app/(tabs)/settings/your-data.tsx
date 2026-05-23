@@ -24,6 +24,7 @@ import { ScreenHeader } from "@/components/shared/screen-header";
 import { EmptyStateCard } from "@/components/shared/empty-state-card";
 import { exportMonthlyData } from "@/api/data-export";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
+import { useAdaptiveLayout } from "@/hooks/use-adaptive-layout";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import {
   useDeleteMonthlyBudgetMutation,
@@ -54,6 +55,7 @@ function formatMonthLabel(monthKey: string, locale: string) {
 
 export default function YourDataScreen() {
   const themeColors = useThemeColors();
+  const adaptive = useAdaptiveLayout();
   const { bottom } = useSafeAreaInsets();
   const { i18n, t } = useTranslation();
   const { currency } = useCurrencyFormatter();
@@ -189,7 +191,13 @@ export default function YourDataScreen() {
       <FlatList
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
+          {
+            alignSelf: "center",
+            maxWidth: adaptive.maxFormWidth,
+            paddingBottom: getTabScreenBottomPadding(bottom, 36),
+            paddingHorizontal: adaptive.gutter,
+            width: "100%",
+          },
         ]}
         data={archives}
         keyExtractor={(item) => item.id}

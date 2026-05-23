@@ -156,6 +156,7 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
   const dockBorderColor = isDark ? "#343434" : "transparent";
   const inactiveIconColor = isDark ? "#F4F1EA" : colors.primaryText;
   const useCompactTabs = width < 390 || fontScale > 1.12;
+  const dockWidth = width >= 600 ? Math.min(width - spacing.xl * 2, 720) : null;
   const scanRouteIndex = state.routes.findIndex(
     (route: { name: string }) => route.name === "scan",
   );
@@ -226,7 +227,18 @@ function FloatingTabBar({ descriptors, navigation, state }: any) {
   return (
     <View
       pointerEvents="box-none"
-      style={[styles.tabBarWrap, { height: 68 + tabBarBottom }]}
+      style={[
+        styles.tabBarWrap,
+        {
+          height: 68 + tabBarBottom,
+          ...(dockWidth
+            ? {
+                left: (width - dockWidth) / 2,
+                right: (width - dockWidth) / 2,
+              }
+            : null),
+        },
+      ]}
     >
       <Animated.View
         pointerEvents={isMinimized ? "none" : "auto"}

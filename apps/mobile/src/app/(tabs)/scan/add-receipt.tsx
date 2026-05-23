@@ -11,10 +11,14 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
+import { useAdaptiveLayout } from "@/hooks/use-adaptive-layout";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useCategoriesQuery } from "@/queries/categories";
 import { usePostReceiptMutation } from "@/queries/receipts";
@@ -50,6 +54,7 @@ function parseAmount(value: string) {
 
 export default function AddReceiptScreen() {
   const themeColors = useThemeColors();
+  const adaptive = useAdaptiveLayout();
   const { bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
   const { currency } = useCurrencyFormatter();
@@ -133,7 +138,13 @@ export default function AddReceiptScreen() {
       <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: getTabScreenBottomPadding(bottom, 42) },
+          {
+            alignSelf: "center",
+            maxWidth: adaptive.maxFormWidth,
+            paddingBottom: getTabScreenBottomPadding(bottom, 42),
+            paddingHorizontal: adaptive.gutter,
+            width: "100%",
+          },
         ]}
         refreshControl={
           <RefreshControl
@@ -158,7 +169,12 @@ export default function AddReceiptScreen() {
             value={store}
             onChangeText={setStore}
           />
-          <View style={styles.twoColumnRow}>
+          <View
+            style={[
+              styles.twoColumnRow,
+              adaptive.isMedium && styles.twoColumnRowWide,
+            ]}
+          >
             <ManualField
               compact
               keyboardType="number-pad"
@@ -361,38 +377,40 @@ function ChoiceGroup<TValue extends string>({
       <View style={styles.choiceList}>
         {options.length ? (
           options.map((option) => {
-          const isSelected = option === value;
+            const isSelected = option === value;
 
-          return (
-            <Pressable
-              key={option}
-              style={[
-                styles.choiceChip,
-                {
-                  backgroundColor: isSelected
-                    ? themeColors.primary
-                    : themeColors.surface,
-                },
-              ]}
-              onPress={() => onChange(option)}
-            >
-              <Text
+            return (
+              <Pressable
+                key={option}
                 style={[
-                  styles.choiceText,
+                  styles.choiceChip,
                   {
-                    color: isSelected
-                      ? themeColors.primaryText
-                      : themeColors.text,
+                    backgroundColor: isSelected
+                      ? themeColors.primary
+                      : themeColors.surface,
                   },
                 ]}
+                onPress={() => onChange(option)}
               >
-                {getOptionLabel ? getOptionLabel(option) : option}
-              </Text>
-            </Pressable>
-          );
+                <Text
+                  style={[
+                    styles.choiceText,
+                    {
+                      color: isSelected
+                        ? themeColors.primaryText
+                        : themeColors.text,
+                    },
+                  ]}
+                >
+                  {getOptionLabel ? getOptionLabel(option) : option}
+                </Text>
+              </Pressable>
+            );
           })
         ) : (
-          <Text style={[styles.choiceEmptyText, { color: themeColors.mutedText }]}>
+          <Text
+            style={[styles.choiceEmptyText, { color: themeColors.mutedText }]}
+          >
             {emptyText}
           </Text>
         )}
@@ -413,8 +431,10 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   twoColumnRow: {
-    flexDirection: "row",
     gap: spacing.md,
+  },
+  twoColumnRowWide: {
+    flexDirection: "row",
   },
   field: {
     minHeight: 74,

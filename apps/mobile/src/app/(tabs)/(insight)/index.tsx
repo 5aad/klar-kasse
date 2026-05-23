@@ -1,13 +1,11 @@
 import { fontSize, radius, spacing } from "@repo/theme";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { RefreshControl, StyleSheet, Text, View } from "react-native";
 import {
-  RefreshControl,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { ExpenseDistributionChart } from "@/components/insight/expense-distribution-chart";
 import { EmptyStateCard } from "@/components/shared/empty-state-card";
@@ -19,6 +17,7 @@ import {
 } from "@/components/shared/month-selector";
 import { TransactionList } from "@/components/shared/transaction-list";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
+import { useAdaptiveLayout } from "@/hooks/use-adaptive-layout";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useCategoriesQuery } from "@/queries/categories";
 import { useReceiptsQuery } from "@/queries/receipts";
@@ -84,6 +83,7 @@ function parseReceiptDate(dateText: string) {
 
 export default function InsightScreen() {
   const themeColors = useThemeColors();
+  const adaptive = useAdaptiveLayout();
   const { bottom } = useSafeAreaInsets();
   const { i18n, t } = useTranslation();
   const { formatCurrency } = useCurrencyFormatter();
@@ -126,7 +126,9 @@ export default function InsightScreen() {
     }
 
     for (const receipt of receiptsQuery.data ?? []) {
-      if (!isReceiptInMonth(receipt.dateText, selectedMonth, receipt.createdAt)) {
+      if (
+        !isReceiptInMonth(receipt.dateText, selectedMonth, receipt.createdAt)
+      ) {
         continue;
       }
 
@@ -174,11 +176,19 @@ export default function InsightScreen() {
       <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
+          {
+            alignSelf: "center",
+            maxWidth: adaptive.maxContentWidth,
+            paddingBottom: getTabScreenBottomPadding(bottom, 36),
+            paddingHorizontal: adaptive.gutter,
+            width: "100%",
+          },
         ]}
         refreshControl={
           <RefreshControl
-            refreshing={categoriesQuery.isRefetching || receiptsQuery.isRefetching}
+            refreshing={
+              categoriesQuery.isRefetching || receiptsQuery.isRefetching
+            }
             tintColor={themeColors.primary}
             colors={[themeColors.primary]}
             progressBackgroundColor={themeColors.surface}
@@ -201,17 +211,33 @@ export default function InsightScreen() {
           onChange={setSelectedMonth}
         />
 
-        <ExpenseDistributionChart
-          data={categorySpending.map((category) => ({
-            label: category.name,
-            value: category.value,
-          }))}
-          periodLabel={selectedMonthLabel}
-        />
-        <CategoryBreakdown
-          categories={categoryBreakdown}
-          themeColors={themeColors}
-        />
+        <View
+          style={[
+            styles.insightGrid,
+            adaptive.isMedium && styles.insightGridWide,
+          ]}
+        >
+          <View
+            style={[
+              styles.gridPrimary,
+              adaptive.isMedium && styles.gridPrimaryWide,
+            ]}
+          >
+            <ExpenseDistributionChart
+              data={categorySpending.map((category) => ({
+                label: category.name,
+                value: category.value,
+              }))}
+              periodLabel={selectedMonthLabel}
+            />
+          </View>
+          <View style={styles.gridSecondary}>
+            <CategoryBreakdown
+              categories={categoryBreakdown}
+              themeColors={themeColors}
+            />
+          </View>
+        </View>
         <TransactionList
           actionLabel={t("dashboard.transactionList.viewAll")}
           items={significantSpending}
@@ -313,6 +339,23 @@ const styles = StyleSheet.create({
   },
   header: {
     gap: spacing.xs,
+  },
+  insightGrid: {
+    gap: spacing.lg,
+  },
+  insightGridWide: {
+    flexDirection: "row",
+    alignItems: "stretch",
+  },
+  gridPrimary: {
+    minWidth: 0,
+  },
+  gridPrimaryWide: {
+    flex: 1.08,
+  },
+  gridSecondary: {
+    flex: 1,
+    minWidth: 0,
   },
   eyebrow: {
     fontSize: fontSize.xs,

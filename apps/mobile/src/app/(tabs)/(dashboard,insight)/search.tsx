@@ -11,7 +11,10 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 import {
@@ -24,6 +27,7 @@ import {
   type TransactionListItem,
 } from "@/components/shared/transaction-list";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
+import { useAdaptiveLayout } from "@/hooks/use-adaptive-layout";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useCategoriesQuery } from "@/queries/categories";
 import { useReceiptsQuery } from "@/queries/receipts";
@@ -113,6 +117,7 @@ function getReceiptIcon(category?: string | null) {
 
 export default function SearchScreen() {
   const themeColors = useThemeColors();
+  const adaptive = useAdaptiveLayout();
   const { bottom } = useSafeAreaInsets();
   const { i18n, t } = useTranslation();
   const { formatCurrency } = useCurrencyFormatter();
@@ -164,7 +169,8 @@ export default function SearchScreen() {
 
     const matchingReceipts = (receiptsQuery.data ?? []).filter((receipt) => {
       const receiptDate =
-        parseReceiptDate(receipt.dateText) ?? parseReceiptDate(receipt.createdAt);
+        parseReceiptDate(receipt.dateText) ??
+        parseReceiptDate(receipt.createdAt);
 
       if (receiptDate && !isSameMonth(receiptDate, selectedMonth)) return false;
       if (
@@ -194,7 +200,9 @@ export default function SearchScreen() {
 
     if (activeFilter !== "significant") return matchingReceipts;
 
-    return [...matchingReceipts].sort((left, right) => right.total - left.total);
+    return [...matchingReceipts].sort(
+      (left, right) => right.total - left.total,
+    );
   }, [
     activeCategoryId,
     activeCategoryName,
@@ -206,11 +214,15 @@ export default function SearchScreen() {
   const paginatedReceipts = filteredReceipts.slice(0, currentPage * PAGE_SIZE);
   const hasMoreReceipts = paginatedReceipts.length < filteredReceipts.length;
   const receiptSections = useMemo(() => {
-    const sections = new Map<string, { items: TransactionListItem[]; title: string }>();
+    const sections = new Map<
+      string,
+      { items: TransactionListItem[]; title: string }
+    >();
 
     for (const receipt of paginatedReceipts) {
       const receiptDate =
-        parseReceiptDate(receipt.dateText) ?? parseReceiptDate(receipt.createdAt);
+        parseReceiptDate(receipt.dateText) ??
+        parseReceiptDate(receipt.createdAt);
       const dateKey = receiptDate ? getDateKey(receiptDate) : "unknown";
       const section = sections.get(dateKey) ?? {
         title: receiptDate
@@ -259,11 +271,19 @@ export default function SearchScreen() {
       <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
+          {
+            alignSelf: "center",
+            maxWidth: adaptive.maxContentWidth,
+            paddingBottom: getTabScreenBottomPadding(bottom, 36),
+            paddingHorizontal: adaptive.gutter,
+            width: "100%",
+          },
         ]}
         refreshControl={
           <RefreshControl
-            refreshing={categoriesQuery.isRefetching || receiptsQuery.isRefetching}
+            refreshing={
+              categoriesQuery.isRefetching || receiptsQuery.isRefetching
+            }
             tintColor={themeColors.primary}
             colors={[themeColors.primary]}
             progressBackgroundColor={themeColors.surface}
@@ -282,62 +302,73 @@ export default function SearchScreen() {
           onChange={setSearchMonth}
         />
 
-        <View style={[styles.panel, { backgroundColor: themeColors.surface }]}>
-          <Text style={[styles.panelLabel, { color: themeColors.text }]}>
-            {t("dashboard.search.activity")}
-          </Text>
-          <View style={styles.searchRow}>
-            <MaterialCommunityIcons
-              color={themeColors.primary}
-              name="magnify"
-              size={22}
-            />
-            <TextInput
-              value={searchQuery}
-              onChangeText={setSearchParam}
-              placeholder={t("dashboard.search.placeholder")}
-              placeholderTextColor={themeColors.mutedText}
-              style={[styles.searchInput, { color: themeColors.text }]}
-            />
+        <View
+          style={[
+            styles.searchGrid,
+            adaptive.isMedium && styles.searchGridWide,
+          ]}
+        >
+          <View
+            style={[styles.panel, { backgroundColor: themeColors.surface }]}
+          >
+            <Text style={[styles.panelLabel, { color: themeColors.text }]}>
+              {t("dashboard.search.activity")}
+            </Text>
+            <View style={styles.searchRow}>
+              <MaterialCommunityIcons
+                color={themeColors.primary}
+                name="magnify"
+                size={22}
+              />
+              <TextInput
+                value={searchQuery}
+                onChangeText={setSearchParam}
+                placeholder={t("dashboard.search.placeholder")}
+                placeholderTextColor={themeColors.mutedText}
+                style={[styles.searchInput, { color: themeColors.text }]}
+              />
+            </View>
           </View>
-        </View>
 
-        <View style={[styles.panel, { backgroundColor: themeColors.surface }]}>
-          <Text style={[styles.panelLabel, { color: themeColors.text }]}>
-            {t("dashboard.search.categoryFilter")}
-          </Text>
-          <View style={styles.filterRow}>
-            {filters.map((filter) => {
-              const isActive = activeFilter === filter.key;
+          <View
+            style={[styles.panel, { backgroundColor: themeColors.surface }]}
+          >
+            <Text style={[styles.panelLabel, { color: themeColors.text }]}>
+              {t("dashboard.search.categoryFilter")}
+            </Text>
+            <View style={styles.filterRow}>
+              {filters.map((filter) => {
+                const isActive = activeFilter === filter.key;
 
-              return (
-                <Pressable
-                  key={filter.key}
-                  style={[
-                    styles.filterChip,
-                    {
-                      backgroundColor: isActive
-                        ? themeColors.primary
-                        : themeColors.background,
-                    },
-                  ]}
-                  onPress={() => setCategoryFilter(filter.key)}
-                >
-                  <Text
+                return (
+                  <Pressable
+                    key={filter.key}
                     style={[
-                      styles.filterText,
+                      styles.filterChip,
                       {
-                        color: isActive
-                          ? themeColors.primaryText
-                          : themeColors.text,
+                        backgroundColor: isActive
+                          ? themeColors.primary
+                          : themeColors.background,
                       },
                     ]}
+                    onPress={() => setCategoryFilter(filter.key)}
                   >
-                    {filter.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
+                    <Text
+                      style={[
+                        styles.filterText,
+                        {
+                          color: isActive
+                            ? themeColors.primaryText
+                            : themeColors.text,
+                        },
+                      ]}
+                    >
+                      {filter.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
         </View>
 
@@ -360,7 +391,10 @@ export default function SearchScreen() {
 
         {hasMoreReceipts ? (
           <Pressable
-            style={[styles.olderButton, { backgroundColor: themeColors.surface }]}
+            style={[
+              styles.olderButton,
+              { backgroundColor: themeColors.surface },
+            ]}
             onPress={loadNextPage}
           >
             <Text style={[styles.olderText, { color: themeColors.text }]}>
@@ -387,7 +421,15 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingBottom: 36,
   },
+  searchGrid: {
+    gap: spacing.lg,
+  },
+  searchGridWide: {
+    flexDirection: "row",
+    alignItems: "stretch",
+  },
   panel: {
+    flex: 1,
     gap: spacing.md,
     borderRadius: radius.md,
     padding: spacing.lg,

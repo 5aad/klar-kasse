@@ -7,6 +7,7 @@ import {
 } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
+import { useAdaptiveLayout } from "@/hooks/use-adaptive-layout";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import {
   legalDocuments,
@@ -30,6 +31,7 @@ function getLocalizedDocument(
 
 export function LegalDocumentScreen({ documentKey, subtitle, title }: Props) {
   const themeColors = useThemeColors();
+  const adaptive = useAdaptiveLayout();
   const { bottom } = useSafeAreaInsets();
   const { i18n } = useTranslation();
   const document = getLocalizedDocument(documentKey, i18n.language);
@@ -42,7 +44,13 @@ export function LegalDocumentScreen({ documentKey, subtitle, title }: Props) {
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
+          {
+            alignSelf: "center",
+            maxWidth: adaptive.maxFormWidth,
+            paddingBottom: getTabScreenBottomPadding(bottom, 36),
+            paddingHorizontal: adaptive.gutter,
+            width: "100%",
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >

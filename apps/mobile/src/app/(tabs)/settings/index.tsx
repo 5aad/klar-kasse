@@ -12,6 +12,7 @@ import {
 
 import { CustomerSupportModal } from "@/components/settings/customer-support-modal";
 import { LanguageModal } from "@/components/settings/language-modal";
+import { useAdaptiveLayout } from "@/hooks/use-adaptive-layout";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useUserPreferencesQuery } from "@/queries/users";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
@@ -23,6 +24,7 @@ const PROFILE_IMAGE =
 
 export default function SettingsScreen() {
   const themeColors = useThemeColors();
+  const adaptive = useAdaptiveLayout();
   const { bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
   const userPreferencesQuery = useUserPreferencesQuery();
@@ -41,64 +43,79 @@ export default function SettingsScreen() {
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: getTabScreenBottomPadding(bottom, spacing.xl) },
+          {
+            alignSelf: "center",
+            maxWidth: adaptive.maxContentWidth,
+            paddingBottom: getTabScreenBottomPadding(bottom, spacing.xl),
+            paddingHorizontal: adaptive.gutter,
+            width: "100%",
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.profile}>
-          <View style={styles.avatarWrap}>
-            <Image
-              contentFit="cover"
-              source={{
-                uri:
-                  userPreferencesQuery.data?.profileImageUri ?? PROFILE_IMAGE,
-              }}
-              style={styles.avatar}
+        <View
+          style={[
+            styles.settingsGrid,
+            adaptive.isExpanded && styles.settingsGridWide,
+          ]}
+        >
+          <View
+            style={[styles.profile, adaptive.isExpanded && styles.profileWide]}
+          >
+            <View style={styles.avatarWrap}>
+              <Image
+                contentFit="cover"
+                source={{
+                  uri:
+                    userPreferencesQuery.data?.profileImageUri ?? PROFILE_IMAGE,
+                }}
+                style={styles.avatar}
+              />
+            </View>
+            <Text style={[styles.name, { color: themeColors.text }]}>
+              {userPreferencesQuery.data?.name ?? "set your name"}
+            </Text>
+            {/* <Text style={styles.email}>Tomhill@mail.com</Text> */}
+          </View>
+
+          <View style={styles.menu}>
+            <SettingsRow
+              icon="cog-outline"
+              label={t("settings.menu.preferences")}
+              themeColors={themeColors}
+              onPress={() => router.push("/settings/preferences")}
+            />
+            <SettingsRow
+              icon="database-outline"
+              label={t("settings.menu.yourData")}
+              themeColors={themeColors}
+              onPress={() => router.push("/settings/your-data")}
+            />
+            <SettingsRow
+              icon="translate"
+              label={t("settings.menu.language")}
+              themeColors={themeColors}
+              onPress={() => setIsLanguageModalVisible(true)}
+            />
+            <SettingsRow
+              icon="shield-lock-outline"
+              label={t("settings.menu.privacyPolicy")}
+              themeColors={themeColors}
+              onPress={() => router.push("/settings/privacy-policy")}
+            />
+            <SettingsRow
+              icon="file-document-outline"
+              label={t("settings.menu.termsOfUse")}
+              themeColors={themeColors}
+              onPress={() => router.push("/settings/terms-of-use")}
+            />
+            <SettingsRow
+              icon="help-circle-outline"
+              label={t("settings.menu.customerSupport")}
+              themeColors={themeColors}
+              onPress={() => setIsSupportModalVisible(true)}
             />
           </View>
-          <Text style={[styles.name, { color: themeColors.text }]}>
-            {userPreferencesQuery.data?.name ?? "set your name"}
-          </Text>
-          {/* <Text style={styles.email}>Tomhill@mail.com</Text> */}
-        </View>
-
-        <View style={styles.menu}>
-          <SettingsRow
-            icon="cog-outline"
-            label={t("settings.menu.preferences")}
-            themeColors={themeColors}
-            onPress={() => router.push("/settings/preferences")}
-          />
-          <SettingsRow
-            icon="database-outline"
-            label={t("settings.menu.yourData")}
-            themeColors={themeColors}
-            onPress={() => router.push("/settings/your-data")}
-          />
-          <SettingsRow
-            icon="translate"
-            label={t("settings.menu.language")}
-            themeColors={themeColors}
-            onPress={() => setIsLanguageModalVisible(true)}
-          />
-          <SettingsRow
-            icon="shield-lock-outline"
-            label={t("settings.menu.privacyPolicy")}
-            themeColors={themeColors}
-            onPress={() => router.push("/settings/privacy-policy")}
-          />
-          <SettingsRow
-            icon="file-document-outline"
-            label={t("settings.menu.termsOfUse")}
-            themeColors={themeColors}
-            onPress={() => router.push("/settings/terms-of-use")}
-          />
-          <SettingsRow
-            icon="help-circle-outline"
-            label={t("settings.menu.customerSupport")}
-            themeColors={themeColors}
-            onPress={() => setIsSupportModalVisible(true)}
-          />
         </View>
       </ScrollView>
 
@@ -155,10 +172,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.xl,
   },
+  settingsGrid: {
+    gap: spacing.xl,
+  },
+  settingsGridWide: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
   profile: {
     alignItems: "center",
     paddingTop: spacing.md,
     paddingBottom: 44,
+  },
+  profileWide: {
+    width: 300,
   },
   avatarWrap: {
     width: 150,
@@ -181,6 +208,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   menu: {
+    flex: 1,
     gap: spacing.lg,
   },
   row: {

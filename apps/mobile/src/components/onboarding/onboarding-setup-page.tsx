@@ -3,6 +3,7 @@ import { fontSize, radius, spacing } from "@repo/theme";
 import { memo } from "react";
 import {
   KeyboardAvoidingView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -11,6 +12,7 @@ import {
 } from "react-native";
 
 import { AvatarCarousel } from "@/components/settings/avatar-carousel";
+import { useAdaptiveLayout } from "@/hooks/use-adaptive-layout";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { avatarImageUrls } from "@/utils/avatar-images";
 
@@ -38,86 +40,112 @@ function OnboardingSetupPage({
   onSelectAvatar,
 }: Props) {
   const { width } = useWindowDimensions();
+  const adaptive = useAdaptiveLayout();
   const themeColors = useThemeColors();
 
   return (
     <KeyboardAvoidingView behavior="padding" style={[styles.page, { width }]}>
-      <View style={styles.copy}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          adaptive.isMedium && styles.scrollContentWide,
+        ]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <View
           style={[
-            styles.iconWrap,
-            { backgroundColor: `${themeColors.primary}18` },
+            styles.setupContent,
+            adaptive.isMedium && styles.setupContentWide,
+            { maxWidth: adaptive.isMedium ? 900 : 420 },
           ]}
         >
-          <MaterialCommunityIcons
-            color={themeColors.primary}
-            name="account-heart-outline"
-            size={38}
-          />
-        </View>
-        <Text style={[styles.eyebrow, { color: themeColors.primary }]}>
-          Setup
-        </Text>
-        <Text style={[styles.title, { color: themeColors.text }]}>
-          Make Klar Kasse yours.
-        </Text>
-      </View>
+          <View style={[styles.copy, adaptive.isMedium && styles.copyWide]}>
+            <View
+              style={[
+                styles.iconWrap,
+                { backgroundColor: `${themeColors.primary}18` },
+              ]}
+            >
+              <MaterialCommunityIcons
+                color={themeColors.primary}
+                name="account-heart-outline"
+                size={38}
+              />
+            </View>
+            <Text style={[styles.eyebrow, { color: themeColors.primary }]}>
+              Setup
+            </Text>
+            <Text
+              style={[
+                styles.title,
+                adaptive.isMedium && styles.titleWide,
+                { color: themeColors.text },
+              ]}
+            >
+              Make Klar Kasse yours.
+            </Text>
+          </View>
 
-      <View style={styles.form}>
-        <View style={styles.field}>
-          <Text style={[styles.label, { color: themeColors.text }]}>Name</Text>
-          <TextInput
-            value={name}
-            onChangeText={onNameChange}
-            placeholder="Your name"
-            placeholderTextColor={themeColors.mutedText}
-            returnKeyType="next"
-            style={[
-              styles.input,
-              {
-                backgroundColor: themeColors.surface,
-                borderColor: themeColors.text,
-                color: themeColors.text,
-              },
-            ]}
-          />
-        </View>
+          <View style={styles.form}>
+            <View style={styles.field}>
+              <Text style={[styles.label, { color: themeColors.text }]}>
+                Name
+              </Text>
+              <TextInput
+                value={name}
+                onChangeText={onNameChange}
+                placeholder="Your name"
+                placeholderTextColor={themeColors.mutedText}
+                returnKeyType="next"
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: themeColors.surface,
+                    borderColor: themeColors.text,
+                    color: themeColors.text,
+                  },
+                ]}
+              />
+            </View>
 
-        <View style={styles.field}>
-          <Text style={[styles.label, { color: themeColors.text }]}>
-            Monthly budget
-          </Text>
-          <TextInput
-            value={budget}
-            onChangeText={onBudgetChange}
-            placeholder="0.00"
-            placeholderTextColor={themeColors.mutedText}
-            keyboardType="decimal-pad"
-            style={[
-              styles.input,
-              {
-                backgroundColor: themeColors.surface,
-                borderColor: themeColors.text,
-                color: themeColors.text,
-              },
-            ]}
-          />
-        </View>
+            <View style={styles.field}>
+              <Text style={[styles.label, { color: themeColors.text }]}>
+                Monthly budget
+              </Text>
+              <TextInput
+                value={budget}
+                onChangeText={onBudgetChange}
+                placeholder="0.00"
+                placeholderTextColor={themeColors.mutedText}
+                keyboardType="decimal-pad"
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: themeColors.surface,
+                    borderColor: themeColors.text,
+                    color: themeColors.text,
+                  },
+                ]}
+              />
+            </View>
 
-        <View style={styles.field}>
-          <Text style={[styles.label, { color: themeColors.text }]}>
-            Profile image
-          </Text>
-          <AvatarCarousel
-            avatarUrls={avatarImageUrls}
-            downloadedAvatarUrls={downloadedAvatarUrls}
-            downloadingAvatarUrl={downloadingAvatarUrl}
-            previewRefreshKey={previewRefreshKey}
-            profileImageUri={profileImageUri}
-            onSelectAvatar={onSelectAvatar}
-          />
+            <View style={styles.field}>
+              <Text style={[styles.label, { color: themeColors.text }]}>
+                Profile image
+              </Text>
+              <AvatarCarousel
+                avatarUrls={avatarImageUrls}
+                downloadedAvatarUrls={downloadedAvatarUrls}
+                downloadingAvatarUrl={downloadingAvatarUrl}
+                previewRefreshKey={previewRefreshKey}
+                profileImageUri={profileImageUri}
+                onSelectAvatar={onSelectAvatar}
+              />
+            </View>
+          </View>
         </View>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -127,13 +155,34 @@ export default memo(OnboardingSetupPage);
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    justifyContent: "center",
-    gap: spacing.lg,
     paddingHorizontal: spacing.lg,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "flex-start",
+    paddingTop: 36,
+    paddingBottom: 28,
+  },
+  scrollContentWide: {
+    justifyContent: "center",
+  },
+  setupContent: {
+    alignSelf: "center",
+    width: "100%",
+    gap: spacing.lg,
+  },
+  setupContentWide: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 48,
   },
   copy: {
     alignItems: "center",
     gap: spacing.sm,
+  },
+  copyWide: {
+    flex: 0.8,
+    alignItems: "flex-start",
   },
   iconWrap: {
     width: 74,
@@ -154,7 +203,11 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     lineHeight: 36,
   },
+  titleWide: {
+    textAlign: "left",
+  },
   form: {
+    flex: 1,
     gap: spacing.md,
   },
   field: {

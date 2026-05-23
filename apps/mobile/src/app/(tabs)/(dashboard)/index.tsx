@@ -10,7 +10,10 @@ import {
   Text,
   View,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { BalanceGraph } from "@/components/dashboard/balance-graph";
 import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
@@ -21,6 +24,7 @@ import {
 } from "@/components/shared/month-selector";
 import { TransactionList } from "@/components/shared/transaction-list";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
+import { useAdaptiveLayout } from "@/hooks/use-adaptive-layout";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useMonthlyBudgetQuery } from "@/queries/budgets";
 import { useReceiptsQuery } from "@/queries/receipts";
@@ -110,6 +114,7 @@ function isReceiptInMonth(
 
 export default function DashboardScreen() {
   const themeColors = useThemeColors();
+  const adaptive = useAdaptiveLayout();
   const { bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
   const { formatCurrency } = useCurrencyFormatter();
@@ -120,7 +125,8 @@ export default function DashboardScreen() {
   const remainingBudget =
     (monthlyBudget?.limitAmount ?? 0) - (monthlyBudget?.spentAmount ?? 0);
   const spendingPoints = useMemo(
-    () => getCurrentMonthSpendingPoints(receiptsQuery.data ?? [], selectedMonth),
+    () =>
+      getCurrentMonthSpendingPoints(receiptsQuery.data ?? [], selectedMonth),
     [receiptsQuery.data, selectedMonth],
   );
   const receiptTransactions = useMemo(
@@ -129,12 +135,12 @@ export default function DashboardScreen() {
         ?.filter((receipt) => isReceiptInMonth(receipt, selectedMonth))
         .slice(0, 5)
         .map((receipt) => ({
-        id: receipt.id,
-        icon: getReceiptIcon(receipt.categoryName),
-        title: receipt.store,
-        category: receipt.categoryName ?? t("dashboard.receiptFallback"),
-        date: receipt.dateText ?? receipt.createdAt,
-        amount: formatCurrency(receipt.total),
+          id: receipt.id,
+          icon: getReceiptIcon(receipt.categoryName),
+          title: receipt.store,
+          category: receipt.categoryName ?? t("dashboard.receiptFallback"),
+          date: receipt.dateText ?? receipt.createdAt,
+          amount: formatCurrency(receipt.total),
         })) ?? [],
     [formatCurrency, receiptsQuery.data, selectedMonth, t],
   );
@@ -152,7 +158,13 @@ export default function DashboardScreen() {
       <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
+          {
+            alignSelf: "center",
+            maxWidth: adaptive.maxContentWidth,
+            paddingBottom: getTabScreenBottomPadding(bottom, 36),
+            paddingHorizontal: adaptive.gutter,
+            width: "100%",
+          },
         ]}
         refreshControl={
           <RefreshControl
@@ -202,8 +214,24 @@ export default function DashboardScreen() {
           selectedMonth={selectedMonth}
           onChange={setSelectedMonth}
         />
-        <BalanceGraph points={spendingPoints} />
-        <TransactionList items={receiptTransactions} />
+        <View
+          style={[
+            styles.dashboardGrid,
+            adaptive.isMedium && styles.dashboardGridWide,
+          ]}
+        >
+          <View
+            style={[
+              styles.gridPrimary,
+              adaptive.isMedium && styles.gridPrimaryWide,
+            ]}
+          >
+            <BalanceGraph points={spendingPoints} />
+          </View>
+          <View style={styles.gridSecondary}>
+            <TransactionList items={receiptTransactions} />
+          </View>
+        </View>
       </KeyboardAwareScrollView>
     </SafeAreaView>
   );
@@ -217,6 +245,23 @@ const styles = StyleSheet.create({
     gap: spacing.xl,
     padding: spacing.lg,
     paddingBottom: 36,
+  },
+  dashboardGrid: {
+    gap: spacing.xl,
+  },
+  dashboardGridWide: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  gridPrimary: {
+    minWidth: 0,
+  },
+  gridPrimaryWide: {
+    flex: 1.35,
+  },
+  gridSecondary: {
+    flex: 1,
+    minWidth: 0,
   },
   header: {
     flexDirection: "row",

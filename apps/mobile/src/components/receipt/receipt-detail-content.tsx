@@ -20,6 +20,7 @@ import {
 import { EmptyStateCard } from "@/components/shared/empty-state-card";
 import { ScreenHeader } from "@/components/shared/screen-header";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
+import { useAdaptiveLayout } from "@/hooks/use-adaptive-layout";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useDeleteReceiptMutation, useReceiptQuery } from "@/queries/receipts";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
@@ -30,6 +31,7 @@ type Props = {
 
 export function ReceiptDetailContent({ receiptId }: Props) {
   const themeColors = useThemeColors();
+  const adaptive = useAdaptiveLayout();
   const { bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
   const { formatCurrency } = useCurrencyFormatter();
@@ -72,7 +74,13 @@ export function ReceiptDetailContent({ receiptId }: Props) {
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: getTabScreenBottomPadding(bottom, 36) },
+          {
+            alignSelf: "center",
+            maxWidth: adaptive.isExpanded ? 820 : adaptive.maxFormWidth,
+            paddingBottom: getTabScreenBottomPadding(bottom, 36),
+            paddingHorizontal: adaptive.gutter,
+            width: "100%",
+          },
         ]}
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
@@ -130,7 +138,12 @@ export function ReceiptDetailContent({ receiptId }: Props) {
                 style={[styles.divider, { borderColor: themeColors.border }]}
               />
 
-              <View style={styles.metaGrid}>
+              <View
+                style={[
+                  styles.metaGrid,
+                  adaptive.isMedium && styles.metaGridWide,
+                ]}
+              >
                 <DetailValue
                   label={t("receiptDetail.fields.category")}
                   value={receipt.categoryName ?? t("receiptDetail.fallback")}
@@ -319,9 +332,12 @@ export function ReceiptDetailContent({ receiptId }: Props) {
 
 function DetailValue({ label, value }: { label: string; value: string }) {
   const themeColors = useThemeColors();
+  const adaptive = useAdaptiveLayout();
 
   return (
-    <View style={styles.detailValue}>
+    <View
+      style={[styles.detailValue, adaptive.isMedium && styles.detailValueWide]}
+    >
       <Text style={[styles.detailLabel, { color: themeColors.mutedText }]}>
         {label}
       </Text>
@@ -417,8 +433,17 @@ const styles = StyleSheet.create({
   metaGrid: {
     gap: spacing.md,
   },
+  metaGridWide: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
   detailValue: {
     gap: spacing.xs,
+  },
+  detailValueWide: {
+    width: "48%",
+    minWidth: 240,
+    flexGrow: 1,
   },
   detailLabel: {
     fontSize: fontSize.xs,

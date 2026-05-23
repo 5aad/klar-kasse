@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useAdaptiveLayout } from "@/hooks/use-adaptive-layout";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useReceiptScanStore } from "@/stores/receipt-scan-store";
 
@@ -39,12 +40,12 @@ type NativeDocumentScannerModule = TurboModule & {
   scanDocument(options: ScanDocumentOptions): Promise<ScanDocumentResponse>;
 };
 
-const documentScanner = TurboModuleRegistry.get<NativeDocumentScannerModule>(
-  "DocumentScanner",
-);
+const documentScanner =
+  TurboModuleRegistry.get<NativeDocumentScannerModule>("DocumentScanner");
 
 export default function ScanReceiptScreen() {
   const themeColors = useThemeColors();
+  const adaptive = useAdaptiveLayout();
   const { t } = useTranslation();
   const [isScanning, setIsScanning] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -100,7 +101,9 @@ export default function ScanReceiptScreen() {
       setErrorMessage(
         t("scan.camera.errors.capture", {
           message:
-            error instanceof Error ? error.message : t("scan.camera.errors.tryAgain"),
+            error instanceof Error
+              ? error.message
+              : t("scan.camera.errors.tryAgain"),
         }),
       );
     } finally {
@@ -119,7 +122,17 @@ export default function ScanReceiptScreen() {
       style={[styles.screen, { backgroundColor: themeColors.background }]}
       edges={["top", "bottom"]}
     >
-      <View style={styles.content}>
+      <View
+        style={[
+          styles.content,
+          {
+            alignSelf: "center",
+            maxWidth: adaptive.maxFormWidth,
+            paddingHorizontal: adaptive.gutter,
+            width: "100%",
+          },
+        ]}
+      >
         {isScanning ? (
           <ActivityIndicator color={themeColors.primary} />
         ) : (

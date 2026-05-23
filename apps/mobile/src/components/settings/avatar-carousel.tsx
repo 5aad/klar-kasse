@@ -58,11 +58,7 @@ function PageDot({
   const dotStyle = {
     backgroundColor: scrollX.interpolate({
       inputRange,
-      outputRange: [
-        inactiveColor,
-        activeColor,
-        inactiveColor,
-      ],
+      outputRange: [inactiveColor, activeColor, inactiveColor],
       extrapolate: "clamp",
     }),
     opacity: scrollX.interpolate({
@@ -88,10 +84,14 @@ export function AvatarCarousel({
   profileImageUri,
   onSelectAvatar,
 }: Props) {
-  const { width } = useWindowDimensions();
+  const { width: windowWidth } = useWindowDimensions();
   const themeColors = useThemeColors();
-  const pageWidth = width - spacing.lg * 2;
-  const avatarTileSize = (pageWidth - spacing.md * 2) / 3;
+  const [containerWidth, setContainerWidth] = useState(0);
+  const pageWidth = Math.max(1, containerWidth || windowWidth - spacing.lg * 2);
+  const avatarTileSize = Math.max(
+    78,
+    Math.min((pageWidth - spacing.md * 2) / 3, 156),
+  );
   const pages = chunkAvatarUrls(avatarUrls);
   const [activePage, setActivePage] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -105,7 +105,10 @@ export function AvatarCarousel({
   }
 
   return (
-    <View style={styles.wrap}>
+    <View
+      style={styles.wrap}
+      onLayout={(event) => setContainerWidth(event.nativeEvent.layout.width)}
+    >
       <Animated.ScrollView
         horizontal
         pagingEnabled
@@ -121,7 +124,10 @@ export function AvatarCarousel({
         onMomentumScrollEnd={updateActivePage}
       >
         {pages.map((page, pageIndex) => (
-          <View key={`avatar-page-${pageIndex}`} style={[styles.page, { width: pageWidth }]}>
+          <View
+            key={`avatar-page-${pageIndex}`}
+            style={[styles.page, { width: pageWidth }]}
+          >
             {page.map((url) => {
               const isSelected = profileImageUri?.endsWith(
                 getAvatarFileName(url),
@@ -223,6 +229,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.md,
+    justifyContent: "center",
   },
   avatarTile: {
     overflow: "hidden",

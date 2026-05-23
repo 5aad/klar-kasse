@@ -12,10 +12,14 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/shared/screen-header";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
+import { useAdaptiveLayout } from "@/hooks/use-adaptive-layout";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useEditCategoryMutation } from "@/queries/categories";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
@@ -23,6 +27,7 @@ import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 
 export default function EditBudgetScreen() {
   const themeColors = useThemeColors();
+  const adaptive = useAdaptiveLayout();
   const { bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
   const { currency, formatCurrency } = useCurrencyFormatter();
@@ -104,7 +109,13 @@ export default function EditBudgetScreen() {
       <KeyboardAwareScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: getTabScreenBottomPadding(bottom, 42) },
+          {
+            alignSelf: "center",
+            maxWidth: adaptive.maxFormWidth,
+            paddingBottom: getTabScreenBottomPadding(bottom, 42),
+            paddingHorizontal: adaptive.gutter,
+            width: "100%",
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >

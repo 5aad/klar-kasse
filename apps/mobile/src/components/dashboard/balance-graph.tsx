@@ -45,11 +45,15 @@ function getLinePath(points: { x: number; y: number }[]) {
 
 export function BalanceGraph({ points }: Props) {
   const { width } = useWindowDimensions();
+  const [cardWidth, setCardWidth] = useState(0);
   const themeColors = useThemeColors();
   const resolvedTheme = useResolvedTheme();
   const { formatCurrency } = useCurrencyFormatter();
-  const chartWidth = Math.min(width - spacing.lg * 4, 340);
-  const chartHeight = 168;
+  const availableWidth = cardWidth
+    ? cardWidth - spacing.lg * 2
+    : width - spacing.lg * 4;
+  const chartWidth = Math.max(280, availableWidth);
+  const chartHeight = chartWidth >= 520 ? 190 : 168;
   const today = new Date();
   const daysInMonth = new Date(
     today.getFullYear(),
@@ -57,7 +61,8 @@ export function BalanceGraph({ points }: Props) {
     0,
   ).getDate();
   const chartData = points.map((point) => ({ ...point }));
-  const maxValue = Math.max(...chartData.map((point) => point.value), 1);
+  const maxPointValue = Math.max(...chartData.map((point) => point.value), 0);
+  const maxValue = Math.max(maxPointValue, 100);
   const [selectedIndex, setSelectedIndex] = useState(
     Math.max(chartData.length - 1, 0),
   );
@@ -149,8 +154,11 @@ export function BalanceGraph({ points }: Props) {
   );
 
   return (
-    <View style={[styles.card, { backgroundColor: themeColors.text }]}>
-      <View {...panResponder.panHandlers}>
+    <View
+      style={[styles.card, { backgroundColor: themeColors.text }]}
+      onLayout={(event) => setCardWidth(event.nativeEvent.layout.width)}
+    >
+      <View style={styles.chartWrap} {...panResponder.panHandlers}>
         <Svg height={chartHeight} width={chartWidth}>
           {[0, 0.25, 0.5, 0.75, 1].map((section) => {
             const y = chartPadding.top + plotHeight * section;
@@ -246,7 +254,6 @@ export function BalanceGraph({ points }: Props) {
           })}
         </Svg>
       </View>
-
     </View>
   );
 }
@@ -257,5 +264,8 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     padding: spacing.lg,
     boxShadow: "0 12px 0 rgba(16, 16, 16, 0.28)",
+  },
+  chartWrap: {
+    alignSelf: "stretch",
   },
 });

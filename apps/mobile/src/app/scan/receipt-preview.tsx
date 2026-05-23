@@ -23,6 +23,7 @@ import {
   saveReceiptParserCorrection,
 } from "@/api/receipt-parser-hints";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
+import { useAdaptiveLayout } from "@/hooks/use-adaptive-layout";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useCategoriesQuery } from "@/queries/categories";
 import { usePostReceiptMutation } from "@/queries/receipts";
@@ -54,6 +55,7 @@ function getPaymentMethod(value?: string) {
 
 export default function CapturedReceiptMlKitScreen() {
   const themeColors = useThemeColors();
+  const adaptive = useAdaptiveLayout();
   const { t } = useTranslation();
   const { currency } = useCurrencyFormatter();
   const categoriesQuery = useCategoriesQuery();
@@ -107,9 +109,7 @@ export default function CapturedReceiptMlKitScreen() {
         const parserResult = result.blocks?.length
           ? parseReceiptBlocks(result.blocks)
           : parseNormaReceipt(result.text);
-        const parsedReceipt = await applyReceiptParserHints(
-          parserResult,
-        );
+        const parsedReceipt = await applyReceiptParserHints(parserResult);
 
         console.log("ML Kit OCR Result:", result.blocks);
         console.log("Receipt parser result:", parsedReceipt);
@@ -222,7 +222,15 @@ export default function CapturedReceiptMlKitScreen() {
       edges={["top", "bottom"]}
     >
       <KeyboardAwareScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          {
+            alignSelf: "center",
+            maxWidth: adaptive.maxContentWidth,
+            paddingHorizontal: adaptive.gutter,
+            width: "100%",
+          },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <ScreenHeader
@@ -232,155 +240,185 @@ export default function CapturedReceiptMlKitScreen() {
 
         <View
           style={[
-            styles.previewPanel,
-            { backgroundColor: themeColors.surface },
+            styles.reviewLayout,
+            adaptive.isExpanded && styles.reviewLayoutWide,
           ]}
         >
           <View
             style={[
-              styles.statusBadge,
-              { backgroundColor: themeColors.background },
+              styles.previewColumn,
+              adaptive.isExpanded && styles.previewColumnWide,
             ]}
           >
-            {isAnalyzing ? (
-              <ActivityIndicator size="small" color={themeColors.primary} />
-            ) : (
-              <MaterialCommunityIcons
-                name="check-circle"
-                size={13}
-                color={themeColors.primary}
+            <View
+              style={[
+                styles.previewPanel,
+                { backgroundColor: themeColors.surface },
+              ]}
+            >
+              <View
+                style={[
+                  styles.statusBadge,
+                  { backgroundColor: themeColors.background },
+                ]}
+              >
+                {isAnalyzing ? (
+                  <ActivityIndicator size="small" color={themeColors.primary} />
+                ) : (
+                  <MaterialCommunityIcons
+                    name="check-circle"
+                    size={13}
+                    color={themeColors.primary}
+                  />
+                )}
+                <Text
+                  style={[styles.statusText, { color: themeColors.mutedText }]}
+                >
+                  {isAnalyzing
+                    ? t("scan.preview.status.analyzing")
+                    : t("scan.preview.status.complete")}
+                </Text>
+              </View>
+
+              <Image
+                source={{ uri: croppedImage.uri }}
+                style={[
+                  styles.receiptImage,
+                  adaptive.isExpanded && styles.receiptImageWide,
+                  { backgroundColor: themeColors.background },
+                ]}
+                contentFit="contain"
               />
-            )}
-            <Text style={[styles.statusText, { color: themeColors.mutedText }]}>
-              {isAnalyzing
-                ? t("scan.preview.status.analyzing")
-                : t("scan.preview.status.complete")}
-            </Text>
+
+              <View style={styles.previewFooter}>
+                <Text
+                  numberOfLines={1}
+                  style={[styles.fileName, { color: themeColors.text }]}
+                >
+                  {fileName}
+                </Text>
+                <Pressable onPress={retakeReceipt}>
+                  <Text
+                    style={[styles.retakeText, { color: themeColors.primary }]}
+                  >
+                    {t("scan.preview.retake")}
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+
+            {errorMessage ? (
+              <Text
+                style={[
+                  styles.errorText,
+                  {
+                    backgroundColor: `${themeColors.primary}26`,
+                    color: themeColors.primary,
+                  },
+                ]}
+              >
+                {errorMessage}
+              </Text>
+            ) : null}
           </View>
 
-          <Image
-            source={{ uri: croppedImage.uri }}
-            style={[
-              styles.receiptImage,
-              { backgroundColor: themeColors.background },
-            ]}
-            contentFit="contain"
-          />
+          <View style={styles.formColumn}>
+            <ReviewField
+              label={t("scan.preview.fields.merchant")}
+              value={merchantName}
+              onChangeText={setMerchantName}
+              placeholder={t("scan.preview.placeholders.merchant")}
+              themeColors={themeColors}
+            />
 
-          <View style={styles.previewFooter}>
-            <Text
-              numberOfLines={1}
-              style={[styles.fileName, { color: themeColors.text }]}
+            <View
+              style={[
+                styles.fieldRow,
+                adaptive.isMedium && styles.fieldRowWide,
+              ]}
             >
-              {fileName}
-            </Text>
-            <Pressable onPress={retakeReceipt}>
-              <Text style={[styles.retakeText, { color: themeColors.primary }]}>
-                {t("scan.preview.retake")}
+              <ReviewField
+                compact
+                label={t("scan.preview.fields.date")}
+                value={date}
+                onChangeText={(value) => setDate(formatDateTextInput(value))}
+                placeholder={t("scan.preview.placeholders.date")}
+                keyboardType="number-pad"
+                themeColors={themeColors}
+              />
+              <ReviewField
+                compact
+                label={t("scan.preview.fields.amount", { currency })}
+                value={amount}
+                onChangeText={setAmount}
+                placeholder={t("scan.preview.placeholders.amount")}
+                keyboardType="decimal-pad"
+                themeColors={themeColors}
+              />
+            </View>
+
+            <ChoiceGroup
+              emptyText={t("scan.preview.emptyCategories")}
+              label={t("scan.preview.fields.category")}
+              options={categoryOptions}
+              value={category}
+              onChange={setCategory}
+            />
+
+            <ChoiceGroup
+              getOptionLabel={(option) => t(paymentMethodLabels[option])}
+              label={t("scan.preview.fields.payment")}
+              options={paymentMethods}
+              value={paymentMethod}
+              onChange={setPaymentMethod}
+            />
+
+            <ReviewField
+              label={t("scan.preview.fields.note")}
+              value={note}
+              onChangeText={setNote}
+              placeholder={t("scan.preview.placeholders.note")}
+              multiline
+              themeColors={themeColors}
+            />
+
+            <Pressable
+              style={[
+                styles.confirmButton,
+                { backgroundColor: themeColors.primary },
+                postReceiptMutation.isPending && styles.disabled,
+              ]}
+              disabled={postReceiptMutation.isPending}
+              onPress={confirmReceipt}
+            >
+              <MaterialCommunityIcons
+                name={
+                  postReceiptMutation.isPending ? "timer-sand" : "plus-circle"
+                }
+                size={18}
+                color={themeColors.primaryText}
+              />
+              <Text
+                style={[
+                  styles.confirmButtonText,
+                  { color: themeColors.primaryText },
+                ]}
+              >
+                {postReceiptMutation.isPending
+                  ? t("scan.preview.saving")
+                  : t("scan.preview.confirm")}
+              </Text>
+            </Pressable>
+
+            <Pressable style={styles.discardButton} onPress={discardScan}>
+              <Text
+                style={[styles.discardButtonText, { color: themeColors.text }]}
+              >
+                {t("scan.preview.discard")}
               </Text>
             </Pressable>
           </View>
         </View>
-
-        {errorMessage ? (
-          <Text
-            style={[
-              styles.errorText,
-              {
-                backgroundColor: `${themeColors.primary}26`,
-                color: themeColors.primary,
-              },
-            ]}
-          >
-            {errorMessage}
-          </Text>
-        ) : null}
-
-        <ReviewField
-          label={t("scan.preview.fields.merchant")}
-          value={merchantName}
-          onChangeText={setMerchantName}
-          placeholder={t("scan.preview.placeholders.merchant")}
-          themeColors={themeColors}
-        />
-
-        <View style={styles.fieldRow}>
-          <ReviewField
-            compact
-            label={t("scan.preview.fields.date")}
-            value={date}
-            onChangeText={(value) => setDate(formatDateTextInput(value))}
-            placeholder={t("scan.preview.placeholders.date")}
-            keyboardType="number-pad"
-            themeColors={themeColors}
-          />
-          <ReviewField
-            compact
-            label={t("scan.preview.fields.amount", { currency })}
-            value={amount}
-            onChangeText={setAmount}
-            placeholder={t("scan.preview.placeholders.amount")}
-            keyboardType="decimal-pad"
-            themeColors={themeColors}
-          />
-        </View>
-
-        <ChoiceGroup
-          emptyText={t("scan.preview.emptyCategories")}
-          label={t("scan.preview.fields.category")}
-          options={categoryOptions}
-          value={category}
-          onChange={setCategory}
-        />
-
-        <ChoiceGroup
-          getOptionLabel={(option) => t(paymentMethodLabels[option])}
-          label={t("scan.preview.fields.payment")}
-          options={paymentMethods}
-          value={paymentMethod}
-          onChange={setPaymentMethod}
-        />
-
-        <ReviewField
-          label={t("scan.preview.fields.note")}
-          value={note}
-          onChangeText={setNote}
-          placeholder={t("scan.preview.placeholders.note")}
-          multiline
-          themeColors={themeColors}
-        />
-
-        <Pressable
-          style={[
-            styles.confirmButton,
-            { backgroundColor: themeColors.primary },
-            postReceiptMutation.isPending && styles.disabled,
-          ]}
-          disabled={postReceiptMutation.isPending}
-          onPress={confirmReceipt}
-        >
-          <MaterialCommunityIcons
-            name={postReceiptMutation.isPending ? "timer-sand" : "plus-circle"}
-            size={18}
-            color={themeColors.primaryText}
-          />
-          <Text
-            style={[
-              styles.confirmButtonText,
-              { color: themeColors.primaryText },
-            ]}
-          >
-            {postReceiptMutation.isPending
-              ? t("scan.preview.saving")
-              : t("scan.preview.confirm")}
-          </Text>
-        </Pressable>
-
-        <Pressable style={styles.discardButton} onPress={discardScan}>
-          <Text style={[styles.discardButtonText, { color: themeColors.text }]}>
-            {t("scan.preview.discard")}
-          </Text>
-        </Pressable>
       </KeyboardAwareScrollView>
     </SafeAreaView>
   );
@@ -491,7 +529,9 @@ function ChoiceGroup<TValue extends string>({
             );
           })
         ) : (
-          <Text style={[styles.choiceEmptyText, { color: themeColors.mutedText }]}>
+          <Text
+            style={[styles.choiceEmptyText, { color: themeColors.mutedText }]}
+          >
             {emptyText}
           </Text>
         )}
@@ -508,6 +548,26 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.lg,
     paddingBottom: spacing.xl,
+  },
+  reviewLayout: {
+    gap: spacing.md,
+  },
+  reviewLayoutWide: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.xl,
+  },
+  previewColumn: {
+    gap: spacing.md,
+  },
+  previewColumnWide: {
+    flex: 0.95,
+    minWidth: 0,
+  },
+  formColumn: {
+    flex: 1,
+    gap: spacing.md,
+    minWidth: 0,
   },
   title: {
     fontSize: 28,
@@ -540,6 +600,9 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 252,
   },
+  receiptImageWide: {
+    height: 520,
+  },
   previewFooter: {
     flexDirection: "row",
     alignItems: "center",
@@ -555,8 +618,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   fieldRow: {
-    flexDirection: "row",
     gap: spacing.md,
+  },
+  fieldRowWide: {
+    flexDirection: "row",
   },
   field: {
     minHeight: 78,
