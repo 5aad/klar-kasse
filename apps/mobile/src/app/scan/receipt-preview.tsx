@@ -178,7 +178,7 @@ export default function CapturedReceiptMlKitScreen() {
       {
         onSuccess: () => {
           clearReceiptImages();
-          router.replace("/(tabs)/scan");
+          router.replace("/(tabs)/(dashboard)");
         },
       },
     );

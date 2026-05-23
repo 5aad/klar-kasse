@@ -126,7 +126,7 @@ export default function AddReceiptScreen() {
     };
 
     postReceiptMutation.mutate(receiptJson, {
-      onSuccess: () => router.replace("/(tabs)/scan"),
+      onSuccess: () => router.replace("/(tabs)/(dashboard)"),
     });
   };
 
