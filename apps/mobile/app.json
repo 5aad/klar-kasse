@@ -57,6 +57,16 @@
         {
           "cameraPermission": "Allow Klar Kasse to scan receipts."
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 36,
+            "minSdkVersion": 24
+          }
+        }
       ]
     ],
     "extra": {
