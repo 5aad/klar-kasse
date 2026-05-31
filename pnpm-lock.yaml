@@ -100,6 +100,9 @@ importers:
       react-native:
         specifier: 0.81.5
         version: 0.81.5(@babel/core@7.29.0)(@react-native/metro-config@0.85.3)(@types/react@19.1.17)(react@19.1.0)
+      react-native-android-widget:
+        specifier: 0.20.3
+        version: 0.20.3(expo@54.0.34)(react-native@0.81.5)(react@19.1.0)
       react-native-document-scanner-plugin:
         specifier: ^2.0.4
         version: 2.0.4(react-native@0.81.5)(react@19.1.0)
@@ -7092,6 +7095,21 @@ packages:
 
   /react-is@19.2.6:
     resolution: {integrity: sha512-XjBR15BhXuylgWGuslhDKqlSayuqvqBX91BP8pauG8kd1zY8kotkNWbXksTCNRarse4kuGbe2kIY05ARtwNIvw==}
+    dev: false
+
+  /react-native-android-widget@0.20.3(expo@54.0.34)(react-native@0.81.5)(react@19.1.0):
+    resolution: {integrity: sha512-/HZpZda3h4xACK5anrdSuPsL3shqMZ/m5wxL/sk+DTjEI24Yj5/kROUJAQ0uwG4evjPoaLi4x++fuLC9a7qYnw==}
+    peerDependencies:
+      expo: '>=54.0.0'
+      react: '*'
+      react-native: '*'
+    peerDependenciesMeta:
+      expo:
+        optional: true
+    dependencies:
+      expo: 54.0.34(@babel/core@7.29.0)(@expo/metro-runtime@6.1.2)(expo-router@6.0.23)(react-native@0.81.5)(react@19.1.0)(typescript@5.9.3)
+      react: 19.1.0
+      react-native: 0.81.5(@babel/core@7.29.0)(@react-native/metro-config@0.85.3)(@types/react@19.1.17)(react@19.1.0)
     dev: false
 
   /react-native-document-scanner-plugin@2.0.4(react-native@0.81.5)(react@19.1.0):

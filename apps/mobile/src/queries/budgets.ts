@@ -10,6 +10,7 @@ import {
 } from "@/api/budgets";
 import { categoryQueryKeys } from "@/queries/categories";
 import { receiptQueryKeys } from "@/queries/receipts";
+import { requestBudgetWidgetRefresh } from "@/widgets/budget-widget-refresh";
 
 export const budgetQueryKeys = {
   allMonthly: ["monthly-budgets"] as const,
@@ -38,11 +39,15 @@ export function useSaveMonthlyBudgetMutation() {
     onSuccess: (monthlyBudget, input) => {
       const monthKey = input.monthKey ?? getCurrentMonthKey();
 
-      queryClient.setQueryData(budgetQueryKeys.monthly(monthKey), monthlyBudget);
+      queryClient.setQueryData(
+        budgetQueryKeys.monthly(monthKey),
+        monthlyBudget,
+      );
       queryClient.invalidateQueries({
         queryKey: budgetQueryKeys.monthly(monthKey),
       });
       queryClient.invalidateQueries({ queryKey: budgetQueryKeys.allMonthly });
+      void requestBudgetWidgetRefresh();
     },
   });
 }
@@ -63,6 +68,7 @@ export function useDeleteMonthlyBudgetMutation() {
 
       queryClient.invalidateQueries({ queryKey: categoryQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: receiptQueryKeys.all });
+      void requestBudgetWidgetRefresh();
     },
   });
 }

@@ -9,6 +9,7 @@ import {
   type EditCategoryInput,
   type PostCategoryInput,
 } from "@/api/categories";
+import { requestBudgetWidgetRefresh } from "@/widgets/budget-widget-refresh";
 
 export const categoryQueryKeys = {
   all: ["categories"] as const,
@@ -44,6 +45,8 @@ export function usePostCategoryMutation() {
           category,
         );
       }
+
+      void requestBudgetWidgetRefresh();
     },
   });
 }
@@ -62,6 +65,8 @@ export function useEditCategoryMutation() {
           category,
         );
       }
+
+      void requestBudgetWidgetRefresh();
     },
   });
 }
@@ -79,6 +84,8 @@ export function useDeleteCategoryMutation() {
           queryKey: categoryQueryKeys.detail(category.id),
         });
       }
+
+      void requestBudgetWidgetRefresh();
     },
   });
 }

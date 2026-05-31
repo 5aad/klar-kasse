@@ -13,6 +13,7 @@
     "build:android": "eas build --platform android --profile production",
     "build:android:apk": "eas build --platform android --profile production-apk",
     "submit:android": "eas submit --platform android --profile production",
+    "test:widget": "tsx --test src/widgets/budget-widget-model.test.ts",
     "update": "eas update --channel production --message \"OTA update\""
   },
   "dependencies": {
@@ -41,6 +42,7 @@
     "react-dom": "19.1.0",
     "react-i18next": "^17.0.7",
     "react-native": "0.81.5",
+    "react-native-android-widget": "0.20.3",
     "react-native-document-scanner-plugin": "^2.0.4",
     "react-native-gesture-handler": "~2.28.0",
     "react-native-gifted-charts": "^1.4.76",

@@ -28,6 +28,7 @@ import { useThemeColors } from "@/hooks/use-theme-colors";
 import { queryClient } from "@/lib/query-client";
 import { downloadAvatarImage } from "@/utils/avatar-images";
 import { setIsOnboardingDone } from "@/utils/onboarding-storage";
+import { requestBudgetWidgetRefresh } from "@/widgets/budget-widget-refresh";
 
 export default function OnboardingScreen() {
   const { bottom } = useSafeAreaInsets();
@@ -100,6 +101,7 @@ export default function OnboardingScreen() {
         queryClient.invalidateQueries({ queryKey: ["user-preferences"] }),
       ]);
       await setIsOnboardingDone(true);
+      void requestBudgetWidgetRefresh();
       router.replace("/(dashboard)");
     } catch (error) {
       console.warn("Onboarding setup failed:", error);

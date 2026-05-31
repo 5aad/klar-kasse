@@ -3,32 +3,18 @@
 ## Goal
 
 Add a polished Android home-screen widget for Klar Kasse using
-`react-native-android-widget`. The widget must adapt to different launcher sizes,
-use the app's local budget data, and provide matching light and dark variants.
+`react-native-android-widget`. The widget uses a fixed `4x2` launcher size, reads
+the app's local budget data, and provides matching light and dark variants.
 
 ## Scope
 
-Create one resizable widget named `KlarKasse`. Android reports the dimensions of
-each widget instance, and the task handler selects a compact, medium, or expanded
-layout. This avoids adding several near-duplicate entries to the Android widget
-picker.
+Create one fixed-size widget named `KlarKasse`. It renders the monthly budget
+pacing layout in a `4x2` launcher cell footprint and cannot be resized.
 
 The widget is Android-only. It does not add configuration screens, remote sync,
 or an iOS widget.
 
-## Layouts
-
-### Compact
-
-Show:
-
-- Remaining monthly balance
-- Monthly spending percentage
-- Red progress bar
-
-This layout is optimized for narrow or short widget placements.
-
-### Medium
+## Layout
 
 Show:
 
@@ -36,20 +22,10 @@ Show:
 - Monthly spending percentage
 - Used amount and monthly limit
 - Red progress bar
-- Up to two category cards, ordered by highest spending
+- Up to three category cards, ordered by highest spending
 
 Each category card shows its category name, spending percentage, and a compact
 progress bar.
-
-### Expanded
-
-Show the medium layout plus a quick-actions section:
-
-- Scan receipt
-- Add expense
-- View insights
-
-The actions use deep links into the existing Expo Router app.
 
 ## Visual Design
 
@@ -97,11 +73,10 @@ Configure the widget with:
 
 - Name: `KlarKasse`
 - Picker label: `Klar Kasse Budget`
-- Resizing: horizontal and vertical
+- Size: fixed `4x2`
+- Resizing: disabled
 - Periodic update: every 30 minutes
-- Default size suitable for the medium layout
-- Minimum size suitable for the compact layout
-- Maximum resize bounds suitable for the expanded layout
+- Minimum size: `320dp x 110dp`
 
 Register the widget task handler from the existing Expo Router entry file,
 `apps/mobile/index.js`.
@@ -112,7 +87,6 @@ Render or rerender the widget for:
 
 - `WIDGET_ADDED`
 - `WIDGET_UPDATE`
-- `WIDGET_RESIZED`
 
 Request immediate refreshes while the app is open after:
 
@@ -125,12 +99,7 @@ Periodic Android refreshes provide a fallback when the app is not open.
 
 ## Navigation
 
-Use `OPEN_URI` click actions with the existing `klarkasse://` scheme:
-
-- Widget body: `klarkasse://`
-- Scan receipt: `klarkasse://scan/scan-receipt`
-- Add expense: `klarkasse://scan/add-receipt`
-- Insights: `klarkasse://insight`
+Tapping the widget body opens Klar Kasse.
 
 ## Error Handling
 
@@ -145,7 +114,6 @@ Verify with:
 - TypeScript type checking for the mobile app
 - Expo config resolution to confirm plugin registration
 - Android native prebuild or native build generation as available
-- Manual Android launcher checks for compact, medium, and expanded sizes
+- Manual Android launcher check for the fixed `4x2` size
 - Manual Android light and dark system-theme checks
-- Manual deep-link checks for each quick action
-
+- Manual check that tapping the widget opens Klar Kasse
