@@ -67,13 +67,28 @@ test("clamps progress bars while preserving overspending percentages", () => {
 test("returns an empty state when no monthly budget exists", () => {
   const snapshot = createBudgetWidgetSnapshot({
     categories: [{ limitAmount: 50, name: "Dining", spentAmount: 75 }],
+    currency: "$",
     monthlyBudget: null,
   });
 
   assert.equal(snapshot.hasBudget, false);
-  assert.equal(snapshot.currency, "EUR");
+  assert.equal(snapshot.currency, "$");
   assert.equal(snapshot.remainingAmount, 0);
   assert.equal(snapshot.spentPercentage, 0);
   assert.equal(snapshot.progressPercentage, 0);
   assert.deepEqual(snapshot.categories, []);
+});
+
+test("uses the user currency instead of the archived monthly budget currency", () => {
+  const snapshot = createBudgetWidgetSnapshot({
+    categories: [],
+    currency: "$",
+    monthlyBudget: {
+      currency: "EUR",
+      limitAmount: 1_000,
+      spentAmount: 180,
+    },
+  });
+
+  assert.equal(snapshot.currency, "$");
 });

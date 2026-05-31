@@ -1,3 +1,5 @@
+import type { SupportedLanguage } from "@/i18n/language-storage";
+
 export type BudgetWidgetLayout = "medium";
 
 type MonthlyBudgetLike = {
@@ -24,6 +26,7 @@ export type BudgetWidgetSnapshot = {
   categories: BudgetWidgetCategorySnapshot[];
   currency: string;
   hasBudget: boolean;
+  language: SupportedLanguage;
   limitAmount: number;
   progressPercentage: number;
   remainingAmount: number;
@@ -50,16 +53,21 @@ export function selectBudgetWidgetLayout(_: {
 
 export function createBudgetWidgetSnapshot({
   categories,
+  currency,
+  language = "en",
   monthlyBudget,
 }: {
   categories: CategoryLike[];
+  currency?: string;
+  language?: SupportedLanguage;
   monthlyBudget: MonthlyBudgetLike | null;
 }): BudgetWidgetSnapshot {
   if (!monthlyBudget) {
     return {
       categories: [],
-      currency: "EUR",
+      currency: currency ?? "€",
       hasBudget: false,
+      language,
       limitAmount: 0,
       progressPercentage: 0,
       remainingAmount: 0,
@@ -92,8 +100,9 @@ export function createBudgetWidgetSnapshot({
           spentPercentage: categoryPercentage,
         };
       }),
-    currency: monthlyBudget.currency,
+    currency: currency ?? monthlyBudget.currency,
     hasBudget: true,
+    language,
     limitAmount: monthlyBudget.limitAmount,
     progressPercentage: clampProgress(spentPercentage),
     remainingAmount: monthlyBudget.limitAmount - monthlyBudget.spentAmount,

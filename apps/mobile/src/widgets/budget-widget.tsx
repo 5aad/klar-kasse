@@ -10,6 +10,10 @@ import {
   type BudgetWidgetCategorySnapshot,
   type BudgetWidgetSnapshot,
 } from "@/widgets/budget-widget-model";
+import {
+  formatBudgetWidgetAmount,
+  getBudgetWidgetCopy,
+} from "@/widgets/budget-widget-content";
 
 export type BudgetWidgetTheme = "dark" | "light";
 
@@ -45,19 +49,6 @@ const palettes: Record<BudgetWidgetTheme, WidgetPalette> = {
     track: "#E8E6E2",
   },
 };
-
-function formatCurrency(amount: number, currency: string) {
-  try {
-    return new Intl.NumberFormat("de-DE", {
-      currency,
-      maximumFractionDigits: 0,
-      minimumFractionDigits: 0,
-      style: "currency",
-    }).format(amount);
-  } catch {
-    return `${currency} ${Math.round(amount).toLocaleString("de-DE")}`;
-  }
-}
 
 function ProgressBar({
   height = 8,
@@ -95,12 +86,16 @@ function ProgressBar({
 }
 
 function EmptyBudget({
+  language,
   palette,
   titleSize,
 }: {
+  language: BudgetWidgetSnapshot["language"];
   palette: WidgetPalette;
   titleSize: number;
 }) {
+  const copy = getBudgetWidgetCopy(language);
+
   return (
     <FlexWidget
       style={{
@@ -110,7 +105,7 @@ function EmptyBudget({
       }}
     >
       <TextWidget
-        text="SET YOUR MONTHLY BUDGET"
+        text={copy.setBudgetTitle}
         style={{
           color: palette.primary,
           fontSize: 11,
@@ -119,11 +114,11 @@ function EmptyBudget({
         }}
       />
       <TextWidget
-        text="Start pacing your spending"
+        text={copy.emptyTitle}
         style={{ color: palette.text, fontSize: titleSize, fontWeight: "700" }}
       />
       <TextWidget
-        text="Open Klar Kasse to add a monthly limit."
+        text={copy.emptyBody}
         maxLines={2}
         style={{ color: palette.mutedText, fontSize: 12 }}
       />
@@ -188,6 +183,8 @@ function CategoriesRow({
   snapshot: BudgetWidgetSnapshot;
 }) {
   if (!snapshot.categories.length) {
+    const copy = getBudgetWidgetCopy(snapshot.language);
+
     return (
       <FlexWidget
         style={{
@@ -197,7 +194,7 @@ function CategoriesRow({
         }}
       >
         <TextWidget
-          text="No category spending yet"
+          text={copy.noCategorySpending}
           style={{ color: palette.mutedText, fontSize: 12, fontWeight: "600" }}
         />
       </FlexWidget>
@@ -224,10 +221,12 @@ function PacingHeader({
   palette: WidgetPalette;
   snapshot: BudgetWidgetSnapshot;
 }) {
+  const copy = getBudgetWidgetCopy(snapshot.language);
+
   return (
     <FlexWidget style={{ flexGap: 8, width: "match_parent" }}>
       <TextWidget
-        text="MONTHLY BUDGET PACING"
+        text={copy.pacingTitle}
         style={{
           color: palette.text,
           fontSize: 12,
@@ -248,7 +247,7 @@ function PacingHeader({
         />
       </FlexWidget>
       <TextWidget
-        text={`Used ${formatCurrency(snapshot.spentAmount, snapshot.currency)} of ${formatCurrency(snapshot.limitAmount, snapshot.currency)}`}
+        text={`${copy.usedLabel} ${formatBudgetWidgetAmount(snapshot.spentAmount, snapshot.currency, snapshot.language)} ${copy.ofLabel} ${formatBudgetWidgetAmount(snapshot.limitAmount, snapshot.currency, snapshot.language)}`}
         style={{ color: palette.text, fontSize: 14, fontWeight: "600" }}
       />
       <ProgressBar palette={palette} percentage={snapshot.progressPercentage} />
@@ -264,7 +263,13 @@ function DetailedWidget({
   snapshot: BudgetWidgetSnapshot;
 }) {
   if (!snapshot.hasBudget) {
-    return <EmptyBudget palette={palette} titleSize={20} />;
+    return (
+      <EmptyBudget
+        language={snapshot.language}
+        palette={palette}
+        titleSize={20}
+      />
+    );
   }
 
   return (

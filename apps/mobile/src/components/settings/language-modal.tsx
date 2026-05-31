@@ -11,6 +11,7 @@ import {
   setAppLanguage,
   type SupportedLanguage,
 } from "@/i18n";
+import { requestBudgetWidgetRefresh } from "@/widgets/budget-widget-refresh";
 
 type Props = {
   onClose: () => void;
@@ -31,7 +32,10 @@ export function LanguageModal({ onClose, visible }: Props) {
   }, [visible]);
 
   const saveLanguage = () => {
-    void setAppLanguage(selectedLanguage).then(onClose);
+    void setAppLanguage(selectedLanguage).then(() => {
+      void requestBudgetWidgetRefresh();
+      onClose();
+    });
   };
 
   return (

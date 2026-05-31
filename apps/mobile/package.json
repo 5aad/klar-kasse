@@ -13,7 +13,7 @@
     "build:android": "eas build --platform android --profile production",
     "build:android:apk": "eas build --platform android --profile production-apk",
     "submit:android": "eas submit --platform android --profile production",
-    "test:widget": "tsx --test src/widgets/budget-widget-model.test.ts",
+    "test:widget": "tsx --test src/widgets/*.test.ts",
     "update": "eas update --channel production --message \"OTA update\""
   },
   "dependencies": {

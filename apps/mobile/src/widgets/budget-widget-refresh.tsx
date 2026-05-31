@@ -2,6 +2,8 @@ import { requestWidgetUpdate } from "react-native-android-widget";
 
 import { getMonthlyBudget } from "@/api/budgets";
 import { getCategories } from "@/api/categories";
+import { getLocalUserPreferences } from "@/api/users";
+import { getStoredAppLanguage } from "@/i18n/language-storage";
 import { BudgetWidget } from "@/widgets/budget-widget";
 import {
   createBudgetWidgetSnapshot,
@@ -11,12 +13,20 @@ import {
 export const KLAR_KASSE_WIDGET_NAME = "KlarKasse";
 
 export async function loadBudgetWidgetSnapshot() {
-  const [monthlyBudget, categories] = await Promise.all([
-    getMonthlyBudget(),
-    getCategories(),
-  ]);
+  const [monthlyBudget, categories, userPreferences, language] =
+    await Promise.all([
+      getMonthlyBudget(),
+      getCategories(),
+      getLocalUserPreferences(),
+      getStoredAppLanguage(),
+    ]);
 
-  return createBudgetWidgetSnapshot({ categories, monthlyBudget });
+  return createBudgetWidgetSnapshot({
+    categories,
+    currency: userPreferences?.currency,
+    language,
+    monthlyBudget,
+  });
 }
 
 export function renderBudgetWidget({
