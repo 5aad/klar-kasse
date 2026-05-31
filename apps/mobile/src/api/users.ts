@@ -84,9 +84,13 @@ async function ensureDefaultProfileImage(user: User | undefined) {
 }
 
 export async function getUserPreferences() {
+  return ensureDefaultProfileImage(await getLocalUserPreferences());
+}
+
+export async function getLocalUserPreferences() {
   initializeDatabase();
 
-  return ensureDefaultProfileImage(ensureLocalUser());
+  return ensureLocalUser();
 }
 
 export async function saveUserPreferences(input: SaveUserPreferencesInput) {
@@ -96,7 +100,9 @@ export async function saveUserPreferences(input: SaveUserPreferencesInput) {
   const now = new Date().toISOString();
   const nextValues: Partial<User> = {
     ...(input.name !== undefined ? { name: input.name.trim() } : undefined),
-    ...(input.appTheme !== undefined ? { appTheme: input.appTheme } : undefined),
+    ...(input.appTheme !== undefined
+      ? { appTheme: input.appTheme }
+      : undefined),
     ...(input.currency !== undefined
       ? { currency: normalizeCurrency(input.currency) }
       : undefined),

@@ -7,6 +7,7 @@ import {
   postReceipt,
   type PostReceiptInput,
 } from "@/api/receipts";
+import { requestBudgetWidgetRefresh } from "@/widgets/budget-widget-refresh";
 
 export const receiptQueryKeys = {
   all: ["receipts"] as const,
@@ -42,6 +43,8 @@ export function usePostReceiptMutation() {
       if (receipt) {
         queryClient.setQueryData(receiptQueryKeys.detail(receipt.id), receipt);
       }
+
+      void requestBudgetWidgetRefresh();
     },
   });
 }
@@ -62,6 +65,8 @@ export function useDeleteReceiptMutation() {
           queryKey: receiptQueryKeys.detail(receipt.id),
         });
       }
+
+      void requestBudgetWidgetRefresh();
     },
   });
 }

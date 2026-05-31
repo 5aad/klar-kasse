@@ -5,6 +5,7 @@ import {
   saveUserPreferences,
   type SaveUserPreferencesInput,
 } from "@/api/users";
+import { requestBudgetWidgetRefresh } from "@/widgets/budget-widget-refresh";
 
 export const userQueryKeys = {
   preferences: ["user-preferences"] as const,
@@ -25,6 +26,7 @@ export function useSaveUserPreferencesMutation() {
     onSuccess: (preferences) => {
       queryClient.setQueryData(userQueryKeys.preferences, preferences);
       queryClient.invalidateQueries({ queryKey: userQueryKeys.preferences });
+      void requestBudgetWidgetRefresh();
     },
   });
 }

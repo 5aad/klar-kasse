@@ -59,13 +59,22 @@
         }
       ],
       [
-        "expo-build-properties",
+        "react-native-android-widget",
         {
-          "android": {
-            "compileSdkVersion": 36,
-            "targetSdkVersion": 36,
-            "minSdkVersion": 24
-          }
+          "widgets": [
+            {
+              "name": "KlarKasse",
+              "label": "Klar Kasse Budget",
+              "description": "Track your monthly budget pacing.",
+              "minWidth": "320dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "previewImage": "./assets/widget-preview/klar-kasse-budget.png",
+              "resizeMode": "none",
+              "updatePeriodMillis": 1800000
+            }
+          ]
         }
       ]
     ],

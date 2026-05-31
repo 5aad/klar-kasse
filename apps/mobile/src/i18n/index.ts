@@ -1,29 +1,18 @@
-import * as Localization from "expo-localization";
-import * as SecureStore from "expo-secure-store";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 
 import de from "@/i18n/locales/de.json";
 import en from "@/i18n/locales/en.json";
-
-export const supportedLanguages = ["en", "de"] as const;
-
-export type SupportedLanguage = (typeof supportedLanguages)[number];
+import {
+  getDeviceLanguage,
+  getStoredAppLanguage,
+  isSupportedLanguage,
+  saveStoredAppLanguage,
+  supportedLanguages,
+  type SupportedLanguage,
+} from "@/i18n/language-storage";
 
 const fallbackLanguage: SupportedLanguage = "en";
-const languageStorageKey = "klar-kasse-language";
-
-function getDeviceLanguage(): SupportedLanguage {
-  const languageCode = Localization.getLocales()[0]?.languageCode?.toLowerCase();
-
-  return supportedLanguages.includes(languageCode as SupportedLanguage)
-    ? (languageCode as SupportedLanguage)
-    : fallbackLanguage;
-}
-
-function isSupportedLanguage(value: string | null | undefined) {
-  return supportedLanguages.includes(value as SupportedLanguage);
-}
 
 void i18next.use(initReactI18next).init({
   compatibilityJSON: "v4",
@@ -38,10 +27,8 @@ void i18next.use(initReactI18next).init({
   },
 });
 
-void SecureStore.getItemAsync(languageStorageKey).then((savedLanguage) => {
-  if (isSupportedLanguage(savedLanguage)) {
-    void i18next.changeLanguage(savedLanguage as SupportedLanguage);
-  }
+void getStoredAppLanguage().then((savedLanguage) => {
+  void i18next.changeLanguage(savedLanguage);
 });
 
 export function getCurrentLanguage(): SupportedLanguage {
@@ -54,8 +41,9 @@ export function getCurrentLanguage(): SupportedLanguage {
 }
 
 export async function setAppLanguage(language: SupportedLanguage) {
-  await SecureStore.setItemAsync(languageStorageKey, language);
+  await saveStoredAppLanguage(language);
   await i18next.changeLanguage(language);
 }
 
-export { i18next };
+export { i18next, supportedLanguages };
+export type { SupportedLanguage };
