@@ -32,10 +32,7 @@ import { usePostReceiptMutation } from "@/queries/receipts";
 import { useReceiptScanStore } from "@/stores/receipt-scan-store";
 import { formatDateInput, formatDateTextInput } from "@/utils/date-input";
 import { parseReceiptBlocks } from "@/utils/receipt-block-parser";
-import {
-  parseNormaReceipt,
-  type ReceiptParseResult,
-} from "@/utils/receipt-parser";
+import type { ReceiptParseResult } from "@/utils/receipt-types";
 import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 
 type ThemeColors = ReturnType<typeof useThemeColors>;
@@ -108,12 +105,10 @@ export default function CapturedReceiptMlKitScreen() {
           croppedImage.uri,
           TextRecognitionScript.LATIN,
         );
-        const parserResult = result.blocks?.length
-          ? parseReceiptBlocks(result.blocks)
-          : parseNormaReceipt(result.text);
+        const parserResult = parseReceiptBlocks(result.blocks);
         const parsedReceipt = await applyReceiptParserHints(parserResult);
 
-        console.log("ML Kit OCR Result:", result.blocks);
+        console.log("ML Kit OCR compact blocks:", parserResult.blocks);
         console.log("Receipt parser result:", parsedReceipt);
 
         if (!isMounted) return;

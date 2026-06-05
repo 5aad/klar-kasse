@@ -1,4 +1,10 @@
-import type { ReceiptItem, ReceiptParseResult } from "@/utils/receipt-parser";
+import type {
+  CompactReceiptOcrLine,
+  ReceiptItem,
+  ReceiptParseResult,
+} from "@/utils/receipt-types";
+
+export type { CompactReceiptOcrLine } from "@/utils/receipt-types";
 
 export type ReceiptOcrFrame = {
   top: number;
@@ -7,21 +13,50 @@ export type ReceiptOcrFrame = {
   height: number;
 };
 
+type ReceiptOcrPoint = {
+  x: number;
+  y: number;
+};
+
+type ReceiptOcrLanguage = {
+  languageCode: string;
+};
+
 export type ReceiptOcrElement = {
   text?: string;
   frame?: ReceiptOcrFrame;
+  cornerPoints?: readonly [
+    ReceiptOcrPoint,
+    ReceiptOcrPoint,
+    ReceiptOcrPoint,
+    ReceiptOcrPoint,
+  ];
 };
 
 export type ReceiptOcrLine = {
   text?: string;
   frame?: ReceiptOcrFrame;
   elements?: ReceiptOcrElement[];
+  cornerPoints?: readonly [
+    ReceiptOcrPoint,
+    ReceiptOcrPoint,
+    ReceiptOcrPoint,
+    ReceiptOcrPoint,
+  ];
+  recognizedLanguages?: ReceiptOcrLanguage[];
 };
 
 export type ReceiptOcrBlock = {
   text?: string;
   frame?: ReceiptOcrFrame;
   lines?: ReceiptOcrLine[];
+  cornerPoints?: readonly [
+    ReceiptOcrPoint,
+    ReceiptOcrPoint,
+    ReceiptOcrPoint,
+    ReceiptOcrPoint,
+  ];
+  recognizedLanguages?: ReceiptOcrLanguage[];
 };
 
 type ParsedLine = {
@@ -216,6 +251,19 @@ function groupVisualRows(lines: ParsedLine[]): VisualRow[] {
 
 function getRawText(rows: VisualRow[]) {
   return rows.map((row) => row.text).join("\n");
+}
+
+function getCompactReceiptOcrLines(rows: VisualRow[]): CompactReceiptOcrLine[] {
+  return rows.map((row) => ({
+    text: row.text,
+    frame: row.frame,
+  }));
+}
+
+export function compactReceiptOcrBlocks(
+  blocks: ReceiptOcrBlock[],
+): CompactReceiptOcrLine[] {
+  return getCompactReceiptOcrLines(groupVisualRows(flattenBlockLines(blocks)));
 }
 
 function getAllText(rows: VisualRow[]) {
@@ -597,6 +645,7 @@ export function parseReceiptBlocks(
 ): ReceiptParseResult {
   const lines = flattenBlockLines(blocks);
   const rows = groupVisualRows(lines);
+  const compactBlocks = getCompactReceiptOcrLines(rows);
   const rawText = getRawText(rows);
   const normalizedText = normalizeOcrText(rawText);
   const total = parseTotalAmount(rows);
@@ -616,5 +665,6 @@ export function parseReceiptBlocks(
     items,
     vat: buildVatFromItems(items),
     rawText,
+    blocks: compactBlocks,
   };
 }
