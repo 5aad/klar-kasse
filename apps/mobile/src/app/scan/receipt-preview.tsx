@@ -26,12 +26,12 @@ import {
 } from "@/api/receipt-parser-hints";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { useAdaptiveLayout } from "@/hooks/use-adaptive-layout";
+import { useReceiptLlmParser } from "@/hooks/use-receipt-llm-parser";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useCategoriesQuery } from "@/queries/categories";
 import { usePostReceiptMutation } from "@/queries/receipts";
 import { useReceiptScanStore } from "@/stores/receipt-scan-store";
 import { formatDateInput, formatDateTextInput } from "@/utils/date-input";
-import { parseReceiptBlocks } from "@/utils/receipt-block-parser";
 import type { ReceiptParseResult } from "@/utils/receipt-types";
 import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 
@@ -57,6 +57,11 @@ export default function CapturedReceiptMlKitScreen() {
   const adaptive = useAdaptiveLayout();
   const { t } = useTranslation();
   const { currency } = useCurrencyFormatter();
+  const {
+    backend: receiptLlmBackend,
+    isReady: isReceiptLlmReady,
+    parseBlocks: parseReceiptBlocksWithLlm,
+  } = useReceiptLlmParser();
   const categoriesQuery = useCategoriesQuery();
   const postReceiptMutation = usePostReceiptMutation();
   const croppedImage = useReceiptScanStore((state) => state.croppedImage);
@@ -105,10 +110,14 @@ export default function CapturedReceiptMlKitScreen() {
           croppedImage.uri,
           TextRecognitionScript.LATIN,
         );
-        const parserResult = parseReceiptBlocks(result.blocks);
+        const parserResult = await parseReceiptBlocksWithLlm(result.blocks);
         const parsedReceipt = await applyReceiptParserHints(parserResult);
 
         console.log("ML Kit OCR compact blocks:", parserResult.blocks);
+        console.log("Receipt LLM status:", {
+          backend: receiptLlmBackend,
+          isReady: isReceiptLlmReady,
+        });
         console.log("Receipt parser result:", parsedReceipt);
 
         if (!isMounted) return;
@@ -138,7 +147,12 @@ export default function CapturedReceiptMlKitScreen() {
     return () => {
       isMounted = false;
     };
-  }, [croppedImage?.uri]);
+  }, [
+    croppedImage?.uri,
+    isReceiptLlmReady,
+    parseReceiptBlocksWithLlm,
+    receiptLlmBackend,
+  ]);
 
   const retakeReceipt = () => {
     clearReceiptImages();
