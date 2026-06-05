@@ -93,6 +93,8 @@ test("builds a compact block prompt for receipt JSON extraction", () => {
   assert.match(prompt, /VAT code/i);
   assert.match(prompt, /A, B, C, 1, 2, or 3/);
   assert.match(prompt, /immediately after the item price/i);
+  assert.match(prompt, /store name/i);
+  assert.match(prompt, /website/i);
   assert.doesNotMatch(prompt, /"blocks"/);
   assert.doesNotMatch(prompt, /"text"/);
   assert.doesNotMatch(prompt, /"frame"/);

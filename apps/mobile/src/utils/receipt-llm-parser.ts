@@ -57,6 +57,7 @@ export function buildReceiptLlmPrompt(blocks: ReceiptOcrBlock[]) {
     "Rules:",
     "- Use numbers for money values, not strings.",
     "- If a field is missing, use empty string, 0, or [] as appropriate.",
+    "- If the header store name is noisy or missing, infer the store name from a visible website or domain line, for example 'NETTO-ONLINE.DE' means 'Netto'.",
     "- Keep item names exactly as recognized, but remove obvious price/tax suffixes.",
     "- Prefer the total near labels like SUMME, SUNNE, TOTAL, GESAMTBETRAG, or ZU ZAHLEN.",
     "- Item VAT code is only A, B, C, 1, 2, or 3 and appears immediately after the item price, for example '1,79 B'.",
