@@ -3,6 +3,7 @@ import {
   checkBackendSupport,
   checkMultimodalSupport,
   GEMMA_4_E2B_IT,
+  getRecommendedBackend,
   useModel,
 } from "react-native-litert-lm";
 
@@ -15,11 +16,12 @@ import {
 import {
   parseReceiptWithLlmFallback,
   RECEIPT_LLM_SYSTEM_PROMPT,
+  type ReceiptLlmFallbackHandler,
 } from "@/utils/receipt-llm-parser";
 
 const baseReceiptLlmConfig = {
   autoLoad: true,
-  maxTokens: 1200,
+  maxTokens: 4096,
   multimodal: false,
   systemPrompt: RECEIPT_LLM_SYSTEM_PROMPT,
   temperature: 0.1,
@@ -27,11 +29,22 @@ const baseReceiptLlmConfig = {
   topP: 0.1,
 };
 
+const RECEIPT_LLM_DEBUG = true;
+const RECEIPT_LLM_DEBUG_TAG = "[ReceiptLLM]";
+
 export function useReceiptLlmParser() {
+  const backendSupport = useMemo(
+    () => ({
+      gpu: formatBackendSupport(checkBackendSupport("gpu")),
+      npu: formatBackendSupport(checkBackendSupport("npu")),
+      recommended: getRecommendedBackend(),
+    }),
+    [],
+  );
   const [backend, setBackend] = useState<ReceiptLlmBackend>(() =>
     getAvailableReceiptLlmBackend(checkBackendSupport),
   );
-  const multimodalError = checkMultimodalSupport();
+  const multimodalError = useMemo(() => checkMultimodalSupport(), []);
   const receiptLlmConfig = useMemo(
     () => ({
       ...baseReceiptLlmConfig,
@@ -42,15 +55,62 @@ export function useReceiptLlmParser() {
   const llm = useModel(GEMMA_4_E2B_IT, receiptLlmConfig);
 
   useEffect(() => {
+    debugReceiptLlm("backend availability", {
+      ...backendSupport,
+      selected: backend,
+      multimodal: multimodalError ?? "supported",
+    });
+  }, [backend, backendSupport, multimodalError]);
+
+  useEffect(() => {
+    debugReceiptLlm("model lifecycle", {
+      modelUrl: GEMMA_4_E2B_IT,
+      backend,
+      downloadProgress: llm.downloadProgress,
+      downloaded: llm.downloadProgress >= 1,
+      isReady: llm.isReady,
+      isGenerating: llm.isGenerating,
+      error: llm.error,
+      memorySummary: llm.memorySummary,
+    });
+  }, [
+    backend,
+    llm.downloadProgress,
+    llm.error,
+    llm.isGenerating,
+    llm.isReady,
+    llm.memorySummary,
+  ]);
+
+  useEffect(() => {
     setBackend((currentBackend) =>
       getNextReceiptLlmBackend(currentBackend, llm.error),
     );
   }, [llm.error]);
 
   const parseBlocks = useCallback(
-    (blocks: ReceiptOcrBlock[]) =>
-      parseReceiptWithLlmFallback(blocks, llm.isReady ? llm.generate : null),
-    [llm.generate, llm.isReady],
+    async (
+      blocks: ReceiptOcrBlock[],
+      onFallback?: ReceiptLlmFallbackHandler,
+    ) => {
+      debugReceiptLlm("parse request", {
+        backend,
+        blockCount: blocks.length,
+        canUseModel: llm.isReady,
+        isGenerating: llm.isGenerating,
+      });
+
+      const result = await parseReceiptWithLlmFallback(
+        blocks,
+        llm.isReady ? llm.generate : null,
+        onFallback,
+      );
+
+      debugReceiptLlm("parse result returned to screen", result);
+
+      return result;
+    },
+    [backend, llm.generate, llm.isGenerating, llm.isReady],
   );
 
   return {
@@ -61,4 +121,14 @@ export function useReceiptLlmParser() {
     isReady: llm.isReady,
     parseBlocks,
   };
+}
+
+function formatBackendSupport(warning: string | undefined) {
+  return warning ?? "supported";
+}
+
+function debugReceiptLlm(label: string, value: unknown) {
+  if (!RECEIPT_LLM_DEBUG) return;
+
+  console.log(`${RECEIPT_LLM_DEBUG_TAG} ${label}`, value);
 }

@@ -6,18 +6,28 @@ import {
 import type { ReceiptItem, ReceiptParseResult } from "@/utils/receipt-types";
 
 export type ReceiptLlmGenerator = (prompt: string) => Promise<string>;
+export type ReceiptLlmFallbackReason =
+  | "model_unavailable"
+  | "invalid_model_output"
+  | "model_error";
+export type ReceiptLlmFallbackHandler = (
+  reason: ReceiptLlmFallbackReason,
+  details?: unknown,
+) => void | Promise<void>;
 
 const PAYMENT_METHODS = new Set(["Cash", "Visa", "Mastercard", "Debit"]);
+const RECEIPT_LLM_DEBUG = true;
+const RECEIPT_LLM_DEBUG_TAG = "[ReceiptLLM]";
 
 export const RECEIPT_LLM_SYSTEM_PROMPT = [
   "You extract structured receipt data from OCR lines.",
-  "Use only the provided compact OCR block data.",
+  "Use only the provided compact OCR line data.",
   "Do not invent missing values.",
   "Return only valid JSON with no markdown, comments, or explanation.",
 ].join(" ");
 
 export function buildReceiptLlmPrompt(blocks: ReceiptOcrBlock[]) {
-  const compactBlocks = compactReceiptOcrBlocks(blocks);
+  const compactInput = buildReceiptLlmInput(blocks);
 
   return [
     "Return only valid JSON for this receipt.",
@@ -34,9 +44,6 @@ export function buildReceiptLlmPrompt(blocks: ReceiptOcrBlock[]) {
         items: [
           {
             name: "string",
-            quantity: 1,
-            unitPrice: 0,
-            weightKg: 0,
             price: 0,
             vatCode: "string",
           },
@@ -51,32 +58,80 @@ export function buildReceiptLlmPrompt(blocks: ReceiptOcrBlock[]) {
     "- Use numbers for money values, not strings.",
     "- If a field is missing, use empty string, 0, or [] as appropriate.",
     "- Keep item names exactly as recognized, but remove obvious price/tax suffixes.",
-    "- Prefer the total near labels like SUMME, TOTAL, GESAMTBETRAG, or ZU ZAHLEN.",
-    "- Use frame positions to understand reading order: lower top values are higher on the receipt; lower left values are further left.",
+    "- Prefer the total near labels like SUMME, SUNNE, TOTAL, GESAMTBETRAG, or ZU ZAHLEN.",
+    "- Item VAT code is only A, B, C, 1, 2, or 3 and appears immediately after the item price, for example '1,79 B'.",
+    "- Put that trailing item VAT code in item.vatCode; do not turn VAT summary rows like 'B 7% ...' into receipt items.",
+    "- The OCR lines are already ordered from top to bottom.",
     "- Never include keys outside the requested JSON shape.",
     "",
-    "OCR compact block data:",
-    JSON.stringify({ blocks: compactBlocks }, null, 2),
+    "OCR compact line data:",
+    JSON.stringify(compactInput, null, 2),
   ].join("\n");
+}
+
+export function buildReceiptLlmInput(blocks: ReceiptOcrBlock[]) {
+  return {
+    lines: compactReceiptOcrBlocks(blocks).map((block) => block.text),
+  };
 }
 
 export async function parseReceiptWithLlmFallback(
   blocks: ReceiptOcrBlock[],
   generate?: ReceiptLlmGenerator | null,
+  onFallback?: ReceiptLlmFallbackHandler,
 ): Promise<ReceiptParseResult> {
   const fallback = parseReceiptBlocks(blocks);
-  if (!generate) return fallback;
+  const compactInput = buildReceiptLlmInput(blocks);
 
-  try {
-    const response = await generate(buildReceiptLlmPrompt(blocks));
-    const parsed = parseReceiptLlmResponse(response);
+  debugReceiptLlm("compact line input", compactInput);
 
-    if (!parsed) return fallback;
-
-    return normalizeLlmReceipt(parsed, fallback);
-  } catch {
+  if (!generate) {
+    await onFallback?.("model_unavailable");
+    debugReceiptLlm("fallback parser used before LLM generation", {
+      reason: "model_not_ready_or_generate_unavailable",
+      fallback,
+    });
     return fallback;
   }
+
+  try {
+    const prompt = buildReceiptLlmPrompt(blocks);
+
+    debugReceiptLlm("prompt sent to model", prompt);
+
+    const response = await generate(prompt);
+
+    debugReceiptLlm("raw model output", response);
+
+    const parsed = parseReceiptLlmResponse(response);
+
+    if (!parsed) {
+      await onFallback?.("invalid_model_output", response);
+      debugReceiptLlm("fallback parser used after invalid model output", {
+        fallback,
+      });
+      return fallback;
+    }
+
+    const normalized = normalizeLlmReceipt(parsed, fallback);
+
+    debugReceiptLlm("normalized model result", normalized);
+
+    return normalized;
+  } catch (error) {
+    await onFallback?.("model_error", error);
+    debugReceiptLlm("fallback parser used after model error", {
+      error,
+      fallback,
+    });
+    return fallback;
+  }
+}
+
+function debugReceiptLlm(label: string, value: unknown) {
+  if (!RECEIPT_LLM_DEBUG) return;
+
+  console.log(`${RECEIPT_LLM_DEBUG_TAG} ${label}`, value);
 }
 
 function parseReceiptLlmResponse(response: string) {

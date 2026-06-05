@@ -38,12 +38,6 @@ export function ReceiptDetailContent({ receiptId }: Props) {
   const receiptQuery = useReceiptQuery(receiptId);
   const deleteReceiptMutation = useDeleteReceiptMutation();
   const receipt = receiptQuery.data;
-  const itemTotal = useMemo(() => {
-    if (!receipt) return 0;
-    if (!receipt.items.length) return receipt.total;
-
-    return receipt.items.reduce((total, item) => total + item.price, 0);
-  }, [receipt]);
 
   function confirmDeleteReceipt() {
     if (!receipt) return;
@@ -277,10 +271,6 @@ export function ReceiptDetailContent({ receiptId }: Props) {
               />
 
               <View style={styles.totalRows}>
-                <SummaryRow
-                  label={t("receiptDetail.subtotal")}
-                  value={formatCurrency(itemTotal)}
-                />
                 <SummaryRow
                   emphasized
                   label={t("receiptDetail.total")}

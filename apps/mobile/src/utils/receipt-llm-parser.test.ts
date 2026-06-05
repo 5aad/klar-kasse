@@ -3,6 +3,7 @@ import test from "node:test";
 
 import type { ReceiptOcrBlock } from "./receipt-block-parser";
 import {
+  buildReceiptLlmInput,
   buildReceiptLlmPrompt,
   parseReceiptWithLlmFallback,
 } from "./receipt-llm-parser";
@@ -87,12 +88,26 @@ test("builds a compact block prompt for receipt JSON extraction", () => {
   const prompt = buildReceiptLlmPrompt(receiptBlocks);
 
   assert.match(prompt, /Return only valid JSON/i);
-  assert.match(prompt, /"blocks"/);
-  assert.match(prompt, /"text": "MILCH 1,29 A"/);
-  assert.match(prompt, /"frame"/);
+  assert.match(prompt, /"lines"/);
+  assert.match(prompt, /"MILCH 1,29 A"/);
+  assert.match(prompt, /VAT code/i);
+  assert.match(prompt, /A, B, C, 1, 2, or 3/);
+  assert.match(prompt, /immediately after the item price/i);
+  assert.doesNotMatch(prompt, /"blocks"/);
+  assert.doesNotMatch(prompt, /"text"/);
+  assert.doesNotMatch(prompt, /"frame"/);
+  assert.doesNotMatch(prompt, /quantity/);
+  assert.doesNotMatch(prompt, /unitPrice/);
+  assert.doesNotMatch(prompt, /weightKg/);
   assert.doesNotMatch(prompt, /recognizedLanguages/);
   assert.doesNotMatch(prompt, /cornerPoints/);
   assert.doesNotMatch(prompt, /elements/);
+});
+
+test("builds LLM input as ordered text lines without frame data", () => {
+  assert.deepEqual(buildReceiptLlmInput(receiptBlocks), {
+    lines: ["Klar Markt", "MILCH 1,29 A", "BROT 1,00 B", "SUMME 2,29"],
+  });
 });
 
 test("uses valid LLM JSON while preserving compact OCR blocks", async () => {
@@ -132,11 +147,16 @@ test("uses valid LLM JSON while preserving compact OCR blocks", async () => {
 });
 
 test("falls back to the block parser when LLM output is invalid", async () => {
+  const fallbackReasons: string[] = [];
   const result = await parseReceiptWithLlmFallback(
     receiptBlocks,
     async () => "not json",
+    (reason) => {
+      fallbackReasons.push(reason);
+    },
   );
 
+  assert.deepEqual(fallbackReasons, ["invalid_model_output"]);
   assert.equal(result.store, "Klar Markt");
   assert.equal(result.total, 2.29);
   assert.equal(result.itemCount, 2);
