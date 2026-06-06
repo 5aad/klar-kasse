@@ -28,6 +28,7 @@ import { useAdaptiveLayout } from "@/hooks/use-adaptive-layout";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useMonthlyBudgetQuery } from "@/queries/budgets";
 import { useReceiptsQuery } from "@/queries/receipts";
+import { getReceiptLlmEngineLabel } from "@/utils/receipt-llm-jobs-model";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 const categoryIcons = {
@@ -141,6 +142,8 @@ export default function DashboardScreen() {
           category: receipt.categoryName ?? t("dashboard.receiptFallback"),
           date: receipt.dateText ?? receipt.createdAt,
           amount: formatCurrency(receipt.total),
+          llmJobStatus: receipt.llmJobStatus,
+          llmStatusLabel: getReceiptLlmEngineLabel(receipt.llmJobStatus),
         })) ?? [],
     [formatCurrency, receiptsQuery.data, selectedMonth, t],
   );

@@ -153,6 +153,18 @@ export function initializeDatabase() {
       deleted_at TEXT
     );
 
+    CREATE TABLE IF NOT EXISTS receipt_llm_jobs (
+      id TEXT PRIMARY KEY NOT NULL,
+      receipt_id TEXT NOT NULL REFERENCES receipts(id) ON DELETE CASCADE,
+      status TEXT NOT NULL DEFAULT 'pending',
+      attempt_count INTEGER NOT NULL DEFAULT 0,
+      last_error TEXT,
+      started_at TEXT,
+      completed_at TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS receipt_parser_hints (
       id TEXT PRIMARY KEY NOT NULL,
       pattern TEXT NOT NULL,
@@ -231,6 +243,8 @@ export function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS receipt_vat_receipt_id_idx ON receipt_vat(receipt_id);
     CREATE INDEX IF NOT EXISTS receipt_vat_sync_status_idx ON receipt_vat(sync_status);
     CREATE UNIQUE INDEX IF NOT EXISTS receipt_vat_remote_id_idx ON receipt_vat(remote_id) WHERE remote_id IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS receipt_llm_jobs_receipt_id_idx ON receipt_llm_jobs(receipt_id);
+    CREATE INDEX IF NOT EXISTS receipt_llm_jobs_status_idx ON receipt_llm_jobs(status, created_at);
     CREATE UNIQUE INDEX IF NOT EXISTS receipt_parser_hints_pattern_idx ON receipt_parser_hints(pattern);
     CREATE UNIQUE INDEX IF NOT EXISTS monthly_budgets_month_key_idx ON monthly_budgets(month_key);
     CREATE INDEX IF NOT EXISTS monthly_budgets_sync_status_idx ON monthly_budgets(sync_status);

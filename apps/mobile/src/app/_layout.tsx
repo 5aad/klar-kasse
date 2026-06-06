@@ -11,6 +11,7 @@ import { initializeDatabase } from "@/db";
 import { recordAppOpened, syncPendingAppActivity } from "@/api/app-activity";
 import { syncPendingSupportTickets } from "@/api/support-tickets";
 import { getUserPreferences } from "@/api/users";
+import { ReceiptLlmBackgroundProcessor } from "@/hooks/use-receipt-llm-background-processor";
 import { queryClient } from "@/lib/query-client";
 
 export default function RootLayout() {
@@ -70,6 +71,7 @@ export default function RootLayout() {
           }}
         />
       </Stack>
+      <ReceiptLlmBackgroundProcessor />
       <StatusBar style={resolvedTheme === "dark" ? "light" : "dark"} />
     </QueryClientProvider>
   );

@@ -26,17 +26,16 @@ import {
 } from "@/api/receipt-parser-hints";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { useAdaptiveLayout } from "@/hooks/use-adaptive-layout";
-import { useReceiptLlmParser } from "@/hooks/use-receipt-llm-parser";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useCategoriesQuery } from "@/queries/categories";
 import { usePostReceiptMutation } from "@/queries/receipts";
 import { useReceiptScanStore } from "@/stores/receipt-scan-store";
 import { formatDateInput, formatDateTextInput } from "@/utils/date-input";
+import { parseReceiptBlocks } from "@/utils/receipt-block-parser";
 import type { ReceiptParseResult } from "@/utils/receipt-types";
 import { KeyboardAwareScrollView } from "@/components/shared/keyboard-compat";
 
 type ThemeColors = ReturnType<typeof useThemeColors>;
-type ReceiptAnalysisEngine = "model" | "parser";
 const paymentMethods = ["Cash", "Visa", "Mastercard", "Debit"] as const;
 const paymentMethodLabels: Record<(typeof paymentMethods)[number], string> = {
   Cash: "scan.add.paymentMethods.cash",
@@ -58,14 +57,6 @@ export default function CapturedReceiptMlKitScreen() {
   const adaptive = useAdaptiveLayout();
   const { t } = useTranslation();
   const { currency } = useCurrencyFormatter();
-  const {
-    backend: receiptLlmBackend,
-    downloadProgress: receiptLlmDownloadProgress,
-    error: receiptLlmError,
-    isGenerating: isReceiptLlmGenerating,
-    isReady: isReceiptLlmReady,
-    parseBlocks: parseReceiptBlocksWithLlm,
-  } = useReceiptLlmParser();
   const categoriesQuery = useCategoriesQuery();
   const postReceiptMutation = usePostReceiptMutation();
   const croppedImage = useReceiptScanStore((state) => state.croppedImage);
@@ -81,11 +72,6 @@ export default function CapturedReceiptMlKitScreen() {
     useState<(typeof paymentMethods)[number]>("Visa");
   const [category, setCategory] = useState("");
   const [note, setNote] = useState("");
-  const [receiptAnalysisEngine, setReceiptAnalysisEngine] =
-    useState<ReceiptAnalysisEngine>("parser");
-  const [receiptLlmFallbackMessage, setReceiptLlmFallbackMessage] = useState<
-    string | null
-  >(null);
   const [parsedReceipt, setParsedReceipt] = useState<ReceiptParseResult | null>(
     null,
   );
@@ -98,14 +84,6 @@ export default function CapturedReceiptMlKitScreen() {
   }, [croppedImage?.uri, t]);
   const categoryOptions =
     categoriesQuery.data?.map((categoryItem) => categoryItem.name) ?? [];
-  const receiptLlmStatus = getReceiptLlmStatus({
-    backend: receiptLlmBackend,
-    downloadProgress: receiptLlmDownloadProgress,
-    error: receiptLlmError,
-    isGenerating: isReceiptLlmGenerating,
-    isReady: isReceiptLlmReady,
-  });
-  const receiptEngineStatus = getReceiptEngineStatus(receiptAnalysisEngine);
 
   useEffect(() => {
     if (category || !categoryOptions.length) return;
@@ -121,35 +99,23 @@ export default function CapturedReceiptMlKitScreen() {
     const analyzeReceipt = async () => {
       setIsAnalyzing(true);
       setErrorMessage(null);
-      setReceiptLlmFallbackMessage(null);
 
       try {
         const result = await TextRecognition.recognize(
           croppedImage.uri,
           TextRecognitionScript.LATIN,
         );
-        let fallbackReason: string | null = null;
-        const parserResult = await parseReceiptBlocksWithLlm(
-          result.blocks,
-          (reason) => {
-            fallbackReason = reason;
-          },
-        );
+        const parserResult = parseReceiptBlocks(result.blocks);
         const parsedReceipt = await applyReceiptParserHints(parserResult);
 
         console.log("ML Kit OCR compact blocks:", parserResult.blocks);
         console.log("Receipt LLM status:", {
-          backend: receiptLlmBackend,
-          isReady: isReceiptLlmReady,
+          queuedAfterSave: Boolean(parserResult.rawText.trim()),
         });
         console.log("Receipt parser result:", parsedReceipt);
 
         if (!isMounted) return;
 
-        setReceiptAnalysisEngine(fallbackReason ? "parser" : "model");
-        setReceiptLlmFallbackMessage(
-          fallbackReason ? getReceiptLlmFallbackMessage(fallbackReason) : null,
-        );
         setMerchantName(parsedReceipt.store || "");
         setDate(parsedReceipt.date || formatDateInput(new Date()));
         setAmount(parsedReceipt.total ? parsedReceipt.total.toFixed(2) : "");
@@ -177,9 +143,6 @@ export default function CapturedReceiptMlKitScreen() {
     };
   }, [
     croppedImage?.uri,
-    isReceiptLlmReady,
-    parseReceiptBlocksWithLlm,
-    receiptLlmBackend,
   ]);
 
   const retakeReceipt = () => {
@@ -338,13 +301,9 @@ export default function CapturedReceiptMlKitScreen() {
                     ]}
                   >
                     <MaterialCommunityIcons
-                      name={receiptLlmStatus.icon}
+                      name="text-box-search-outline"
                       size={13}
-                      color={
-                        receiptLlmStatus.isAvailable
-                          ? themeColors.primary
-                          : themeColors.mutedText
-                      }
+                      color={themeColors.mutedText}
                     />
                     <Text
                       style={[
@@ -352,32 +311,7 @@ export default function CapturedReceiptMlKitScreen() {
                         { color: themeColors.mutedText },
                       ]}
                     >
-                      {receiptLlmStatus.label}
-                    </Text>
-                  </View>
-
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      { backgroundColor: themeColors.background },
-                    ]}
-                  >
-                    <MaterialCommunityIcons
-                      name={receiptEngineStatus.icon}
-                      size={13}
-                      color={
-                        receiptAnalysisEngine === "model"
-                          ? themeColors.primary
-                          : themeColors.mutedText
-                      }
-                    />
-                    <Text
-                      style={[
-                        styles.statusText,
-                        { color: themeColors.mutedText },
-                      ]}
-                    >
-                      {receiptEngineStatus.label}
+                      Using parser
                     </Text>
                   </View>
                 </View>
@@ -391,20 +325,6 @@ export default function CapturedReceiptMlKitScreen() {
                   ]}
                   contentFit="contain"
                 />
-
-                {receiptLlmFallbackMessage ? (
-                  <Text
-                    style={[
-                      styles.inlineFallbackText,
-                      {
-                        backgroundColor: `${themeColors.primary}26`,
-                        color: themeColors.primary,
-                      },
-                    ]}
-                  >
-                    {receiptLlmFallbackMessage}
-                  </Text>
-                ) : null}
 
                 <View style={styles.previewFooter}>
                   <Text
@@ -545,78 +465,6 @@ export default function CapturedReceiptMlKitScreen() {
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
-}
-
-function getReceiptLlmStatus({
-  backend,
-  downloadProgress,
-  error,
-  isGenerating,
-  isReady,
-}: {
-  backend: string;
-  downloadProgress: number;
-  error: string | null;
-  isGenerating: boolean;
-  isReady: boolean;
-}) {
-  const backendLabel = backend.toUpperCase();
-
-  if (error) {
-    return {
-      icon: "alert-circle-outline" as const,
-      isAvailable: false,
-      label: `LLM ${backendLabel} unavailable`,
-    };
-  }
-
-  if (isGenerating) {
-    return {
-      icon: "brain" as const,
-      isAvailable: true,
-      label: `LLM ${backendLabel} generating`,
-    };
-  }
-
-  if (isReady) {
-    return {
-      icon: "brain" as const,
-      isAvailable: true,
-      label: `LLM ${backendLabel} ready`,
-    };
-  }
-
-  return {
-    icon: "download-outline" as const,
-    isAvailable: false,
-    label: `LLM ${backendLabel} loading ${Math.round(downloadProgress * 100)}%`,
-  };
-}
-
-function getReceiptLlmFallbackMessage(reason: string) {
-  if (reason === "model_unavailable") {
-    return "LLM model is not ready yet, so this result used the block parser.";
-  }
-
-  if (reason === "invalid_model_output") {
-    return "LLM did not return valid receipt JSON, so this result used the block parser.";
-  }
-
-  return "LLM hit an error, so this result used the block parser.";
-}
-
-function getReceiptEngineStatus(engine: ReceiptAnalysisEngine) {
-  if (engine === "model") {
-    return {
-      icon: "brain" as const,
-      label: "Using model",
-    };
-  }
-
-  return {
-    icon: "text-box-search-outline" as const,
-    label: "Using parser",
-  };
 }
 
 type ReviewFieldProps = {
@@ -805,14 +653,6 @@ const styles = StyleSheet.create({
   },
   receiptImageWide: {
     height: 520,
-  },
-  inlineFallbackText: {
-    borderRadius: radius.sm,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    fontSize: fontSize.xs,
-    fontWeight: "600",
-    lineHeight: 16,
   },
   previewFooter: {
     flexDirection: "row",

@@ -27,8 +27,14 @@ export const RECEIPT_LLM_SYSTEM_PROMPT = [
 ].join(" ");
 
 export function buildReceiptLlmPrompt(blocks: ReceiptOcrBlock[]) {
-  const compactInput = buildReceiptLlmInput(blocks);
+  return buildReceiptLlmPromptFromInput(buildReceiptLlmInput(blocks));
+}
 
+export function buildReceiptLlmPromptFromLines(lines: string[]) {
+  return buildReceiptLlmPromptFromInput({ lines });
+}
+
+function buildReceiptLlmPromptFromInput(compactInput: { lines: string[] }) {
   return [
     "Return only valid JSON for this receipt.",
     "",
@@ -57,6 +63,10 @@ export function buildReceiptLlmPrompt(blocks: ReceiptOcrBlock[]) {
     "Rules:",
     "- Use numbers for money values, not strings.",
     "- If a field is missing, use empty string, 0, or [] as appropriate.",
+    "- Date is an evidence field: copy it from an OCR line, do not guess or correct it.",
+    "- For dates like 02.06.26 or 02-06-2026, keep the same day, month, and year digits; only normalize the separator to dots and expand YY to 20YY.",
+    "- Never change year digits. If OCR says 2026 or 26, the date year must be 2026, not 2028.",
+    "- If a date appears inside an address line, use it for date if it is the only date evidence, but do not include the date fragment in address.",
     "- If the header store name is noisy or missing, infer the store name from a visible website or domain line, for example 'NETTO-ONLINE.DE' means 'Netto'.",
     "- Keep item names exactly as recognized, but remove obvious price/tax suffixes.",
     "- Prefer the total near labels like SUMME, SUNNE, TOTAL, GESAMTBETRAG, or ZU ZAHLEN.",
@@ -129,6 +139,15 @@ export async function parseReceiptWithLlmFallback(
   }
 }
 
+export function parseReceiptLlmResponseWithFallback(
+  response: string,
+  fallback: ReceiptParseResult,
+) {
+  const parsed = parseReceiptLlmResponse(response);
+
+  return parsed ? normalizeLlmReceipt(parsed, fallback) : null;
+}
+
 function debugReceiptLlm(label: string, value: unknown) {
   if (!RECEIPT_LLM_DEBUG) return;
 
@@ -166,11 +185,12 @@ function normalizeLlmReceipt(
   const items = normalizeItems(parsed.items);
   const vat = normalizeVat(parsed.vat);
   const paymentMethod = toStringValue(parsed.paymentMethod);
+  const date = normalizeSupportedDate(toStringValue(parsed.date), fallback);
 
   return {
     store: toStringValue(parsed.store) || fallback.store,
     address: normalizeStringArray(parsed.address) ?? fallback.address,
-    date: toStringValue(parsed.date) || fallback.date,
+    date,
     total: toMoneyValue(parsed.total) || fallback.total,
     paymentMethod: PAYMENT_METHODS.has(paymentMethod)
       ? paymentMethod
@@ -182,6 +202,57 @@ function normalizeLlmReceipt(
     rawText: fallback.rawText,
     blocks: fallback.blocks,
   };
+}
+
+function normalizeSupportedDate(
+  modelDate: string,
+  fallback: ReceiptParseResult,
+) {
+  if (!modelDate) return fallback.date;
+
+  const normalizedModelDate = normalizeDateText(modelDate);
+  if (!normalizedModelDate) return fallback.date;
+
+  const rawDateSignatures = getDateSignatures(fallback.rawText);
+  if (!rawDateSignatures.size) return normalizedModelDate;
+
+  return rawDateSignatures.has(getDateSignature(normalizedModelDate))
+    ? normalizedModelDate
+    : fallback.date;
+}
+
+function normalizeDateText(value: string) {
+  const match = value.match(/\b(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{2}|\d{4})\b/);
+  if (!match) return "";
+
+  const day = match[1].padStart(2, "0");
+  const month = match[2].padStart(2, "0");
+  const year = match[3].length === 2 ? `20${match[3]}` : match[3];
+
+  return `${day}.${month}.${year}`;
+}
+
+function getDateSignatures(value: string) {
+  const signatures = new Set<string>();
+  const matches = value.matchAll(
+    /\b(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{2}|\d{4})\b/g,
+  );
+
+  for (const match of matches) {
+    signatures.add(
+      getDateSignature(
+        `${match[1].padStart(2, "0")}.${match[2].padStart(2, "0")}.${
+          match[3].length === 2 ? `20${match[3]}` : match[3]
+        }`,
+      ),
+    );
+  }
+
+  return signatures;
+}
+
+function getDateSignature(value: string) {
+  return value.replace(/\D/g, "");
 }
 
 function normalizeItems(value: unknown): ReceiptItem[] {

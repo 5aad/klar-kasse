@@ -15,6 +15,7 @@ import { LanguageModal } from "@/components/settings/language-modal";
 import { useAdaptiveLayout } from "@/hooks/use-adaptive-layout";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useUserPreferencesQuery } from "@/queries/users";
+import { useReceiptLlmRuntimeStore } from "@/stores/receipt-llm-runtime-store";
 import { getTabScreenBottomPadding } from "@/utils/tab-screen-spacing";
 
 type ThemeColors = ReturnType<typeof useThemeColors>;
@@ -28,6 +29,19 @@ export default function SettingsScreen() {
   const { bottom } = useSafeAreaInsets();
   const { t } = useTranslation();
   const userPreferencesQuery = useUserPreferencesQuery();
+  const receiptLlmBackend = useReceiptLlmRuntimeStore(
+    (state) => state.backend,
+  );
+  const receiptLlmDownloadProgress = useReceiptLlmRuntimeStore(
+    (state) => state.downloadProgress,
+  );
+  const receiptLlmError = useReceiptLlmRuntimeStore((state) => state.error);
+  const isReceiptLlmGenerating = useReceiptLlmRuntimeStore(
+    (state) => state.isGenerating,
+  );
+  const isReceiptLlmReady = useReceiptLlmRuntimeStore(
+    (state) => state.isReady,
+  );
   const [isLanguageModalVisible, setIsLanguageModalVisible] = useState(false);
   const [isSupportModalVisible, setIsSupportModalVisible] = useState(false);
 
@@ -75,6 +89,14 @@ export default function SettingsScreen() {
             <Text style={[styles.name, { color: themeColors.text }]}>
               {userPreferencesQuery.data?.name ?? "set your name"}
             </Text>
+            <ReceiptLlmStatusPills
+              backend={receiptLlmBackend}
+              downloadProgress={receiptLlmDownloadProgress}
+              error={receiptLlmError}
+              isGenerating={isReceiptLlmGenerating}
+              isReady={isReceiptLlmReady}
+              themeColors={themeColors}
+            />
             {/* <Text style={styles.email}>Tomhill@mail.com</Text> */}
           </View>
 
@@ -128,6 +150,104 @@ export default function SettingsScreen() {
         onClose={() => setIsLanguageModalVisible(false)}
       />
     </SafeAreaView>
+  );
+}
+
+type ReceiptLlmStatusPillsProps = {
+  backend: string;
+  downloadProgress: number;
+  error: string | null;
+  isGenerating: boolean;
+  isReady: boolean;
+  themeColors: ThemeColors;
+};
+
+function ReceiptLlmStatusPills({
+  backend,
+  downloadProgress,
+  error,
+  isGenerating,
+  isReady,
+  themeColors,
+}: ReceiptLlmStatusPillsProps) {
+  const progressPercent = Math.round(downloadProgress * 100);
+  const readinessLabel = error
+    ? "LLM paused"
+    : isGenerating
+      ? "LLM working"
+      : isReady
+        ? "LLM ready"
+        : "LLM loading";
+  const readinessIcon = error
+    ? "alert-circle-outline"
+    : isGenerating
+      ? "brain"
+      : isReady
+        ? "check-circle-outline"
+        : "progress-download";
+
+  return (
+    <View style={styles.llmPillRow}>
+      <StatusPill
+        icon={readinessIcon}
+        label={readinessLabel}
+        tone={error ? "muted" : isReady ? "ready" : "loading"}
+        themeColors={themeColors}
+      />
+      <StatusPill
+        icon="chip"
+        label={`Backend ${backend.toUpperCase()}`}
+        tone="muted"
+        themeColors={themeColors}
+      />
+      <StatusPill
+        icon={downloadProgress >= 1 ? "cloud-check-outline" : "download"}
+        label={`Model ${progressPercent}%`}
+        tone={downloadProgress >= 1 ? "ready" : "loading"}
+        themeColors={themeColors}
+      />
+    </View>
+  );
+}
+
+type StatusPillProps = {
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  label: string;
+  themeColors: ThemeColors;
+  tone: "loading" | "muted" | "ready";
+};
+
+function StatusPill({ icon, label, themeColors, tone }: StatusPillProps) {
+  const isReadyTone = tone === "ready";
+
+  return (
+    <View
+      style={[
+        styles.llmPill,
+        {
+          backgroundColor: isReadyTone
+            ? `${themeColors.primary}18`
+            : themeColors.surface,
+          borderColor: isReadyTone
+            ? `${themeColors.primary}66`
+            : themeColors.border,
+        },
+      ]}
+    >
+      <MaterialCommunityIcons
+        color={isReadyTone ? themeColors.primary : themeColors.mutedText}
+        name={icon}
+        size={14}
+      />
+      <Text
+        style={[
+          styles.llmPillText,
+          { color: isReadyTone ? themeColors.primary : themeColors.mutedText },
+        ]}
+      >
+        {label}
+      </Text>
+    </View>
   );
 }
 
@@ -200,6 +320,27 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     fontSize: fontSize.xl,
     fontWeight: "600",
+  },
+  llmPillRow: {
+    marginTop: spacing.sm,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: spacing.xs,
+  },
+  llmPill: {
+    minHeight: 28,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
+  },
+  llmPillText: {
+    fontSize: fontSize.xs,
+    fontWeight: "700",
   },
   email: {
     marginTop: spacing.xs,

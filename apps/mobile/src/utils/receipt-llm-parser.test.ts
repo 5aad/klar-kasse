@@ -5,6 +5,8 @@ import type { ReceiptOcrBlock } from "./receipt-block-parser";
 import {
   buildReceiptLlmInput,
   buildReceiptLlmPrompt,
+  buildReceiptLlmPromptFromLines,
+  parseReceiptLlmResponseWithFallback,
   parseReceiptWithLlmFallback,
 } from "./receipt-llm-parser";
 
@@ -95,6 +97,8 @@ test("builds a compact block prompt for receipt JSON extraction", () => {
   assert.match(prompt, /immediately after the item price/i);
   assert.match(prompt, /store name/i);
   assert.match(prompt, /website/i);
+  assert.match(prompt, /Never change year digits/i);
+  assert.match(prompt, /not 2028/i);
   assert.doesNotMatch(prompt, /"blocks"/);
   assert.doesNotMatch(prompt, /"text"/);
   assert.doesNotMatch(prompt, /"frame"/);
@@ -110,6 +114,18 @@ test("builds LLM input as ordered text lines without frame data", () => {
   assert.deepEqual(buildReceiptLlmInput(receiptBlocks), {
     lines: ["Klar Markt", "MILCH 1,29 A", "BROT 1,00 B", "SUMME 2,29"],
   });
+});
+
+test("builds the same compact prompt from stored raw text lines", () => {
+  const prompt = buildReceiptLlmPromptFromLines([
+    "Klar Markt",
+    "MILCH 1,29 A",
+    "SUMME 1,29",
+  ]);
+
+  assert.match(prompt, /"lines"/);
+  assert.match(prompt, /"MILCH 1,29 A"/);
+  assert.doesNotMatch(prompt, /"frame"/);
 });
 
 test("uses valid LLM JSON while preserving compact OCR blocks", async () => {
@@ -146,6 +162,94 @@ test("uses valid LLM JSON while preserving compact OCR blocks", async () => {
     result.blocks.map((line) => line.text),
     ["Klar Markt", "MILCH 1,29 A", "BROT 1,00 B", "SUMME 2,29"],
   );
+});
+
+test("normalizes stored rawText LLM output against a saved fallback receipt", () => {
+  const result = parseReceiptLlmResponseWithFallback(
+    JSON.stringify({
+      store: "Netto",
+      address: ["Georgenstr. 41"],
+      date: "02.06.2026",
+      total: 2.48,
+      paymentMethod: "Visa",
+      cardLast4: "2672",
+      items: [{ name: "Cookies", price: 1.79, vatCode: "B" }],
+      vat: [{ rate: 7, net: 2.32, tax: 0.16 }],
+    }),
+    {
+      store: "Unknown",
+      address: [],
+      date: "",
+      total: 0,
+      paymentMethod: "",
+      cardLast4: "",
+      itemCount: 0,
+      items: [],
+      vat: [],
+      rawText: "Netto\nCookies 1,79 B",
+      blocks: [],
+    },
+  );
+
+  assert.equal(result?.store, "Netto");
+  assert.equal(result?.total, 2.48);
+  assert.deepEqual(result?.items, [
+    { name: "Cookies", price: 1.79, vatCode: "B" },
+  ]);
+  assert.equal(result?.rawText, "Netto\nCookies 1,79 B");
+});
+
+test("keeps parser date when LLM changes OCR year digits", () => {
+  const result = parseReceiptLlmResponseWithFallback(
+    JSON.stringify({
+      store: "Airtberg",
+      address: ["Kaiser-Ludwig-Ring 9"],
+      date: "02.06.2028",
+      total: 1.99,
+      paymentMethod: "Debit",
+      cardLast4: "8333",
+      items: [{ name: "Tab31 laptopstander faltbar", price: 1.99, vatCode: "1" }],
+      vat: [{ rate: 19, net: 1.67, tax: 0.32 }],
+    }),
+    {
+      store: "Airtberg",
+      address: ["Kaiser-Ludwig-Ring 9"],
+      date: "02.06.2026",
+      total: 1.99,
+      paymentMethod: "Debit",
+      cardLast4: "8333",
+      itemCount: 1,
+      items: [{ name: "Tab31 laptopstander faltbar", price: 1.99, vatCode: "1" }],
+      vat: [{ rate: 19, net: 1.67, tax: 0.32 }],
+      rawText: "Airtberg\nKaiser-Ludwig-Ring 9 02-06-2026\nEUR 1,99",
+      blocks: [],
+    },
+  );
+
+  assert.equal(result?.date, "02.06.2026");
+});
+
+test("accepts LLM date when it matches OCR date with different separators", () => {
+  const result = parseReceiptLlmResponseWithFallback(
+    JSON.stringify({
+      date: "02.06.2026",
+    }),
+    {
+      store: "",
+      address: [],
+      date: "",
+      total: 0,
+      paymentMethod: "",
+      cardLast4: "",
+      itemCount: 0,
+      items: [],
+      vat: [],
+      rawText: "Kaiser-Ludwig-Ring 9 02-06-2026",
+      blocks: [],
+    },
+  );
+
+  assert.equal(result?.date, "02.06.2026");
 });
 
 test("falls back to the block parser when LLM output is invalid", async () => {

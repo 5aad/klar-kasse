@@ -201,6 +201,31 @@ export const receiptVat = sqliteTable(
   ],
 );
 
+export const receiptLlmJobs = sqliteTable(
+  "receipt_llm_jobs",
+  {
+    id: text("id").primaryKey(),
+    receiptId: text("receipt_id")
+      .notNull()
+      .references(() => receipts.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("pending"),
+    attemptCount: integer("attempt_count").notNull().default(0),
+    lastError: text("last_error"),
+    startedAt: text("started_at"),
+    completedAt: text("completed_at"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("receipt_llm_jobs_receipt_id_idx").on(table.receiptId),
+    index("receipt_llm_jobs_status_idx").on(table.status, table.createdAt),
+  ],
+);
+
 export const receiptParserHints = sqliteTable(
   "receipt_parser_hints",
   {
@@ -298,6 +323,8 @@ export type ReceiptItem = typeof receiptItems.$inferSelect;
 export type NewReceiptItem = typeof receiptItems.$inferInsert;
 export type ReceiptVat = typeof receiptVat.$inferSelect;
 export type NewReceiptVat = typeof receiptVat.$inferInsert;
+export type ReceiptLlmJob = typeof receiptLlmJobs.$inferSelect;
+export type NewReceiptLlmJob = typeof receiptLlmJobs.$inferInsert;
 export type ReceiptParserHint = typeof receiptParserHints.$inferSelect;
 export type NewReceiptParserHint = typeof receiptParserHints.$inferInsert;
 export type MonthlyBudget = typeof monthlyBudgets.$inferSelect;

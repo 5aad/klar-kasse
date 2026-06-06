@@ -1,11 +1,13 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { fontSize, radius, spacing } from "@repo/theme";
 import { router } from "expo-router";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { EmptyStateCard } from "@/components/shared/empty-state-card";
 import { useResolvedTheme, useThemeColors } from "@/hooks/use-theme-colors";
+import type { ReceiptLlmJobStatus } from "@/utils/receipt-llm-jobs-model";
 
 export type TransactionListItem = {
   amount: string;
@@ -13,6 +15,8 @@ export type TransactionListItem = {
   date: string;
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   id?: string;
+  llmJobStatus?: ReceiptLlmJobStatus | null;
+  llmStatusLabel?: string | null;
   title: string;
 };
 
@@ -35,6 +39,42 @@ export function TransactionList({ actionLabel, items = [], title }: Props) {
     resolvedTheme === "dark" ? themeColors.text : themeColors.text;
   const iconColor =
     resolvedTheme === "dark" ? themeColors.background : themeColors.primaryText;
+  const hasProcessingReceipt = items.some(
+    (transaction) => transaction.llmJobStatus === "processing",
+  );
+  const borderPulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!hasProcessingReceipt) {
+      borderPulse.stopAnimation();
+      borderPulse.setValue(0);
+      return;
+    }
+
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(borderPulse, {
+          toValue: 1,
+          duration: 850,
+          useNativeDriver: false,
+        }),
+        Animated.timing(borderPulse, {
+          toValue: 0,
+          duration: 850,
+          useNativeDriver: false,
+        }),
+      ]),
+    );
+
+    animation.start();
+
+    return () => animation.stop();
+  }, [borderPulse, hasProcessingReceipt]);
+
+  const processingBorderColor = borderPulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [`${themeColors.primary}33`, themeColors.primary],
+  });
 
   return (
     <View style={styles.section}>
@@ -54,55 +94,82 @@ export function TransactionList({ actionLabel, items = [], title }: Props) {
       <View style={styles.list}>
         {items.length ? (
           items.map((transaction) => (
-            <Pressable
+            <Animated.View
               key={transaction.id ?? `${transaction.title}-${transaction.date}`}
-              style={styles.row}
-              accessibilityLabel={t("dashboard.transactionList.openReceipt", {
-                title: transaction.title,
-              })}
-              accessibilityRole={transaction.id ? "button" : undefined}
-              disabled={!transaction.id}
-              onPress={() => {
-                if (!transaction.id) return;
-
-                router.push(`/(dashboard)/receipt/${transaction.id}`);
-              }}
+              style={[
+                styles.rowFrame,
+                transaction.llmJobStatus === "processing" && {
+                  borderColor: processingBorderColor,
+                },
+              ]}
             >
-              <View
-                style={[styles.iconBox, { backgroundColor: iconBackground }]}
+              <Pressable
+                style={styles.row}
+                accessibilityLabel={t("dashboard.transactionList.openReceipt", {
+                  title: transaction.title,
+                })}
+                accessibilityRole={transaction.id ? "button" : undefined}
+                disabled={!transaction.id}
+                onPress={() => {
+                  if (!transaction.id) return;
+
+                  router.push(`/(dashboard)/receipt/${transaction.id}`);
+                }}
               >
-                <MaterialCommunityIcons
-                  color={iconColor}
-                  name={transaction.icon}
-                  size={26}
-                />
-              </View>
-              <View style={styles.copy}>
-                <Text
-                  style={[styles.transactionTitle, { color: themeColors.text }]}
+                <View
+                  style={[styles.iconBox, { backgroundColor: iconBackground }]}
                 >
-                  {transaction.title}
-                </Text>
+                  <MaterialCommunityIcons
+                    color={iconColor}
+                    name={transaction.icon}
+                    size={26}
+                  />
+                </View>
+                <View style={styles.copy}>
+                  <Text
+                    style={[
+                      styles.transactionTitle,
+                      { color: themeColors.text },
+                    ]}
+                  >
+                    {transaction.title}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.transactionSubtitle,
+                      { color: themeColors.mutedText },
+                    ]}
+                  >
+                    {transaction.category} | {transaction.date}
+                  </Text>
+                  {transaction.llmStatusLabel ? (
+                    <Text
+                      style={[
+                        styles.aiStatusText,
+                        {
+                          color:
+                            transaction.llmJobStatus === "failed"
+                              ? themeColors.primary
+                              : themeColors.mutedText,
+                        },
+                      ]}
+                    >
+                      {transaction.llmStatusLabel}
+                    </Text>
+                  ) : null}
+                </View>
                 <Text
                   style={[
-                    styles.transactionSubtitle,
-                    { color: themeColors.mutedText },
+                    styles.amount,
+                    {
+                      color: themeColors.text,
+                    },
                   ]}
                 >
-                  {transaction.category} | {transaction.date}
+                  {transaction.amount}
                 </Text>
-              </View>
-              <Text
-                style={[
-                  styles.amount,
-                  {
-                    color: themeColors.text,
-                  },
-                ]}
-              >
-                {transaction.amount}
-              </Text>
-            </Pressable>
+              </Pressable>
+            </Animated.View>
           ))
         ) : (
           <EmptyStateCard
@@ -137,6 +204,12 @@ const styles = StyleSheet.create({
   list: {
     gap: spacing.md,
   },
+  rowFrame: {
+    borderLeftWidth: 3,
+    borderColor: "transparent",
+    borderRadius: radius.sm,
+    paddingLeft: spacing.sm,
+  },
   row: {
     minHeight: 62,
     flexDirection: "row",
@@ -161,6 +234,10 @@ const styles = StyleSheet.create({
   transactionSubtitle: {
     fontSize: fontSize.sm,
     fontWeight: "500",
+  },
+  aiStatusText: {
+    fontSize: fontSize.xs,
+    fontWeight: "700",
   },
   amount: {
     fontSize: 22,

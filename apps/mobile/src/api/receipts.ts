@@ -6,6 +6,7 @@ import {
   categoryBudgets,
   monthlyBudgets,
   receiptItems,
+  receiptLlmJobs,
   receipts,
   receiptVat,
   syncOutbox,
@@ -13,6 +14,10 @@ import {
   type ReceiptItem,
   type ReceiptVat,
 } from "@/db/schema";
+import {
+  shouldEnqueueReceiptLlmJob,
+  type ReceiptLlmJobStatus,
+} from "@/utils/receipt-llm-jobs-model";
 
 export type PostReceiptInput = {
   address?: string[];
@@ -43,6 +48,7 @@ export type PostReceiptInput = {
 export type ReceiptWithDetails = Receipt & {
   address: string[];
   items: ReceiptItem[];
+  llmJobStatus: ReceiptLlmJobStatus | null;
   vat: ReceiptVat[];
 };
 
@@ -101,13 +107,39 @@ function toReceiptWithDetails(
   receipt: Receipt,
   items: ReceiptItem[],
   vat: ReceiptVat[],
+  llmJobStatus: ReceiptLlmJobStatus | null,
 ): ReceiptWithDetails {
   return {
     ...receipt,
     address: parseAddress(receipt.addressJson),
     items,
+    llmJobStatus,
     vat,
   };
+}
+
+function normalizeReceiptLlmJobStatus(value?: string | null) {
+  if (
+    value === "pending" ||
+    value === "processing" ||
+    value === "done" ||
+    value === "failed"
+  ) {
+    return value;
+  }
+
+  return null;
+}
+
+function getLatestReceiptLlmJobStatus(receiptId: string) {
+  const job = db
+    .select()
+    .from(receiptLlmJobs)
+    .where(eq(receiptLlmJobs.receiptId, receiptId))
+    .orderBy(desc(receiptLlmJobs.createdAt))
+    .get();
+
+  return normalizeReceiptLlmJobStatus(job?.status);
 }
 
 export async function postReceipt(input: PostReceiptInput) {
@@ -174,6 +206,16 @@ export async function postReceipt(input: PostReceiptInput) {
       createdAt: now,
       updatedAt: now,
     })) ?? [];
+  const receiptLlmJobRow = shouldEnqueueReceiptLlmJob(input.rawText)
+    ? {
+        id: createLocalId("receipt_llm_job"),
+        receiptId,
+        status: "pending",
+        attemptCount: 0,
+        createdAt: now,
+        updatedAt: now,
+      }
+    : null;
 
   db.transaction((tx) => {
     tx.insert(receipts).values(receiptRows).run();
@@ -184,6 +226,10 @@ export async function postReceipt(input: PostReceiptInput) {
 
     if (vatRows.length) {
       tx.insert(receiptVat).values(vatRows).run();
+    }
+
+    if (receiptLlmJobRow) {
+      tx.insert(receiptLlmJobs).values(receiptLlmJobRow).run();
     }
 
     tx.insert(syncOutbox)
@@ -354,7 +400,12 @@ export async function getReceipt(id: string) {
     .where(eq(receiptVat.receiptId, id))
     .all();
 
-  return toReceiptWithDetails(receipt, items, vat);
+  return toReceiptWithDetails(
+    receipt,
+    items,
+    vat,
+    getLatestReceiptLlmJobStatus(id),
+  );
 }
 
 export async function deleteReceipt(id: string) {
@@ -539,6 +590,11 @@ export async function getReceipts() {
       .where(eq(receiptVat.receiptId, receipt.id))
       .all();
 
-    return toReceiptWithDetails(receipt, items, vat);
+    return toReceiptWithDetails(
+      receipt,
+      items,
+      vat,
+      getLatestReceiptLlmJobStatus(receipt.id),
+    );
   });
 }
