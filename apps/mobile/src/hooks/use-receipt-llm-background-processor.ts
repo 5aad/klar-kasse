@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   checkBackendSupport,
   checkMultimodalSupport,
@@ -41,13 +41,53 @@ function debugReceiptLlm(label: string, value: unknown) {
 }
 
 export function ReceiptLlmBackgroundProcessor() {
-  useReceiptLlmBackgroundProcessor();
+  const [modelInstanceKey, setModelInstanceKey] = useState(0);
+  const lastRemountRequestIdRef = useRef<number | null>(null);
+  const remountRequestId = useReceiptLlmRuntimeStore(
+    (state) => state.remountRequestId,
+  );
+  const handleModelUnavailable = useCallback(() => {
+    setModelInstanceKey((currentKey) => currentKey + 1);
+  }, []);
+
+  useEffect(() => {
+    if (lastRemountRequestIdRef.current === null) {
+      lastRemountRequestIdRef.current = remountRequestId;
+      return;
+    }
+
+    if (lastRemountRequestIdRef.current === remountRequestId) return;
+
+    lastRemountRequestIdRef.current = remountRequestId;
+    debugReceiptLlm("background model instance remount requested", {
+      reason: "explicit_request",
+    });
+    setModelInstanceKey((currentKey) => currentKey + 1);
+  }, [remountRequestId]);
+
+  return createElement(ReceiptLlmBackgroundProcessorInstance, {
+    key: modelInstanceKey,
+    onModelUnavailable: handleModelUnavailable,
+  });
+}
+
+function ReceiptLlmBackgroundProcessorInstance({
+  onModelUnavailable,
+}: {
+  onModelUnavailable: () => void;
+}) {
+  useReceiptLlmBackgroundProcessor(onModelUnavailable);
 
   return null;
 }
 
-export function useReceiptLlmBackgroundProcessor() {
+export function useReceiptLlmBackgroundProcessor(
+  onModelUnavailable?: () => void,
+) {
   const isProcessingRef = useRef(false);
+  const deferProcessingUntil = useReceiptLlmRuntimeStore(
+    (state) => state.deferProcessingUntil,
+  );
   const setRuntimeStatus = useReceiptLlmRuntimeStore(
     (state) => state.setRuntimeStatus,
   );
@@ -140,6 +180,12 @@ export function useReceiptLlmBackgroundProcessor() {
 
     async function processQueue() {
       if (isProcessingRef.current) return;
+      if (Date.now() < deferProcessingUntil) {
+        debugReceiptLlm("background queue deferred", {
+          remainingMs: deferProcessingUntil - Date.now(),
+        });
+        return;
+      }
 
       isProcessingRef.current = true;
 
@@ -148,6 +194,15 @@ export function useReceiptLlmBackgroundProcessor() {
           const didProcessJob = await processNextReceiptLlmJob(
             generateReceiptJson,
             refreshReceiptState,
+            () => {
+              debugReceiptLlm("background model instance remount requested", {
+                backend,
+              });
+              useReceiptLlmRuntimeStore
+                .getState()
+                .deferProcessing(8000);
+              onModelUnavailable?.();
+            },
           );
           if (!didProcessJob) break;
 
@@ -166,7 +221,7 @@ export function useReceiptLlmBackgroundProcessor() {
       clearTimeout(startupTimeoutId);
       clearInterval(intervalId);
     };
-  }, [generateReceiptJson, llm.error, llm.isReady]);
+  }, [deferProcessingUntil, generateReceiptJson, llm.error, llm.isReady]);
 
   return {
     backend,

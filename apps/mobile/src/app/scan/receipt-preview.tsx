@@ -29,6 +29,7 @@ import { useAdaptiveLayout } from "@/hooks/use-adaptive-layout";
 import { useThemeColors } from "@/hooks/use-theme-colors";
 import { useCategoriesQuery } from "@/queries/categories";
 import { usePostReceiptMutation } from "@/queries/receipts";
+import { useReceiptLlmRuntimeStore } from "@/stores/receipt-llm-runtime-store";
 import { useReceiptScanStore } from "@/stores/receipt-scan-store";
 import { formatDateInput, formatDateTextInput } from "@/utils/date-input";
 import { parseReceiptBlocks } from "@/utils/receipt-block-parser";
@@ -43,6 +44,7 @@ const paymentMethodLabels: Record<(typeof paymentMethods)[number], string> = {
   Mastercard: "scan.add.paymentMethods.mastercard",
   Debit: "scan.add.paymentMethods.debit",
 };
+const RECEIPT_LLM_POST_SAVE_COOLDOWN_MS = 12000;
 
 function getPaymentMethod(value?: string) {
   const paymentMethod = paymentMethods.find(
@@ -62,6 +64,12 @@ export default function CapturedReceiptMlKitScreen() {
   const croppedImage = useReceiptScanStore((state) => state.croppedImage);
   const clearReceiptImages = useReceiptScanStore(
     (state) => state.clearReceiptImages,
+  );
+  const deferReceiptLlmProcessing = useReceiptLlmRuntimeStore(
+    (state) => state.deferProcessing,
+  );
+  const requestReceiptLlmRemount = useReceiptLlmRuntimeStore(
+    (state) => state.requestModelRemount,
   );
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -156,6 +164,9 @@ export default function CapturedReceiptMlKitScreen() {
   };
 
   const confirmReceipt = () => {
+    requestReceiptLlmRemount();
+    deferReceiptLlmProcessing(RECEIPT_LLM_POST_SAVE_COOLDOWN_MS);
+
     if (parsedReceipt) {
       saveReceiptParserCorrection(parsedReceipt, {
         store: merchantName,

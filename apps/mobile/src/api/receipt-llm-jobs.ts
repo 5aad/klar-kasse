@@ -491,6 +491,7 @@ export function resetInterruptedReceiptLlmJobs() {
 export async function processNextReceiptLlmJob(
   generate: ReceiptLlmGenerator,
   onStatusChange?: () => void | Promise<void>,
+  onModelUnavailable?: () => void | Promise<void>,
 ) {
   initializeDatabase();
 
@@ -545,6 +546,7 @@ export async function processNextReceiptLlmJob(
     } catch (error) {
       if (isModelAvailabilityError(error)) {
         requeueJobForModelAvailability(job.id, previousAttemptCount, error);
+        await onModelUnavailable?.();
         return false;
       }
 
@@ -583,6 +585,7 @@ export async function processNextReceiptLlmJob(
   } catch (error) {
     if (isModelAvailabilityError(error)) {
       requeueJobForModelAvailability(job.id, previousAttemptCount, error);
+      await onModelUnavailable?.();
       return false;
     }
 
